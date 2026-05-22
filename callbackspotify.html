@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotify ulanmoqda...</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#101418;color:#fff;font-family:Segoe UI,system-ui,sans-serif}
+.box{width:min(90%,390px);padding:34px 28px;border-radius:18px;background:#171d22;border:1px solid rgba(30,215,96,.25);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.logo{font-size:1.45rem;font-weight:900;letter-spacing:.08em;color:#1ed760;margin-bottom:20px}
+.spinner{width:42px;height:42px;border:3px solid rgba(30,215,96,.18);border-top-color:#1ed760;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status{font-size:.95rem;color:rgba(255,255,255,.72);line-height:1.5}
+.error{display:none;color:#ff7b7b;line-height:1.5;font-size:.9rem}
+.success{display:none;flex-direction:column;align-items:center;gap:10px}
+.avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(30,215,96,.45);display:none}
+.name{font-weight:800}
+.btn{display:inline-block;margin-top:16px;padding:10px 20px;border-radius:999px;background:#1ed760;color:#07100a;text-decoration:none;font-weight:800}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">SPOTIFY</div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="status" id="status">Spotify bilan bog'lanilmoqda...</div>
+  </div>
+  <div class="success" id="success">
+    <img class="avatar" id="avatar" alt="Spotify avatar">
+    <div class="name" id="name">Spotify ulandi</div>
+    <div class="status">Profilga qaytilmoqda...</div>
+  </div>
+  <div class="error" id="error"></div>
+  <a class="btn" id="backBtn" href="/" style="display:none">Bosh sahifa</a>
+</div>
+
+<script>
+(async function(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const error = params.get('error');
+  const loading = document.getElementById('loading');
+  const errBox = document.getElementById('error');
+  const backBtn = document.getElementById('backBtn');
+
+  function showError(msg){
+    loading.style.display = 'none';
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+    backBtn.style.display = 'inline-block';
+  }
+
+  if(error){ showError('Spotify ulanish rad etildi: ' + error); return; }
+  if(!code || !state){ showError('Spotify kodi yoki state topilmadi.'); return; }
+
+  try{
+    document.getElementById('status').textContent = 'Token tekshirilmoqda...';
+    const res = await fetch('/api/auth/spotify/callback', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({code, state})
+    });
+    const data = await res.json();
+    if(!data.ok){ showError(data.error || 'Server xatosi'); return; }
+
+    loading.style.display = 'none';
+    const success = document.getElementById('success');
+    const spotify = data.spotify || {};
+    document.getElementById('name').textContent = (spotify.name || 'Spotify') + ' ulandi';
+    if(spotify.image){
+      const avatar = document.getElementById('avatar');
+      avatar.src = spotify.image;
+      avatar.style.display = 'block';
+    }
+    success.style.display = 'flex';
+    setTimeout(()=>{ window.location.href = '/#profile'; }, 1400);
+  }catch(e){
+    showError("Serverga ulanib bo'lmadi: " + e.message);
+  }
+})();
+</script>
+</body>
+</html>

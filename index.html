@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="glass">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6b3f24">
+<meta name="msapplication-TileColor" content="#6b3f24">
+<meta name="google-client-id" content="{{GOOGLE_CLIENT_ID}}">
+<meta property="og:image" content="/bot-icon">
+<meta name="twitter:image" content="/bot-icon">
+<link rel="icon" href="/bot-icon">
+<link rel="apple-touch-icon" href="/bot-icon">
+<title>AnimeUZ Official</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="console.warn('THREE.js CDN failed to load – 3D background disabled.')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+[data-theme="glass"]{
+  --surface:rgba(255,255,255,.55);--card-bg:rgba(255,255,255,.68);
+  --border:rgba(108,99,255,.22);--border2:rgba(108,99,255,.08);
+  --accent:#6c63ff;--accent2:#a78bfa;--accent3:#ec4899;
+  --red:#ef4444;--green:#10b981;--gold:#f59e0b;
+  --text:#1a1a2e;--text2:#4c4a6e;--muted:rgba(80,70,140,.5);
+  --sidebar-bg:rgba(230,230,255,.95);--nav-bg:rgba(230,230,255,.97);
+  --glow-c:rgba(108,99,255,.2);--glow-p:rgba(167,139,250,.2);--shadow:rgba(108,99,255,.14);
+  --hud-line:#6c63ff;--hud-glow:rgba(108,99,255,.6);--hud-text:#1a1a2e;
+}
+[data-theme="futuristic"]{
+  --surface:rgba(10,10,24,.9);--card-bg:rgba(15,15,32,.95);
+  --border:rgba(0,212,255,.18);--border2:rgba(0,212,255,.07);
+  --accent:#00d4ff;--accent2:#8b5cf6;--accent3:#f0abfc;
+  --red:#ff4d6d;--green:#10ffa0;--gold:#fbbf24;
+  --text:#cce4ff;--text2:#7aadcc;--muted:rgba(120,170,210,.48);
+  --sidebar-bg:rgba(4,4,14,.98);--nav-bg:rgba(4,4,14,.97);
+  --glow-c:rgba(0,212,255,.22);--glow-p:rgba(139,92,246,.22);--shadow:rgba(0,0,0,.8);
+  --hud-line:#00d4ff;--hud-glow:rgba(0,212,255,.7);--hud-text:#cce4ff;
+}
+[data-theme="cyber3d"]{
+  --surface:rgba(6,6,24,.92);--card-bg:rgba(8,8,32,.96);
+  --border:rgba(0,255,231,.18);--border2:rgba(0,255,231,.07);
+  --accent:#00ffe7;--accent2:#bf00ff;--accent3:#ff6b00;
+  --red:#ff003c;--green:#00ffe7;--gold:#ffe500;
+  --text:#b8d4f0;--text2:#6090b8;--muted:rgba(80,130,180,.48);
+  --sidebar-bg:rgba(2,2,12,.98);--nav-bg:rgba(2,2,12,.97);
+  --glow-c:rgba(0,255,231,.22);--glow-p:rgba(191,0,255,.22);--shadow:rgba(0,0,0,.9);
+  --hud-line:#00ffe7;--hud-glow:rgba(0,255,231,.7);--hud-text:#b8d4f0;
+}
+[data-theme="mirror"]{
+  --surface:rgba(255,255,255,.78);--card-bg:rgba(255,255,255,.86);
+  --border:rgba(154,169,191,.32);--border2:rgba(154,169,191,.14);
+  --accent:#7f8ea8;--accent2:#b7c0d1;--accent3:#d6dbe6;
+  --red:#ef4444;--green:#22c55e;--gold:#f59e0b;
+  --text:#1e293b;--text2:#475569;--muted:rgba(71,85,105,.65);
+  --sidebar-bg:rgba(246,248,252,.94);--nav-bg:rgba(246,248,252,.95);
+  --glow-c:rgba(184,196,216,.35);--glow-p:rgba(209,217,231,.35);--shadow:rgba(100,116,139,.2);
+  --hud-line:#7f8ea8;--hud-glow:rgba(127,142,168,.45);--hud-text:#1e293b;
+}
+
+html{scroll-behavior:smooth}
+
+[data-theme="glass"] body{background:linear-gradient(135deg,#c9d6ff 0%,#e8e8ff 40%,#f5e6ff 70%,#d4e8ff 100%) fixed;color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+[data-theme="glass"] body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+[data-theme="glass"] #bg3d{opacity:0!important}
+[data-theme="futuristic"] body{background:#02020a;color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden;}
+[data-theme="futuristic"] body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,.006) 2px,rgba(0,212,255,.006) 4px);pointer-events:none;z-index:0;}
+[data-theme="futuristic"] #bg3d{opacity:.6}
+[data-theme="cyber3d"] body{background:#010108;color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden;}
+[data-theme="cyber3d"] body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(0,255,231,.015) 1px,transparent 1px) 0 0/36px 36px,linear-gradient(90deg,rgba(0,255,231,.015) 1px,transparent 1px) 0 0/36px 36px;pointer-events:none;z-index:0;}
+[data-theme="cyber3d"] #bg3d{opacity:1}
+[data-theme="mirror"] body{background:radial-gradient(circle at 20% 10%,#eef2ff 0%,#e2e8f0 40%,#dbe4f3 70%,#d7dfea 100%) fixed;color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+[data-theme="mirror"] body::before{content:'';position:fixed;inset:0;background:linear-gradient(120deg,rgba(255,255,255,.45),transparent 28%,rgba(255,255,255,.18) 55%,transparent 75%);pointer-events:none;z-index:0;}
+[data-theme="mirror"] #bg3d{opacity:.18}
+
+/* ══ MIRROR: universal button glass style ══ */
+[data-theme="mirror"] button,
+[data-theme="mirror"] .m-btn,
+[data-theme="mirror"] .ab2-btn{
+  background:linear-gradient(145deg,rgba(255,255,255,.55),rgba(235,241,250,.35))!important;
+  border:1px solid rgba(157,171,194,.45)!important;
+  color:#27364d!important;
+  backdrop-filter:blur(10px) saturate(135%);
+  -webkit-backdrop-filter:blur(10px) saturate(135%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 6px 16px rgba(100,116,139,.18);
+  position:relative;
+  overflow:hidden;
+}
+[data-theme="mirror"] button::before,
+[data-theme="mirror"] .m-btn::before,
+[data-theme="mirror"] .ab2-btn::before{
+  content:'';
+  position:absolute;
+  left:-35%;
+  top:-120%;
+  width:64%;
+  height:330%;
+  transform:rotate(18deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.52),transparent);
+  pointer-events:none;
+}
+[data-theme="mirror"] button:hover,
+[data-theme="mirror"] .m-btn:hover,
+[data-theme="mirror"] .ab2-btn:hover{
+  border-color:rgba(127,142,168,.72)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    0 10px 22px rgba(100,116,139,.25);
+  transform:translateY(-1px);
+}
+[data-theme="mirror"] button:active,
+[data-theme="mirror"] .m-btn:active,
+[data-theme="mirror"] .ab2-btn:active{
+  transform:translateY(0);
+}
+[data-theme="mirror"] .pill.on,
+[data-theme="mirror"] .filter-btn.active,
+[data-theme="mirror"] .snav.active,
+[data-theme="mirror"] .bnav-item.active,
+[data-theme="mirror"] .rf-type-btn.sel,
+[data-theme="mirror"] .mirror-btn.primary,
+[data-theme="mirror"] .g-next-btn,
+[data-theme="mirror"] .g-play-again{
+  background:linear-gradient(145deg,rgba(144,160,185,.92),rgba(126,142,167,.88))!important;
+  border-color:rgba(110,126,151,.95)!important;
+  color:#f8fbff!important;
+}
+[data-theme="mirror"] .rf-send{
+  background:linear-gradient(145deg,rgba(122,142,171,.95),rgba(103,121,149,.95))!important;
+  color:#f8fbff!important;
+  border:1px solid rgba(100,117,143,.95)!important;
+}
+
+#bg3d{position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity .4s}
+#portalFx{position:fixed;inset:0;z-index:140;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s}
+#portalFx.on{opacity:1;visibility:visible}
+#portalFx canvas{width:100%;height:100%;display:block}
+#portalFlash{position:fixed;inset:0;z-index:141;pointer-events:none;opacity:0;background:radial-gradient(circle at center,rgba(255,255,255,.92),rgba(167,139,250,.34) 28%,transparent 62%);transition:opacity .22s ease}
+#portalFlash.on{opacity:1}
+
+/* ══ SIDEBAR ══ */
+.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:60;width:64px;background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;backdrop-filter:blur(24px);transition:width .26s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.sidebar.open{width:230px}
+.sidebar-arrow{position:absolute;top:50%;right:-14px;transform:translateY(-50%);width:28px;height:28px;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;color:var(--muted);font-size:.75rem;transition:all .2s;box-shadow:2px 0 12px var(--shadow);}
+.sidebar-arrow:hover{color:var(--accent);border-color:var(--accent);background:var(--sidebar-bg)}
+.sidebar-head{display:flex;align-items:center;gap:12px;padding:20px 16px 16px;border-bottom:1px solid var(--border);min-height:64px;flex-shrink:0;}
+.sidebar-head-icon{width:32px;height:32px;flex-shrink:0;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:900;color:#fff;font-family:'Orbitron',monospace;}
+.sidebar-head-title{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:900;color:var(--accent);letter-spacing:.08em;white-space:nowrap;opacity:0;transition:opacity .15s;}
+.sidebar.open .sidebar-head-title{opacity:1}
+.sidebar-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.sidebar-nav::-webkit-scrollbar{width:3px}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--border)}
+.snav{display:flex;align-items:center;gap:13px;padding:10px 8px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'Exo 2',sans-serif;font-size:.84rem;font-weight:500;transition:all .18s;white-space:nowrap;width:100%;text-align:left;position:relative;}
+.snav:hover{color:var(--text);background:var(--border2)}
+.snav.active{color:var(--accent);background:rgba(0,212,255,.08)}
+[data-theme="glass"] .snav.active{color:var(--accent);background:rgba(108,99,255,.1)}
+[data-theme="cyber3d"] .snav.active{background:rgba(0,255,231,.07)}
+.snav.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;border-radius:0 3px 3px 0;background:var(--accent);}
+.snav-ico{font-size:1.2rem;width:22px;text-align:center;flex-shrink:0}
+.snav-txt{opacity:0;transition:opacity .12s;font-size:.83rem;flex:1}
+.sidebar.open .snav-txt{opacity:1}
+.snav-badge{font-family:'Orbitron',monospace;font-size:.52rem;font-weight:700;padding:2px 6px;background:var(--accent);color:#000;border-radius:8px;opacity:0;transition:opacity .12s;flex-shrink:0;margin-left:auto;}
+.sidebar.open .snav-badge{opacity:1}
+.sdivider{height:1px;background:var(--border);margin:6px 8px}
+.sidebar-footer{padding:10px 8px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:2px}
+
+/* ══ MAIN ══ */
+.main{margin-left:64px;min-height:100vh;position:relative;z-index:2;transition:margin-left .26s cubic-bezier(.4,0,.2,1);}
+.sidebar.open ~ .main{margin-left:230px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;background:var(--sidebar-bg);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:40;transition:background .3s;}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar-title{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--text);letter-spacing:.06em}
+.breadcrumb{font-size:.74rem;color:var(--muted)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.tbtn{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:.95rem;transition:all .18s;}
+.tbtn:hover{color:var(--accent);border-color:var(--accent);background:var(--border2)}
+
+/* ══ PAGES ══ */
+.content{padding:24px}
+.page{display:none}
+.page.active{display:block}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;gap:16px;flex-wrap:wrap;}
+.page-title{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;color:var(--text);letter-spacing:.06em;line-height:1.2;}
+.page-subtitle{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+/* ══ SEARCH + FILTERS ══ */
+.search-wrap{display:flex;align-items:center;gap:11px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:0 16px;margin-bottom:14px;box-shadow:0 3px 16px var(--shadow);transition:border-color .2s,box-shadow .2s;}
+.search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 20px var(--glow-c)}
+.search-wrap svg{color:var(--muted);flex-shrink:0}
+.search-wrap input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Exo 2',sans-serif;font-size:.9rem;padding:13px 0}
+.search-wrap input::placeholder{color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px}
+.filter-btn{font-size:.76rem;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .18s;}
+.filter-btn:hover{color:var(--text);border-color:var(--accent)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.result-bar{font-size:.73rem;color:var(--muted);margin-bottom:16px}
+.result-bar b{color:var(--accent)}
+
+/* ══ HUD FLIP CARD ══ */
+@keyframes cardSpin{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+#animeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--cw,196px),1fr));gap:14px}
+
+.card-wrap{perspective:900px;cursor:pointer}
+.card-flipper{position:relative;width:100%;transform-style:preserve-3d;animation:cardSpin var(--sd,9s) linear infinite}
+.card-wrap:hover .card-flipper{animation-play-state:paused}
+.cf,.cb{width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--card-bg);box-shadow:0 5px 20px var(--shadow);transition:border-color .22s,box-shadow .22s;}
+.cb{position:absolute;top:0;left:0;height:100%;transform:rotateY(180deg)}
+.card-wrap:hover .cf,.card-wrap:hover .cb{border-color:var(--accent);box-shadow:0 10px 34px var(--shadow),0 0 20px var(--glow-c)}
+.card-poster{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:var(--surface)}
+.card-poster-ph{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:2.2rem;background:var(--surface);color:var(--border)}
+
+/* ══ HUD CARD BACK ══ */
+.hud-cb{
+  width:100%;aspect-ratio:3/4;
+  position:relative;overflow:hidden;
+  background:var(--card-bg);
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:10px 10px 10px;
+}
+/* scan lines overlay */
+.hud-cb::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(var(--hud-rgb,108,99,255),.03) 3px,rgba(var(--hud-rgb,108,99,255),.03) 4px);
+  pointer-events:none;z-index:0;
+  animation:hudFlicker .12s infinite;
+}
+@keyframes hudFlicker{0%,100%{opacity:1}50%{opacity:.88}}
+
+/* corner cuts */
+.hud-cb::after{
+  content:'';position:absolute;top:0;right:0;
+  width:0;height:0;
+  border-top:18px solid var(--surface);
+  border-left:18px solid transparent;
+  z-index:2;pointer-events:none;
+}
+[data-theme="futuristic"] .hud-cb::after{border-top-color:#02020a}
+[data-theme="cyber3d"] .hud-cb::after{border-top-color:#010108}
+
+/* TOP LINE — right to left */
+.hud-top-line{
+  position:absolute;top:0;right:0;left:0;height:2px;overflow:hidden;z-index:1;
+}
+.hud-top-line::after{
+  content:'';position:absolute;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--hud-line,var(--accent)));
+  width:0;
+  animation:hudTopLine .7s cubic-bezier(.16,1,.3,1) var(--hud-delay,.1s) forwards;
+  box-shadow:0 0 8px var(--accent);
+}
+@keyframes hudTopLine{from{width:0;right:0}to{width:100%;right:0}}
+
+/* HEADER TAG */
+.hud-tag{
+  position:relative;z-index:1;
+  font-family:'Share Tech Mono','Orbitron',monospace;
+  font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);opacity:0;
+  animation:hudFadeIn .3s ease calc(var(--hud-delay,.1s) + .7s) forwards;
+  display:flex;align-items:center;gap:5px;
+}
+.hud-tag::before{content:'◆';font-size:.5rem}
+
+/* ANIME NAME — typewriter */
+.hud-name{
+  position:relative;z-index:1;
+  font-family:'Orbitron',monospace;
+  font-size:.76rem;font-weight:900;
+  color:var(--hud-text,var(--text));
+  letter-spacing:.04em;line-height:1.3;
+  overflow:hidden;
+  white-space:nowrap;
+  width:0;
+  text-shadow:0 0 10px var(--accent);
+  animation:hudTypeName .6s steps(18,end) calc(var(--hud-delay,.1s) + .85s) forwards;
+}
+@keyframes hudTypeName{from{width:0;opacity:1}to{width:100%;opacity:1}}
+
+/* DIVIDER with angled cap */
+.hud-div-wrap{
+  position:relative;z-index:1;
+  height:14px;margin:3px 0;
+}
+.hud-div-line{
+  position:absolute;left:0;top:5px;height:1.5px;width:0;
+  background:linear-gradient(90deg,var(--accent),rgba(0,0,0,0));
+  box-shadow:0 0 6px var(--accent);
+  animation:hudDivLine .6s cubic-bezier(.16,1,.3,1) calc(var(--hud-delay,.1s) + 1.5s) forwards;
+}
+@keyframes hudDivLine{from{width:0}to{width:88%}}
+.hud-div-cap{
+  position:absolute;top:0;right:12%;width:16px;height:1.5px;
+  background:var(--accent);transform:rotate(-30deg);transform-origin:left center;
+  box-shadow:0 0 5px var(--accent);
+  opacity:0;
+  animation:hudFadeIn .2s ease calc(var(--hud-delay,.1s) + 2.1s) forwards;
+}
+
+/* INFO ROWS */
+.hud-rows{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;gap:4px;flex:1;
+}
+.hud-row{
+  display:grid;grid-template-columns:6px 52px 1px 1fr;
+  align-items:center;gap:4px;
+  opacity:0;
+}
+.hud-row:nth-child(1){animation:hudRowIn .4s ease calc(var(--hud-delay,.1s) + 2.2s) forwards}
+.hud-row:nth-child(2){animation:hudRowIn .4s ease calc(var(--hud-delay,.1s) + 2.45s) forwards}
+.hud-row:nth-child(3){animation:hudRowIn .4s ease calc(var(--hud-delay,.1s) + 2.7s) forwards}
+.hud-row:nth-child(4){animation:hudRowIn .4s ease calc(var(--hud-delay,.1s) + 2.95s) forwards}
+.hud-row:nth-child(5){animation:hudRowIn .4s ease calc(var(--hud-delay,.1s) + 3.2s) forwards}
+.hud-row:nth-child(6){animation:hudRowIn .4s ease calc(var(--hud-delay,.1s) + 3.45s) forwards}
+@keyframes hudRowIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+.hud-dot{width:4px;height:4px;border:1.5px solid var(--accent);transform:rotate(45deg);box-shadow:0 0 4px var(--accent);}
+.hud-key{font-family:'Orbitron',monospace;font-size:.46rem;font-weight:700;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;opacity:.75;}
+.hud-sep{width:1px;height:10px;background:var(--border);justify-self:center;}
+.hud-val{font-family:'Share Tech Mono','Orbitron',monospace;font-size:.62rem;color:var(--hud-text,var(--text));overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+
+/* STATUS PIPS */
+.hud-pips{
+  position:relative;z-index:1;
+  display:flex;gap:3px;margin-top:4px;
+  opacity:0;
+  animation:hudFadeIn .5s ease calc(var(--hud-delay,.1s) + 3.8s) forwards;
+}
+.hud-pip{width:16px;height:3px;background:var(--border2);border:1px solid var(--border);clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%);}
+.hud-pip.on{background:var(--accent);box-shadow:0 0 4px var(--accent);}
+
+/* BOTTOM LINE */
+.hud-bot-line{
+  position:absolute;bottom:0;left:0;right:0;height:2px;overflow:hidden;z-index:1;
+}
+.hud-bot-line::after{
+  content:'';position:absolute;left:0;top:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),transparent);
+  width:0;
+  animation:hudBotLine .7s cubic-bezier(.16,1,.3,1) calc(var(--hud-delay,.1s) + .5s) forwards;
+  box-shadow:0 0 6px var(--accent);
+}
+@keyframes hudBotLine{from{width:0}to{width:85%}}
+
+@keyframes hudFadeIn{to{opacity:1}}
+
+/* ID corner */
+.hud-id{
+  position:absolute;bottom:8px;right:8px;z-index:1;
+  font-family:'Orbitron',monospace;font-size:.55rem;font-weight:700;
+  color:var(--border);letter-spacing:.1em;
+  opacity:0;
+  animation:hudFadeIn .3s ease calc(var(--hud-delay,.1s) + 3.1s) forwards;
+}
+
+/* ══ ADMIN GRID ══ */
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.aw{perspective:900px;cursor:pointer}
+.af-fl{position:relative;transform-style:preserve-3d;animation:cardSpin var(--sd,9s) linear infinite}
+.aw:hover .af-fl{animation-play-state:paused}
+.af,.ab2{width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;box-shadow:0 5px 20px var(--shadow)}
+.ab2{position:absolute;top:0;left:0;height:100%;transform:rotateY(180deg)}
+.af{background:var(--card-bg);border:1px solid var(--border);padding:26px 16px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;position:relative}
+.af::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:10px 10px 0 0}
+.af.sup{border-color:rgba(240,171,252,.22)}
+.af.sup::before{background:linear-gradient(90deg,var(--accent3),var(--accent2))}
+.ab2{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:22px 16px;overflow:hidden}
+.ab2::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 28px,var(--border2) 28px,var(--border2) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,var(--border2) 28px,var(--border2) 29px);pointer-events:none}
+.avt{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin:0 auto 10px;display:block}
+.avt-ph{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;color:#fff;margin:0 auto 10px}
+.aname{font-weight:600;font-size:.88rem;color:var(--text);margin-bottom:2px}
+.aun{font-size:.72rem;color:var(--muted);margin-bottom:8px}
+.atag{font-family:'Orbitron',monospace;font-size:.55rem;font-weight:700;letter-spacing:.1em;padding:3px 9px;border-radius:3px;text-transform:uppercase}
+.atag.dev{background:rgba(240,171,252,.1);color:var(--accent3);border:1px solid rgba(240,171,252,.22)}
+.atag.adm{background:var(--border2);color:var(--accent);border:1px solid var(--border)}
+.ab2-r{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:9px;width:100%}
+.ab2-init{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--border)}
+.ab2-role{font-family:'Orbitron',monospace;font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.ab2-un{font-size:.76rem;color:var(--muted)}
+.ab2-div{width:100%;height:1px;background:var(--border)}
+.ab2-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:8px;background:var(--border2);border:1px solid var(--border);border-radius:4px;color:var(--accent);font-family:'Orbitron',monospace;font-size:.56rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:all .18s}
+.ab2-btn:hover{background:var(--accent);color:#000}
+
+/* ══ STATS ══ */
+.stats-page{display:flex;flex-direction:column;gap:22px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:14px}
+.sc-w{perspective:900px}
+.sc-fl{position:relative;transform-style:preserve-3d;animation:cardSpin var(--sd,9s) linear infinite}
+.sc-w:hover .sc-fl{animation-play-state:paused}
+.scf,.scb{width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;min-height:158px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;padding:22px 16px;box-shadow:0 5px 20px var(--shadow)}
+.scb{position:absolute;top:0;left:0;height:100%;transform:rotateY(180deg);overflow:hidden}
+.sc-cyan .scf{background:var(--card-bg);border:1px solid rgba(0,212,255,.28)}
+.sc-cyan .scb{background:linear-gradient(135deg,#030d14,#071620);border:1px solid rgba(0,212,255,.38)}
+.sc-purple .scf{background:var(--card-bg);border:1px solid rgba(139,92,246,.28)}
+.sc-purple .scb{background:linear-gradient(135deg,#08040e,#120a20);border:1px solid rgba(139,92,246,.38)}
+.sc-pink .scf{background:var(--card-bg);border:1px solid rgba(240,171,252,.28)}
+.sc-pink .scb{background:linear-gradient(135deg,#0e0410,#180820);border:1px solid rgba(240,171,252,.38)}
+.sc-green .scf{background:var(--card-bg);border:1px solid rgba(16,255,160,.28)}
+.sc-green .scb{background:linear-gradient(135deg,#031209,#061e10);border:1px solid rgba(16,255,160,.38)}
+.sc-ico{font-size:1.9rem;line-height:1}
+.sc-val{font-family:'Orbitron',monospace;font-size:2.3rem;font-weight:900;line-height:1}
+.sc-cyan .sc-val{color:var(--accent)}.sc-purple .sc-val{color:var(--accent2)}.sc-pink .sc-val{color:var(--accent3)}.sc-green .sc-val{color:var(--green)}
+.sc-lbl{font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sc-bi{font-size:2.8rem;opacity:.1;position:absolute;bottom:6px;right:10px}
+.sc-bt{font-family:'Orbitron',monospace;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:1}
+.sc-cyan .sc-bt{color:var(--accent)}.sc-purple .sc-bt{color:var(--accent2)}.sc-pink .sc-bt{color:var(--accent3)}.sc-green .sc-bt{color:var(--green)}
+.sc-bv{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;position:relative;z-index:1}
+.sc-cyan .sc-bv{color:rgba(0,212,255,.72)}.sc-purple .sc-bv{color:rgba(139,92,246,.72)}.sc-pink .sc-bv{color:rgba(240,171,252,.72)}.sc-green .sc-bv{color:rgba(16,255,160,.72)}
+.sc-bd{font-size:.74rem;color:var(--muted);line-height:1.45;position:relative;z-index:1}
+.sec-title{font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-bottom:9px;border-bottom:1px solid var(--border)}
+.chart-box{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:0 5px 20px var(--shadow)}
+#actChart{width:100%!important;max-height:210px}
+
+/* ══ SETTINGS — FIX: pills wrap, no overflow ══ */
+.settings-page{display:flex;flex-direction:column;gap:18px;max-width:580px}
+.sgrp{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.sgrp-title{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);background:var(--border2)}
+.srow{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:13px 16px;border-bottom:1px solid var(--border2);gap:12px;
+  flex-wrap:wrap;
+}
+.srow:last-child{border-bottom:none}
+.srow-l{display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:140px;}
+.srow-label{font-size:.85rem;font-weight:500;color:var(--text)}
+.srow-desc{font-size:.72rem;color:var(--muted);line-height:1.35}
+
+/* PILLS FIX — wrap properly, never overflow */
+.pills{
+  display:flex;gap:4px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  max-width:220px;
+}
+.pill{
+  font-family:'Orbitron',monospace;font-size:.57rem;font-weight:700;
+  letter-spacing:.06em;padding:5px 11px;border-radius:20px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .18s;
+  text-transform:uppercase;white-space:nowrap;
+  flex-shrink:0;
+}
+.pill:hover{border-color:var(--accent);color:var(--text)}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#000}
+
+.mirror-wrap{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+.mirror-note{font-size:.72rem;line-height:1.5;color:var(--muted);background:var(--border2);border:1px solid var(--border);border-radius:10px;padding:10px}
+.mirror-note b{color:var(--text)}
+.mirror-cam-box{position:relative;width:100%;aspect-ratio:9/16;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:linear-gradient(145deg,var(--surface),var(--card-bg));box-shadow:0 6px 20px var(--shadow)}
+.mirror-cam{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none}
+.mirror-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:.76rem;color:var(--muted);line-height:1.5}
+.mirror-actions{display:flex;gap:8px;flex-wrap:wrap}
+.mirror-btn{flex:1;min-width:118px;padding:9px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:.73rem;font-weight:700;cursor:pointer;transition:all .2s}
+.mirror-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mirror-btn.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border-color:transparent}
+.mirror-btn.primary:hover{transform:translateY(-1px)}
+
+.tog{position:relative;width:44px;height:24px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:background .2s}
+.tog-sl::before{content:'';position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+.tog input:checked ~ .tog-sl{background:var(--accent)}
+.tog input:checked ~ .tog-sl::before{transform:translateX(20px)}
+
+/* ══ REPORT ══ */
+.report-page{max-width:580px;display:flex;flex-direction:column;gap:18px}
+.report-info{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;gap:14px;align-items:flex-start;}
+.ri-icon{font-size:2rem;flex-shrink:0}
+.ri-text h3{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:5px;letter-spacing:.04em}
+.ri-text p{font-size:.8rem;color:var(--muted);line-height:1.55}
+.report-form{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.rf-title{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);background:var(--border2)}
+.rf-body{padding:16px;display:flex;flex-direction:column;gap:13px}
+.rf-label{font-size:.8rem;font-weight:500;color:var(--text);margin-bottom:5px;display:block}
+.rf-select,.rf-input,.rf-textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:10px 13px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+.rf-select:focus,.rf-input:focus,.rf-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 16px var(--glow-c)}
+.rf-textarea{resize:vertical;min-height:110px;line-height:1.5}
+.rf-select option{background:var(--sidebar-bg);color:var(--text)}
+.rf-type-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rf-type-btn{padding:10px 8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.82rem;font-weight:500;transition:all .18s;text-align:center;}
+.rf-type-btn:hover{border-color:var(--accent);color:var(--text)}
+.rf-type-btn.sel{border-color:var(--accent);background:rgba(0,212,255,.09);color:var(--accent);font-weight:600}
+.rf-send{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:8px;background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;color:#fff;font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.rf-send:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--glow-c)}
+.rf-send:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.rf-success{display:none;padding:18px;text-align:center;background:rgba(16,255,160,.07);border:1px solid rgba(16,255,160,.2);border-radius:10px;}
+.rf-success.show{display:block}
+.rf-success-ico{font-size:2.5rem;margin-bottom:10px}
+.rf-success h3{font-family:'Orbitron',monospace;font-size:.85rem;color:var(--green);margin-bottom:5px}
+.rf-success p{font-size:.8rem;color:var(--muted)}
+.rf-char{font-size:.7rem;color:var(--muted);text-align:right;margin-top:-8px}
+
+/* ══ MODAL ══ */
+.modal-bg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal-bg.open .modal{transform:translateY(0) scale(1)}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;position:relative;transform:translateY(20px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 28px 70px var(--shadow),0 0 44px var(--glow-c)}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--border)}
+.mcl{position:absolute;top:11px;right:11px;z-index:10;width:30px;height:30px;background:var(--border2);border:1px solid var(--border);border-radius:50%;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.mcl:hover{color:var(--red);border-color:var(--red)}
+.m-media{width:100%;background:#000;position:relative;border-radius:14px 14px 0 0;overflow:hidden;min-height:120px}
+.m-img{width:100%;max-height:280px;object-fit:cover;display:block}
+.m-img-ph{width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;background:var(--surface);color:var(--border)}
+.play-btn{position:absolute;bottom:11px;right:11px;width:42px;height:42px;background:rgba(0,212,255,.15);border:1px solid var(--accent);border-radius:50%;color:var(--accent);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;backdrop-filter:blur(8px)}
+.play-btn:hover{background:var(--accent);color:#000;transform:scale(1.1)}
+.m-body{padding:18px}
+.m-title{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:14px;letter-spacing:.04em;line-height:1.4}
+.irow{display:flex;align-items:flex-start;gap:9px;padding:6px 0;border-bottom:1px solid var(--border2);font-size:.8rem}
+.irow:last-of-type{border-bottom:none}
+.ilbl{font-family:'Orbitron',monospace;font-size:.58rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;min-width:60px;padding-top:2px}
+.ival{color:var(--text2);line-height:1.5}
+.m-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;margin-top:12px;background:var(--border2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-family:'Orbitron',monospace;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:all .2s}
+.m-btn:hover{background:var(--accent);color:#000}
+.verr{padding:18px;text-align:center;color:var(--muted);font-size:.84rem;line-height:1.6}
+
+/* ══ AI CHAT ══ */
+#aiToggle{position:fixed;bottom:80px;right:20px;z-index:150;width:48px;height:48px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;cursor:pointer;box-shadow:0 4px 16px var(--shadow),0 0 18px var(--glow-p);transition:transform .2s}
+#aiToggle:hover{transform:scale(1.1)}
+#aiBox{position:fixed;bottom:138px;right:20px;z-index:150;width:310px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 46px var(--shadow),0 0 28px var(--glow-c);display:none;flex-direction:column;overflow:hidden}
+#aiBox.open{display:flex}
+.ai-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--border2)}
+.ai-hd h3{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
+.ai-cl{cursor:pointer;color:var(--muted);font-size:.95rem;transition:color .15s}
+.ai-cl:hover{color:var(--red)}
+#chatMsgs{padding:12px;max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+#chatMsgs::-webkit-scrollbar{width:3px}
+#chatMsgs::-webkit-scrollbar-thumb{background:var(--border)}
+.msg{max-width:84%;padding:7px 11px;border-radius:8px;font-size:.78rem;line-height:1.5}
+.msg.ai{background:var(--border2);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-radius:2px 8px 8px 8px}
+.msg.user{background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.22);color:var(--text);align-self:flex-end;border-radius:8px 2px 8px 8px}
+.ai-inp-w{display:flex;align-items:center;gap:6px;padding:9px 11px;border-top:1px solid var(--border)}
+#chatInp{flex:1;background:var(--border2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:.76rem;padding:6px 10px;outline:none;transition:border-color .15s}
+#chatInp:focus{border-color:var(--accent)}
+.ai-send{width:30px;height:30px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;flex-shrink:0;transition:transform .15s}
+.ai-send:hover{transform:scale(1.08)}
+
+/* ══ Tags ══ */
+.tag{font-family:'Orbitron',monospace;font-size:.57rem;font-weight:700;letter-spacing:.05em;padding:2px 6px;border-radius:3px;text-transform:uppercase}
+.t-on {background:rgba(255,77,109,.13);color:var(--red);border:1px solid rgba(255,77,109,.26)}
+.t-fin{background:rgba(16,255,160,.08);color:var(--green);border:1px solid rgba(16,255,160,.2)}
+.t-ep {background:rgba(139,92,246,.1);color:var(--accent2);border:1px solid rgba(139,92,246,.2)}
+.t-vi {background:var(--border2);color:var(--accent);border:1px solid var(--border)}
+
+/* Misc */
+.loading{text-align:center;padding:56px 20px;color:var(--muted);font-size:.84rem;grid-column:1/-1}
+.spinner{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-ico{font-size:2.4rem;margin-bottom:11px}
+.empty h3{font-family:'Orbitron',monospace;font-size:.88rem;color:var(--text);margin-bottom:6px}
+.empty p{font-size:.78rem}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ══ GAME ══ */
+.g-login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:60px 20px;text-align:center;}
+.g-login-ico{font-size:3.5rem}
+.g-login-title{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;color:var(--text);letter-spacing:.05em}
+.g-login-desc{font-size:.84rem;color:var(--muted);line-height:1.55;max-width:320px}
+.g-google-btn{display:flex;align-items:center;gap:12px;padding:13px 28px;background:#fff;border:none;border-radius:40px;font-size:.92rem;font-weight:700;color:#1f1f1f;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.g-google-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.g-google-btn svg{flex-shrink:0;width:22px;height:22px}
+.g-board{display:flex;flex-direction:column;gap:18px}
+.g-score-bar{display:flex;align-items:center;justify-content:space-between;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:14px 20px;}
+.g-score-side{display:flex;flex-direction:column;align-items:center;gap:4px}
+.g-score-name{font-size:.74rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-family:'Orbitron',monospace}
+.g-score-val{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;line-height:1}
+.g-score-val.player{color:var(--accent)}.g-score-val.cpu{color:var(--accent3)}
+.g-score-mid{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;text-align:center}
+.g-round-info{font-size:.78rem;color:var(--text);font-weight:600}
+.g-cards-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;}
+.g-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 6px 22px var(--shadow);transition:border-color .2s,box-shadow .2s;}
+.g-card.winner{border-color:var(--green);box-shadow:0 0 20px rgba(16,255,160,.25)}
+.g-card.loser{border-color:var(--red);opacity:.75}
+.g-card.draw-c{border-color:var(--gold)}
+.g-card-poster{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--surface);}
+.g-card-poster-ph{width:100%;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface);color:var(--border);}
+.g-card-body{padding:10px 12px}
+.g-card-title{font-family:'Orbitron',monospace;font-size:.76rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.g-card-stats{display:flex;flex-direction:column;gap:5px}
+.g-stat-row{display:flex;align-items:center;justify-content:space-between;font-size:.74rem;padding:5px 8px;border-radius:6px;background:var(--border2);cursor:pointer;border:1px solid transparent;transition:all .18s;}
+.g-stat-row:hover{border-color:var(--accent);background:rgba(0,212,255,.1)}
+.g-stat-row.chosen{border-color:var(--accent);background:rgba(0,212,255,.15);color:var(--accent)}
+.g-stat-row.win{border-color:var(--green);background:rgba(16,255,160,.1);color:var(--green)}
+.g-stat-row.lose{border-color:var(--red);background:rgba(255,77,109,.08);color:var(--red)}
+.g-stat-row.draw-s{border-color:var(--gold);background:rgba(251,191,36,.08);color:var(--gold)}
+.g-stat-lbl{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.g-stat-lbl.colored{color:inherit}
+.g-stat-val{font-family:'Orbitron',monospace;font-weight:700;font-size:.8rem}
+.g-vs-badge{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:var(--muted);letter-spacing:.1em;text-align:center;padding:8px 4px;}
+.g-card-owner{font-family:'Orbitron',monospace;font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;text-align:center;}
+.g-card-owner.you{color:var(--accent);background:rgba(0,212,255,.07);border-bottom:1px solid var(--border)}
+.g-card-owner.cpu-label{color:var(--accent3);background:rgba(240,171,252,.07);border-bottom:1px solid var(--border)}
+.g-choose-prompt{font-family:'Orbitron',monospace;font-size:.76rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);text-align:center;padding:10px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.15);border-radius:8px;}
+.g-round-result{text-align:center;padding:16px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.g-round-result.win{background:rgba(16,255,160,.08);border:1px solid rgba(16,255,160,.2)}
+.g-round-result.lose{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.2)}
+.g-round-result.draw-r{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2)}
+.g-rr-ico{font-size:2rem}
+.g-rr-text{font-family:'Orbitron',monospace;font-size:.88rem;font-weight:700;color:var(--text);letter-spacing:.04em}
+.g-rr-sub{font-size:.76rem;color:var(--muted)}
+.g-next-btn{padding:10px 28px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .18s;margin-top:4px;}
+.g-next-btn:hover{transform:translateY(-1px);box-shadow:0 5px 16px var(--glow-c)}
+.g-over{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 20px;}
+.g-over-ico{font-size:4rem}
+.g-over-title{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;color:var(--text);letter-spacing:.06em}
+.g-over-score{font-family:'Orbitron',monospace;font-size:1rem;color:var(--muted)}
+.g-over-score b{color:var(--accent)}
+.g-play-again{padding:12px 32px;background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;border-radius:8px;color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.g-play-again:hover{transform:translateY(-2px);box-shadow:0 6px 20px var(--glow-c)}
+.g-loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:.9rem}
+.guess-opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.guess-opt{padding:12px 10px;border-radius:10px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;line-height:1.3}
+.guess-opt:hover:not(.disabled):not(.correct):not(.wrong){border-color:var(--accent);background:rgba(0,212,255,.08);color:var(--accent)}
+.guess-opt.correct{background:rgba(52,211,153,.15);border-color:#34d399;color:#34d399}
+.guess-opt.wrong{background:rgba(239,68,68,.12);border-color:#ef4444;color:#ef4444}
+.guess-opt.disabled{opacity:.45;cursor:default}
+
+/* ══ ANILIST GLOBAL QIDIRUV ══ */
+#page-global .gl-search-wrap{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:10px;padding:0 16px;margin-bottom:16px;
+  box-shadow:0 3px 16px var(--shadow);transition:border-color .2s,box-shadow .2s;
+}
+#page-global .gl-search-wrap:focus-within{
+  border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 20px var(--glow-c);
+}
+#page-global .gl-search-wrap input{
+  flex:1;background:none;border:none;outline:none;color:var(--text);
+  font-family:'Exo 2',sans-serif;font-size:.9rem;padding:13px 0;
+}
+#page-global .gl-search-wrap input::placeholder{color:var(--muted)}
+.gl-search-btn{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;padding:8px 18px;border-radius:8px;
+  background:linear-gradient(90deg,var(--accent2),var(--accent));
+  border:none;color:#fff;font-family:'Orbitron',monospace;
+  font-size:.68rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.gl-search-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--glow-c)}
+.gl-search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* AniList connect banner */
+.al-connect-bar{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;margin-bottom:16px;
+}
+.al-connect-bar .al-logo{font-size:1.4rem;flex-shrink:0}
+.al-connect-bar .al-info{flex:1;min-width:0}
+.al-connect-bar .al-title{font-size:.82rem;font-weight:600;color:var(--text)}
+.al-connect-bar .al-sub{font-size:.72rem;color:var(--muted)}
+.al-connect-btn{
+  padding:7px 16px;border-radius:8px;
+  border:1px solid var(--accent);background:rgba(0,212,255,.08);
+  color:var(--accent);font-size:.72rem;font-weight:700;
+  cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;
+}
+.al-connect-btn:hover{background:var(--accent);color:#000}
+.al-connected-badge{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:20px;border:1px solid var(--green);
+  background:rgba(16,255,160,.07);
+  font-size:.72rem;font-weight:600;color:var(--green);
+  white-space:nowrap;flex-shrink:0;
+}
+
+/* AniList result grid */
+#glResultGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(var(--cw,196px),1fr));
+  gap:14px;
+}
+.al-card{
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+  box-shadow:0 5px 20px var(--shadow);
+  transition:border-color .22s,box-shadow .22s,transform .22s;
+  cursor:default;
+}
+.al-card:hover{
+  border-color:var(--accent);
+  box-shadow:0 10px 34px var(--shadow),0 0 20px var(--glow-c);
+  transform:translateY(-3px);
+}
+.al-card-img{
+  width:100%;aspect-ratio:3/4;object-fit:cover;
+  display:block;background:var(--surface);
+}
+.al-card-img-ph{
+  width:100%;aspect-ratio:3/4;display:flex;
+  align-items:center;justify-content:center;
+  font-size:2.4rem;background:var(--surface);color:var(--border);
+}
+.al-card-body{padding:10px 12px 12px}
+.al-card-title{
+  font-family:'Exo 2',sans-serif;font-size:.82rem;font-weight:700;
+  color:var(--text);line-height:1.3;margin-bottom:8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.al-card-meta{display:flex;flex-wrap:wrap;gap:5px}
+.al-badge{
+  font-family:'Orbitron',monospace;font-size:.55rem;font-weight:700;
+  letter-spacing:.06em;padding:3px 8px;border-radius:20px;
+  border:1px solid var(--border);color:var(--muted);text-transform:uppercase;
+}
+.al-badge.status-RELEASING{border-color:var(--red);color:var(--red)}
+.al-badge.status-FINISHED{border-color:var(--green);color:var(--green)}
+.al-badge.status-NOT_YET_RELEASED{border-color:var(--gold);color:var(--gold)}
+.al-score{
+  font-family:'Orbitron',monospace;font-size:.6rem;font-weight:900;
+  padding:3px 8px;border-radius:20px;
+  background:rgba(245,158,11,.15);border:1px solid var(--gold);color:var(--gold);
+}
+.al-airing{
+  margin-top:10px;padding:9px 10px;border-radius:9px;
+  border:1px solid rgba(245,158,11,.45);
+  background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(108,99,255,.08));
+}
+.al-airing-top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:.64rem;font-weight:800;color:var(--gold);
+  font-family:'Orbitron',monospace;letter-spacing:.04em;text-transform:uppercase;
+}
+.al-airing-date{
+  margin-top:4px;font-size:.68rem;color:var(--text2);line-height:1.35;
+}
+.al-countdown{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px;
+}
+.al-count-unit{
+  min-width:0;text-align:center;border:1px solid var(--border);
+  background:var(--surface);border-radius:7px;padding:5px 3px;
+}
+.al-count-num{
+  display:block;font-family:'Share Tech Mono','Orbitron',monospace;
+  font-size:.88rem;font-weight:700;color:var(--text);line-height:1;
+}
+.al-count-lbl{
+  display:block;margin-top:2px;font-size:.48rem;font-weight:800;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+}
+.al-airing-ended{
+  color:var(--green);font-size:.72rem;font-weight:700;margin-top:7px;
+}
+.gl-msg{
+  text-align:center;padding:40px 20px;color:var(--muted);
+  font-size:.85rem;line-height:1.7;
+}
+.gl-msg .gl-msg-ico{font-size:2.8rem;margin-bottom:12px}
+
+/* ══ SPLASH SCREEN ══ */
+#splash{position:fixed;inset:0;z-index:9999;background:#050510;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
+#splash.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.splash-logo-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.splash-logo-img{width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,255,.5);box-shadow:0 0 36px rgba(0,212,255,.6),0 0 72px rgba(139,92,246,.35);animation:splashPulse 2s ease-in-out infinite}
+.splash-logo-ph{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#00d4ff);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:#fff;border:2px solid rgba(0,212,255,.5);box-shadow:0 0 36px rgba(0,212,255,.6),0 0 72px rgba(139,92,246,.35);animation:splashPulse 2s ease-in-out infinite}
+.splash-ring{position:absolute;width:116px;height:116px;border-radius:50%;border:1.5px solid rgba(0,212,255,.25);animation:splashRing 2.5s linear infinite}
+.splash-ring2{position:absolute;width:140px;height:140px;border-radius:50%;border:1px solid rgba(139,92,246,.18);animation:splashRing 3.5s linear infinite reverse}
+@keyframes splashPulse{0%,100%{box-shadow:0 0 36px rgba(0,212,255,.6),0 0 72px rgba(139,92,246,.35)}50%{box-shadow:0 0 54px rgba(0,212,255,.9),0 0 100px rgba(139,92,246,.55)}}
+@keyframes splashRing{to{transform:rotate(360deg)}}
+.splash-name{font-family:'Orbitron',monospace;font-size:1.65rem;font-weight:900;color:#fff;letter-spacing:.14em;text-transform:uppercase;text-shadow:0 0 24px rgba(0,212,255,.8),0 0 48px rgba(139,92,246,.6);animation:spFadeUp .6s ease .15s both}
+.splash-sub{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:rgba(0,212,255,.65);letter-spacing:.2em;text-transform:uppercase;margin-top:6px;animation:spFadeUp .6s ease .3s both}
+.splash-bar-wrap{margin-top:34px;width:160px;height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;animation:spFadeUp .4s ease .5s both}
+.splash-bar{height:100%;width:0;background:linear-gradient(90deg,#8b5cf6,#00d4ff);border-radius:2px;animation:spLoad 1.9s cubic-bezier(.4,0,.2,1) .6s forwards}
+@keyframes spLoad{from{width:0}to{width:100%}}
+@keyframes spFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ══ HERO HEADER ══ */
+.hero-header{position:relative;overflow:hidden;padding:22px 20px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+[data-theme="futuristic"] .hero-header,[data-theme="cyber3d"] .hero-header{background:linear-gradient(135deg,rgba(4,4,18,.98),rgba(8,4,24,.95))}
+[data-theme="glass"] .hero-header{background:linear-gradient(135deg,rgba(200,210,255,.55),rgba(210,200,255,.45))}
+[data-theme="mirror"] .hero-header{background:linear-gradient(135deg,rgba(238,242,255,.75),rgba(228,236,255,.6))}
+.hero-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,var(--glow-p) 0%,transparent 55%),radial-gradient(ellipse at 85% 50%,var(--glow-c) 0%,transparent 55%);pointer-events:none}
+.hero-logo-wrap{position:relative;flex-shrink:0}
+.hero-logo-img{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);box-shadow:0 0 16px var(--glow-c),0 0 32px var(--glow-p)}
+.hero-logo-ph{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:1.7rem;font-weight:900;color:#fff;border:2px solid var(--accent);box-shadow:0 0 16px var(--glow-c)}
+.hero-logo-ph img,.splash-logo-ph img,.sidebar-head-icon img{width:100%;height:100%;border-radius:inherit;object-fit:cover;display:block}
+.hero-neon-ring{position:absolute;inset:-5px;border-radius:50%;border:1.5px solid var(--accent);opacity:.3;animation:heroRing 4s linear infinite}
+@keyframes heroRing{to{transform:rotate(360deg)}}
+.hero-info{flex:1;min-width:0;position:relative;z-index:1}
+.hero-bot-name{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;color:var(--text);letter-spacing:.07em;line-height:1.2;text-shadow:0 0 16px var(--glow-c)}
+.hero-bot-user{font-size:.68rem;color:var(--accent);letter-spacing:.1em;margin-top:2px;font-family:'Share Tech Mono',monospace}
+.hero-stats-row{display:flex;gap:16px;margin-top:9px;flex-wrap:wrap}
+.hero-stat-val{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:900;color:var(--accent);line-height:1}
+.hero-stat-lbl{font-size:.57rem;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;font-family:'Orbitron',monospace;margin-top:1px}
+.hero-tg-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;border-radius:18px;color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.hero-tg-btn:hover{transform:translateY(-2px);box-shadow:0 5px 18px var(--glow-c)}
+
+/* ══ GALLERY PAGE ══ */
+#galGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--cw,170px),1fr));gap:12px}
+.gal-card{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--card-bg);box-shadow:0 5px 20px var(--shadow);transition:all .22s;cursor:pointer}
+.gal-card:hover{border-color:var(--accent);box-shadow:0 10px 34px var(--shadow),0 0 18px var(--glow-c);transform:translateY(-3px)}
+.gal-img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--surface)}
+.gal-img-ph{width:100%;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface);color:var(--border)}
+.gal-overlay{position:absolute;bottom:0;left:0;right:0;padding:32px 8px 8px;background:linear-gradient(transparent,rgba(0,0,0,.88))}
+.gal-title{font-family:'Orbitron',monospace;font-size:.58rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gal-actions{display:flex;gap:4px}
+.ga-btn{flex:1;height:24px;border-radius:5px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.5);color:#fff;font-size:.68rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:2px;transition:all .15s;backdrop-filter:blur(4px);font-family:'Orbitron',monospace;font-size:.46rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.ga-btn:hover{transform:scale(1.06)}
+.ga-btn.liked{background:rgba(236,72,153,.3);border-color:rgba(236,72,153,.5);color:#fda4af}
+.ga-btn.saved{background:rgba(0,212,255,.2);border-color:rgba(0,212,255,.45);color:#67e8f9}
+.gal-badge{position:absolute;top:7px;left:7px;font-family:'Orbitron',monospace;font-size:.48rem;font-weight:700;padding:2px 6px;border-radius:3px;text-transform:uppercase;backdrop-filter:blur(4px)}
+.gal-badge.on{background:rgba(239,68,68,.25);border:1px solid rgba(239,68,68,.45);color:#fca5a5}
+.gal-badge.fin{background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.35);color:#6ee7b7}
+
+/* ══ CARD SAVE/LIKE inline buttons ══ */
+.card-action-bar{position:absolute;bottom:0;left:0;right:0;display:flex;gap:4px;padding:6px 6px;background:linear-gradient(transparent,rgba(0,0,0,.8));opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
+.card-wrap:hover .card-action-bar,.card-wrap:focus-within .card-action-bar{opacity:1;pointer-events:all}
+.ca-btn{flex:1;height:24px;border-radius:4px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.5);color:#fff;font-size:.68rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:2px;transition:all .15s;backdrop-filter:blur(4px);font-family:'Orbitron',monospace;font-size:.46rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.ca-btn:hover{transform:scale(1.06)}
+.ca-btn.liked{background:rgba(236,72,153,.3);border-color:rgba(236,72,153,.5);color:#fda4af}
+.ca-btn.saved{background:rgba(0,212,255,.2);border-color:rgba(0,212,255,.45);color:#67e8f9}
+.cf{position:relative}
+
+/* ══ PROFILE PAGE ══ */
+.profile-wrap{display:flex;flex-direction:column;gap:16px;max-width:640px}
+.prof-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 6px 24px var(--shadow)}
+.prof-cover{height:84px;background:linear-gradient(135deg,var(--accent2),var(--accent));position:relative}
+.prof-cover::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 84' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='20' r='60' fill='rgba(255,255,255,.05)'/%3E%3Ccircle cx='270' cy='70' r='80' fill='rgba(255,255,255,.04)'/%3E%3C/svg%3E")}
+.prof-av-wrap{position:relative;margin:-34px 0 0 18px;z-index:1;width:68px}
+.prof-av{width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--card-bg);box-shadow:0 4px 14px var(--shadow)}
+.prof-av-ph{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:3px solid var(--card-bg)}
+.prof-body{padding:8px 18px 18px}
+.prof-name{font-family:'Orbitron',monospace;font-size:.92rem;font-weight:900;color:var(--text);letter-spacing:.04em}
+.prof-email{font-size:.7rem;color:var(--muted);margin-top:2px}
+.prof-stats-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.prof-stat{background:var(--border2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:2px;flex:1;min-width:70px;text-align:center}
+.prof-stat-val{font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:var(--accent)}
+.prof-stat-lbl{font-size:.55rem;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;font-family:'Orbitron',monospace}
+.prof-logout-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 18px;background:transparent;border:1px solid var(--red);border-radius:20px;color:var(--red);font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .18s;margin-top:10px}
+.prof-logout-btn:hover{background:rgba(239,68,68,.1)}
+.prof-login-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:44px 20px;text-align:center;background:var(--card-bg);border:1px solid var(--border);border-radius:14px}
+.prof-login-ico{font-size:2.8rem}
+.prof-login-title{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;color:var(--text);letter-spacing:.05em}
+.prof-login-desc{font-size:.77rem;color:var(--muted);line-height:1.55;max-width:280px}
+.prof-google-btn{display:flex;align-items:center;gap:10px;padding:11px 22px;background:#fff;border:none;border-radius:40px;font-size:.85rem;font-weight:700;color:#1f1f1f;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.prof-google-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.prof-google-btn svg{flex-shrink:0;width:18px;height:18px}
+.prof-spotify-btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 18px;background:#1ed760;border:none;border-radius:40px;font-size:.8rem;font-weight:800;color:#07100a;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(30,215,96,.22);text-decoration:none}
+.prof-spotify-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(30,215,96,.32)}
+.prof-spotify-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(30,215,96,.45)}
+.prof-sec-title{font-family:'Orbitron',monospace;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 16px;border-bottom:1px solid var(--border);background:var(--border2)}
+.prof-anime-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px;padding:12px}
+.prof-anime-item{border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--card-bg);cursor:pointer;transition:all .18s;position:relative}
+.prof-anime-item:hover{border-color:var(--accent);transform:translateY(-2px)}
+.prof-anime-img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--surface)}
+.prof-anime-label{font-family:'Orbitron',monospace;font-size:.52rem;font-weight:700;color:var(--text);padding:4px 6px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.prof-anime-rm{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:4px;background:rgba(0,0,0,.65);border:none;color:#fff;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:2}
+.prof-empty{text-align:center;padding:24px;color:var(--muted);font-size:.78rem;grid-column:1/-1}
+
+/* ══ BOTTOM NAV — ixcham 5 ta ══ */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--nav-bg);border-top:1px solid var(--border);backdrop-filter:blur(20px);padding:4px 0 max(4px,env(safe-area-inset-bottom))}
+.bnav-inner{display:flex;justify-content:space-around}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 8px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:color .18s;flex:1}
+.bnav-item.active{color:var(--accent)}
+.bn-ico{font-size:1.2rem;line-height:1}
+.bn-lbl{font-family:'Orbitron',monospace;font-size:.44rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+@media(max-width:768px){
+  .sidebar,.sidebar-arrow{display:none}
+  .main{margin-left:0!important}
+  .topbar{padding:0 14px;height:52px}
+  .content{padding:0 0 74px}
+  #animeGrid{grid-template-columns:repeat(auto-fill,minmax(var(--cw,140px),1fr));gap:10px;padding:12px}
+  .page-header,.search-wrap,.filters,.result-bar,.settings-page,.report-page,.stats-page,.al-connect-bar,.gl-search-wrap,.profile-wrap{padding-left:12px;padding-right:12px}
+  .page-header{padding-top:14px}
+  .bottom-nav{display:block}
+  #aiToggle{bottom:80px;right:13px}
+  #aiBox{right:13px;width:calc(100vw - 26px);bottom:136px}
+  .pills{max-width:160px}
+  .hero-header{padding:16px 14px 14px;gap:12px}
+  .hero-bot-name{font-size:1rem}
+  #galGrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:12px}
+  .prof-anime-grid{padding:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH SCREEN ══ -->
+<div id="splash">
+  <div class="splash-logo-wrap">
+    <div class="splash-ring"></div>
+    <div class="splash-ring2"></div>
+    <div class="splash-logo-ph" id="splashLogoEl">A</div>
+  </div>
+  <div class="splash-name" id="splashBotName">ANIMEUZ</div>
+  <div class="splash-sub" id="splashBotUser">@anime_uz_official_bot</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+</div>
+
+<canvas id="bg3d"></canvas>
+<div id="portalFx"></div>
+<div id="portalFlash"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-arrow" id="sideArrow" onclick="toggleSidebar()">❯</div>
+  <div class="sidebar-head">
+    <div class="sidebar-head-icon" id="sideLogoEl">A</div>
+    <span class="sidebar-head-title" id="sideBotName">ANIMEUZ</span>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="snav active" onclick="showPage('animes',this)">
+      <span class="snav-ico">🎬</span><span class="snav-txt">Animelar</span>
+      <span class="snav-badge" id="sideCount">0</span>
+    </button>
+    <button class="snav" onclick="showPage('gallery',this)">
+      <span class="snav-ico">🖼️</span><span class="snav-txt">Gallery</span>
+    </button>
+    <button class="snav" onclick="showPage('admins',this)">
+      <span class="snav-ico">👑</span><span class="snav-txt">Adminlar</span>
+    </button>
+    <button class="snav" onclick="showPage('global',this)">
+      <span class="snav-ico">🌐</span><span class="snav-txt">Global Qidiruv</span>
+    </button>
+    <button class="snav" onclick="showPage('stats',this)">
+      <span class="snav-ico">📊</span><span class="snav-txt">Statistika</span>
+    </button>
+    <div class="sdivider"></div>
+    <button class="snav" onclick="showPage('game',this)">
+      <span class="snav-ico">🃏</span><span class="snav-txt">Karta Jangi</span>
+    </button>
+    <button class="snav" onclick="showPage('report',this)">
+      <span class="snav-ico">📩</span><span class="snav-txt">Shikoyat / Taklif</span>
+    </button>
+    <button class="snav" onclick="showPage('profile',this)">
+      <span class="snav-ico">👤</span><span class="snav-txt">Profil</span>
+    </button>
+    <button class="snav" onclick="showPage('settings',this)">
+      <span class="snav-ico">⚙️</span><span class="snav-txt">Sozlamalar</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="snav" onclick="toggleAi()" style="display:none">
+      <span class="snav-ico">🤖</span><span class="snav-txt">AI Yordamchi</span>
+    </button>
+  </div>
+</aside>
+
+<div class="main" id="mainEl">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topTitle">Animelar</div>
+      <div class="breadcrumb" id="topSub">10 ta anime</div>
+    </div>
+    <div class="topbar-right">
+      <button class="tbtn" onclick="showPage('report',null)" title="Shikoyat">📩</button>
+      <button class="tbtn" onclick="showPage('settings',null)" title="Sozlamalar">⚙️</button>
+      <button class="tbtn" onclick="toggleAi()" title="AI" style="display:none">🤖</button>
+      <div id="topbar-auth">
+        <button id="topbar-login-btn" class="tbtn" onclick="topbarLogin()" title="Google bilan kirish" style="display:none;align-items:center;gap:5px;font-size:.7rem;padding:5px 10px;border-radius:20px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent);font-weight:600;white-space:nowrap">
+          <svg width="14" height="14" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Kirish
+        </button>
+        <div id="topbar-user" style="display:none;align-items:center;gap:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:40px;padding:4px 10px 4px 4px;cursor:pointer" onclick="showPage('profile',null)" title="Profil sahifasi">
+          <img id="topbar-avatar" style="width:26px;height:26px;border-radius:50%;object-fit:cover" src="" alt="">
+          <span id="topbar-uname" style="font-size:.75rem;font-weight:600;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+          <button onclick="event.stopPropagation();topbarLogout()" style="font-size:.65rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:0 0 0 2px">✕</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- 🎬 ANIMELAR -->
+    <div class="page active" id="page-animes">
+      <!-- HERO HEADER -->
+      <div class="hero-header" id="heroHeader">
+        <div class="hero-logo-wrap">
+          <div class="hero-neon-ring"></div>
+          <div class="hero-logo-ph" id="heroLogoEl">A</div>
+        </div>
+        <div class="hero-info">
+          <div class="hero-bot-name" id="heroBotName">ANIMEUZ</div>
+          <div class="hero-bot-user" id="heroBotUser">@anime_uz_official_bot</div>
+          <div class="hero-stats-row">
+            <div>
+              <div class="hero-stat-val" id="heroUsers">—</div>
+              <div class="hero-stat-lbl">Foydalanuvchi</div>
+            </div>
+            <div>
+              <div class="hero-stat-val" id="heroAnimes">—</div>
+              <div class="hero-stat-lbl">Anime</div>
+            </div>
+            <div>
+              <div class="hero-stat-val" id="heroOnline" style="color:var(--green)">●</div>
+              <div class="hero-stat-lbl">Online</div>
+            </div>
+          </div>
+        </div>
+        <a class="hero-tg-btn" id="heroTgBtn" href="https://t.me/anime_uz_official_bot" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+          Botga o'tish
+        </a>
+      </div>
+      <div style="padding:14px 14px 0">
+      <div class="page-header" style="margin-bottom:10px">
+        <div class="page-title-block">
+          <div class="page-title">🎬 Animelar</div>
+          <div class="page-subtitle">Barcha anime sarlavhalar</div>
+        </div>
+      </div>
+      <div class="search-wrap" style="margin:0 14px 10px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Anime nomini kiriting..." autocomplete="off">
+      </div>
+      <div class="filters" style="padding:0 14px">
+        <button class="filter-btn active" data-filter="all">Barchasi</button>
+        <button class="filter-btn" data-filter="ongoing">OnGoing 🔴</button>
+        <button class="filter-btn" data-filter="completed">Tugallangan ✅</button>
+        <button class="filter-btn" data-filter="top">Top 👁</button>
+        <button class="filter-btn" data-filter="new">Yangi ⚡</button>
+        <button class="filter-btn" data-filter="age0">👶 0+</button>
+        <button class="filter-btn" data-filter="age7">🧒 7+</button>
+        <button class="filter-btn" data-filter="age13">👦 13+</button>
+        <button class="filter-btn" data-filter="age16">🧑 16+</button>
+        <button class="filter-btn" data-filter="age18">🔞 18+</button>
+      </div>
+      <div class="result-bar" style="padding:0 14px">Ko'rsatilmoqda: <b id="resultCount">0</b> ta</div>
+      <div id="animeGrid" style="padding:0 14px 14px"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+      </div>
+    </div>
+
+    <!-- 👑 ADMINLAR -->
+    <div class="page" id="page-admins">
+      <div class="page-header">
+        <div class="page-title-block">
+          <div class="page-title">👑 Adminlar</div>
+          <div class="page-subtitle">Bot va sayt boshqaruvchilari</div>
+        </div>
+      </div>
+      <div class="admin-grid" id="adminGrid"></div>
+    </div>
+
+    <!-- 📊 STATISTIKA -->
+    <div class="page" id="page-stats">
+      <div class="page-header">
+        <div class="page-title-block">
+          <div class="page-title">📊 Statistika</div>
+          <div class="page-subtitle">Bot faoliyat ko'rsatkichlari</div>
+        </div>
+      </div>
+      <div class="stats-page">
+        <div class="stat-grid" id="statGrid"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+        <div class="sec-title">⬡ Umumiy taqqoslash</div>
+        <div class="chart-box"><canvas id="actChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 📩 SHIKOYAT -->
+    <div class="page" id="page-report">
+      <div class="page-header">
+        <div class="page-title-block">
+          <div class="page-title">📩 Shikoyat / Taklif</div>
+          <div class="page-subtitle">Xabaringiz adminga yetkaziladi</div>
+        </div>
+      </div>
+      <div class="report-page">
+        <div class="report-info">
+          <div class="ri-icon">💬</div>
+          <div class="ri-text">
+            <h3>Murojaat qiling</h3>
+            <p>Shikoyat, taklif yoki xatolik haqida xabar yuboring. Super admin tez orada ko'rib chiqadi.</p>
+          </div>
+        </div>
+        <div class="report-form">
+          <div class="rf-title">📝 Murojaat shakli</div>
+          <div class="rf-body">
+            <div>
+              <label class="rf-label">Murojaat turi</label>
+              <div class="rf-type-row">
+                <button class="rf-type-btn sel" onclick="selectType(this,'bug')">🐛 Xatolik</button>
+                <button class="rf-type-btn" onclick="selectType(this,'suggestion')">💡 Taklif</button>
+                <button class="rf-type-btn" onclick="selectType(this,'complaint')">😤 Shikoyat</button>
+                <button class="rf-type-btn" onclick="selectType(this,'other')">📌 Boshqa</button>
+              </div>
+            </div>
+            <div>
+              <label class="rf-label">Isming (ixtiyoriy)</label>
+              <input type="text" class="rf-input" id="rName" placeholder="Ismingizni kiriting...">
+            </div>
+            <div>
+              <label class="rf-label">Telegram username (ixtiyoriy)</label>
+              <input type="text" class="rf-input" id="rUsername" placeholder="@username">
+            </div>
+            <div>
+              <label class="rf-label">Xabar *</label>
+              <textarea class="rf-textarea" id="rMsg" placeholder="Muammo yoki taklifingizni batafsil yozing..." maxlength="800" oninput="updateChar()"></textarea>
+              <div class="rf-char"><span id="rCharCount">0</span>/800</div>
+            </div>
+            <button class="rf-send" id="rSendBtn" onclick="sendReport()">🚀 Yuborish</button>
+          </div>
+        </div>
+        <div class="rf-success" id="rSuccess">
+          <div class="rf-success-ico">✅</div>
+          <h3>Muvaffaqiyatli yuborildi!</h3>
+          <p>Xabaringiz super adminga yetkazildi.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎮 O'YINLAR -->
+    <div class="page" id="page-game">
+      <div class="page-hd">
+        <div><div class="page-title">🎮 O'yinlar</div><div class="page-sub">Google bilan kiring va o'ynang</div></div>
+        <div id="game-user-badge" style="display:none;align-items:center;gap:10px;background:var(--card-bg);border:1px solid var(--border);border-radius:40px;padding:6px 14px 6px 8px">
+          <img id="game-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover" src="" alt="">
+          <span id="game-uname" style="font-size:.84rem;font-weight:600;color:var(--text)"></span>
+          <button onclick="gameLogout()" style="font-size:.7rem;color:var(--muted);background:none;border:none;cursor:pointer;padding-left:4px">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 0 14px 0;border-bottom:1px solid var(--border);margin-bottom:16px">
+        <button id="gtab-card" onclick="switchGameTab('card')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#000;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s">🃏 Karta Jangi</button>
+        <button id="gtab-guess" onclick="switchGameTab('guess')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card-bg);color:var(--muted);font-weight:600;font-size:.8rem;cursor:pointer;transition:all .2s">🎯 Anime Taxminlash</button>
+      </div>
+      <div id="game-root"></div>
+      <div id="guess-root" style="display:none"></div>
+    </div>
+
+    <!-- 🌐 GLOBAL QIDIRUV (AniList) -->
+    <div class="page" id="page-global">
+      <div class="page-header">
+        <div class="page-title-block">
+          <div class="page-title">🌐 Global Qidiruv</div>
+          <div class="page-subtitle">AniList orqali dunyo bo'yicha anime qidiring</div>
+        </div>
+      </div>
+
+      <!-- AniList ulanish banneri -->
+      <div class="al-connect-bar" id="alConnectBar">
+        <div class="al-logo">🟦</div>
+        <div class="al-info">
+          <div class="al-title">AniList hisobini ulang</div>
+          <div class="al-sub">Shaxsiy ro'yxat va reytinglar uchun</div>
+        </div>
+        <button class="al-connect-btn" id="alConnectBtn" onclick="anilistConnect()">Ulash</button>
+      </div>
+
+      <!-- Qidiruv satri -->
+      <div class="gl-search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="glSearchInput" placeholder="Anime nomini kiriting (inglizcha yoki yaponcha)..." autocomplete="off"
+               onkeydown="if(event.key==='Enter')glSearch()">
+        <button class="gl-search-btn" id="glSearchBtn" onclick="glSearch()">🔍 Qidirish</button>
+      </div>
+
+      <div class="result-bar" id="glResultBar" style="display:none">
+        Natijalar: <b id="glResultCount">0</b> ta
+      </div>
+
+      <!-- Natijalar grid -->
+      <div id="glResultGrid">
+        <div class="gl-msg">
+          <div class="gl-msg-ico">🔍</div>
+          <div>Anime nomini kiriting va qidiring.<br>
+          AniList ma'lumotlar bazasidan <b>natijalar</b> ko'rinadi.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🖼️ GALLERY -->
+    <div class="page" id="page-gallery">
+      <div class="page-header" style="padding:14px 14px 0">
+        <div class="page-title-block">
+          <div class="page-title">🖼️ Gallery</div>
+          <div class="page-subtitle">Barcha anime posterlari</div>
+        </div>
+      </div>
+      <div class="filters" style="padding:8px 14px 0" id="galFilters">
+        <button class="filter-btn active" data-gf="all">Barchasi</button>
+        <button class="filter-btn" data-gf="ongoing">OnGoing 🔴</button>
+        <button class="filter-btn" data-gf="completed">Tugallangan ✅</button>
+        <button class="filter-btn" data-gf="saved">💾 Saqlangan</button>
+        <button class="filter-btn" data-gf="liked">❤️ Yoqtirilgan</button>
+      </div>
+      <div id="galGrid" style="padding:10px 14px 14px"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+    </div>
+
+    <!-- 👤 PROFIL -->
+    <div class="page" id="page-profile">
+      <div style="padding:14px">
+        <div id="profileContent"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+      </div>
+    </div>
+
+    <!-- ⚙️ SOZLAMALAR -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title-block">
+          <div class="page-title">⚙️ Sozlamalar</div>
+          <div class="page-subtitle">Interfeys sozlamalari</div>
+        </div>
+      </div>
+      <div class="settings-page">
+        <div class="sgrp">
+          <div class="sgrp-title">🎨 Ko'rinish</div>
+          <div class="srow">
+            <div class="srow-l"><div class="srow-label">Tema</div><div class="srow-desc">Sayt rang sxemasini tanlang</div></div>
+            <div class="pills">
+              <button class="pill" id="th-glass"      onclick="setTheme('glass',this)">Glass</button>
+              <button class="pill" id="th-futuristic" onclick="setTheme('futuristic',this)">Futuristik</button>
+              <button class="pill" id="th-cyber3d"    onclick="setTheme('cyber3d',this)">3D</button>
+              <button class="pill" id="th-mirror"     onclick="setTheme('mirror',this)">Mirror</button>
+            </div>
+          </div>
+          <div class="srow">
+            <div class="srow-l">
+              <div class="srow-label">🪞 Mirror rejimi</div>
+              <div class="srow-desc">Old kamera bilan oynadek ko'rinish</div>
+            </div>
+            <div class="mirror-wrap">
+              <div class="mirror-note" id="mirrorNote">
+                <b>Xotirjam bo'ling:</b> kamera faqat shu sahifada preview uchun ishlaydi,
+                video hech qayerga yuborilmaydi va saqlanmaydi.
+              </div>
+              <div class="mirror-cam-box">
+                <video id="mirrorCam" class="mirror-cam" playsinline muted autoplay></video>
+                <div class="mirror-placeholder" id="mirrorPlaceholder">
+                  Mirror tema yoqilganda old kamerani xavfsiz tarzda ulashingiz mumkin.
+                </div>
+              </div>
+              <div class="mirror-actions">
+                <button class="mirror-btn primary" id="mirrorStartBtn" onclick="startMirrorCamera()">🔓 Kameraga ruxsat berish</button>
+                <button class="mirror-btn" id="mirrorStopBtn" onclick="stopMirrorCamera()" style="display:none">⏹ Kamerani to'xtatish</button>
+              </div>
+            </div>
+          </div>
+          <div class="srow">
+            <div class="srow-l"><div class="srow-label">Fon animatsiyasi</div><div class="srow-desc">3D shakllar</div></div>
+            <label class="tog"><input type="checkbox" id="togBg" onchange="setBg(this.checked)"><span class="tog-sl"></span></label>
+          </div>
+        </div>
+        <div class="sgrp">
+          <div class="sgrp-title">🃏 Kartalar</div>
+          <div class="srow">
+            <div class="srow-l"><div class="srow-label">Aylanish tezligi</div><div class="srow-desc">Karta flip animatsiyasi</div></div>
+            <div class="pills">
+              <button class="pill" id="sp-5"  onclick="setSpin(5,this)">Tez</button>
+              <button class="pill" id="sp-9"  onclick="setSpin(9,this)">O'rta</button>
+              <button class="pill" id="sp-16" onclick="setSpin(16,this)">Sekin</button>
+              <button class="pill" id="sp-0"  onclick="setSpin(0,this)">O'chir</button>
+            </div>
+          </div>
+          <div class="srow">
+            <div class="srow-l"><div class="srow-label">Karta o'lchami</div><div class="srow-desc">Grid katakcha kengligi</div></div>
+            <div class="pills">
+              <button class="pill" id="cw-150" onclick="setCard(150,this)">Kichik</button>
+              <button class="pill" id="cw-196" onclick="setCard(196,this)">O'rta</button>
+              <button class="pill" id="cw-260" onclick="setCard(260,this)">Katta</button>
+            </div>
+          </div>
+        </div>
+        <div class="sgrp">
+          <div class="sgrp-title">🌐 Til</div>
+          <div class="srow">
+            <div class="srow-l"><div class="srow-label">Interfeys tili</div><div class="srow-desc">Hozircha O'zbek to'liq qo'llab-quvvatlanadi</div></div>
+            <div class="pills">
+              <button class="pill" id="lg-uz" onclick="setLang('uz',this)">UZ</button>
+              <button class="pill" id="lg-ru" onclick="setLang('ru',this)">RU</button>
+              <button class="pill" id="lg-en" onclick="setLang('en',this)">EN</button>
+            </div>
+          </div>
+        </div>
+        <div class="sgrp">
+          <div class="sgrp-title">🔍 Boshlang'ich filtr</div>
+          <div class="srow">
+            <div class="srow-l"><div class="srow-label">Sahifa ochilganda</div><div class="srow-desc">Qaysi animelar birinchi</div></div>
+            <div class="pills">
+              <button class="pill" id="df-all"     onclick="setDef('all',this)">Barchasi</button>
+              <button class="pill" id="df-ongoing" onclick="setDef('ongoing',this)">OnGoing</button>
+              <button class="pill" id="df-top"     onclick="setDef('top',this)">Top</button>
+              <button class="pill" id="df-new"     onclick="setDef('new',this)">Yangi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV — 5 ta ixcham -->
+<nav class="bottom-nav">
+  <div class="bnav-inner">
+    <button class="bnav-item active" onclick="showPage('animes',this)"><span class="bn-ico">🎬</span><span class="bn-lbl">Anime</span></button>
+    <button class="bnav-item" onclick="showPage('gallery',this)"><span class="bn-ico">🖼️</span><span class="bn-lbl">Gallery</span></button>
+    <button class="bnav-item" onclick="showPage('game',this)"><span class="bn-ico">🃏</span><span class="bn-lbl">O'yin</span></button>
+    <button class="bnav-item" onclick="showPage('global',this)"><span class="bn-ico">🌐</span><span class="bn-lbl">Global</span></button>
+    <button class="bnav-item" onclick="showPage('profile',this)"><span class="bn-ico">👤</span><span class="bn-lbl">Profil</span></button>
+  </div>
+</nav>
+
+<div id="aiToggle" onclick="toggleAi()">🤖</div>
+<div id="aiBox">
+  <div class="ai-hd"><h3>✦ AI Yordamchi</h3><div class="ai-cl" onclick="toggleAi()">✕</div></div>
+  <div id="chatMsgs"><div class="msg ai">Salom! Animelar haqida savol bering 👋</div></div>
+  <div class="ai-inp-w">
+    <input type="text" id="chatInp" placeholder="Savolingiz..." onkeydown="if(event.key==='Enter')sendAi()">
+    <div class="ai-send" onclick="sendAi()">🚀</div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="mcl" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ── THREE.JS BG ──
+(function(){
+  if(typeof THREE==='undefined'){console.warn('THREE.js not loaded – skipping 3D background.');return;}
+  const c=document.getElementById('bg3d');
+  const r=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});
+  r.setPixelRatio(Math.min(devicePixelRatio,1.5));r.setSize(innerWidth,innerHeight);
+  const s=new THREE.Scene(),cam=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,1000);
+  cam.position.z=26;
+  const mk=(g,col,o)=>new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:col,wireframe:true,transparent:true,opacity:o}));
+  const i1=mk(new THREE.IcosahedronGeometry(9,1),0x00d4ff,.08),i2=mk(new THREE.IcosahedronGeometry(5.5,0),0x8b5cf6,.09);
+  s.add(i1,i2);
+  const geos=[new THREE.TetrahedronGeometry(.8),new THREE.OctahedronGeometry(.7),new THREE.BoxGeometry(1,1,1),new THREE.IcosahedronGeometry(.6,0)];
+  const cols=[0x00d4ff,0x8b5cf6,0xf0abfc,0x10ffa0];
+  Array.from({length:22},(_,i)=>{
+    const m=mk(geos[i%4],cols[i%4],.06+Math.random()*.09);
+    const rr=14+Math.random()*20,t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);
+    m.position.set(rr*Math.sin(p)*Math.cos(t),rr*Math.sin(p)*Math.sin(t),rr*Math.cos(p)-10);
+    m.userData={sx:(Math.random()-.5)*.009,sy:(Math.random()-.5)*.009};s.add(m);return m;
+  });
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{mx=(e.clientX/innerWidth-.5)*.016;my=(e.clientY/innerHeight-.5)*.016;});
+  const smalls=[...s.children].slice(2);
+  (function a(){
+    requestAnimationFrame(a);
+    i1.rotation.x+=.0017+mx*.35;i1.rotation.y+=.0026+my*.35;
+    i2.rotation.x-=.0022;i2.rotation.y-=.0016;
+    smalls.forEach(m=>{m.rotation.x+=m.userData.sx;m.rotation.y+=m.userData.sy;});
+    r.render(s,cam);
+  })();
+  window.addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+})();
+
+// ── SETTINGS ──
+const LS=k=>localStorage.getItem('az_'+k);
+const LSS=(k,v)=>localStorage.setItem('az_'+k,v);
+let S={theme:LS('theme')||'glass',bg:LS('bg')!=='off',spin:+LS('spin')||9,card:+LS('card')||196,def:LS('def')||'all',lang:LS('lang')||'uz'};
+document.documentElement.setAttribute('data-theme',S.theme);
+updateBrowserThemeColor(S.theme);
+document.documentElement.style.setProperty('--sd',S.spin===0?'99999s':S.spin+'s');
+document.documentElement.style.setProperty('--cw',S.card+'px');
+window.addEventListener('DOMContentLoaded',syncUI);
+let _mirrorStream=null;
+
+function updateBrowserThemeColor(theme){
+  const color='#6b3f24';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',color);
+  document.querySelector('meta[name="msapplication-TileColor"]')?.setAttribute('content',color);
+}
+function syncUI(){
+  ['glass','futuristic','cyber3d','mirror'].forEach(t=>document.getElementById('th-'+t)?.classList.toggle('on',S.theme===t));
+  const bg=document.getElementById('togBg');if(bg)bg.checked=S.bg;
+  [5,9,16,0].forEach(v=>document.getElementById('sp-'+v)?.classList.toggle('on',S.spin===v));
+  [150,196,260].forEach(v=>document.getElementById('cw-'+v)?.classList.toggle('on',S.card===v));
+  ['all','ongoing','top','new'].forEach(v=>document.getElementById('df-'+v)?.classList.toggle('on',S.def===v));
+  ['uz','ru','en'].forEach(v=>document.getElementById('lg-'+v)?.classList.toggle('on',S.lang===v));
+  updateMirrorHint();
+}
+function syncSettingsUI(){syncUI();}
+function setTheme(t,b){
+  S.theme=t;LSS('theme',t);document.documentElement.setAttribute('data-theme',t);hiPill('th-',['glass','futuristic','cyber3d','mirror'],t);
+  updateBrowserThemeColor(t);
+  if(t!=='mirror')stopMirrorCamera(true);
+  updateMirrorHint();
+}
+function setBg(on){S.bg=on;LSS('bg',on?'on':'off');document.getElementById('bg3d').style.opacity=on?'':'0';}
+function setSpin(v,b){S.spin=v;LSS('spin',v);document.documentElement.style.setProperty('--sd',v===0?'99999s':v+'s');hiPill('sp-',[5,9,16,0],v);}
+function setCard(v,b){S.card=v;LSS('card',v);document.documentElement.style.setProperty('--cw',v+'px');hiPill('cw-',[150,196,260],v);}
+function setDef(v,b){S.def=v;LSS('def',v);hiPill('df-',['all','ongoing','top','new'],v);}
+function setLang(v,b){S.lang=v;LSS('lang',v);hiPill('lg-',['uz','ru','en'],v);}
+function hiPill(prefix,vals,active){vals.forEach(v=>{const el=document.getElementById(prefix+v);if(el)el.classList.toggle('on',v===active);});}
+
+function updateMirrorHint(){
+  const note=document.getElementById('mirrorNote');
+  const ph=document.getElementById('mirrorPlaceholder');
+  if(!note||!ph)return;
+  if(S.theme==='mirror'){
+    if(_mirrorStream){
+      note.innerHTML="<b>Mirror faol:</b> xohlagan payt kamerani to'xtatishingiz mumkin.";
+      ph.style.display='none';
+    }else{
+      note.innerHTML="<b>Xotirjam bo'ling:</b> ruxsat bersangiz ham video faqat shu oynada ko'rinadi, saqlanmaydi va serverga yuborilmaydi.";
+      ph.style.display='flex';
+      ph.textContent="Mirror tema yoqildi. Tayyor bo'lsangiz, pastdagi tugma orqali old kamerani yoqing.";
+    }
+  }else{
+    note.innerHTML="<b>Mirror rejimi:</b> avval temani Mirror ga o'tkazing, keyin kamerani yoqsangiz bo'ladi.";
+    ph.style.display='flex';
+    ph.textContent="Old kamerani ishga tushirishdan oldin Mirror temani tanlang.";
+  }
+}
+
+async function startMirrorCamera(){
+  if(S.theme!=='mirror'){
+    alert("Avval temani Mirror ga o'tkazing.");
+    return;
+  }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    alert("Bu qurilmada kamera API qo'llab-quvvatlanmaydi.");
+    return;
+  }
+  if(location.protocol!=='https:'&&location.hostname!=='localhost'){
+    alert("Kamera uchun HTTPS kerak (yoki localhost).");
+    return;
+  }
+  const cam=document.getElementById('mirrorCam');
+  const ph=document.getElementById('mirrorPlaceholder');
+  const st=document.getElementById('mirrorStartBtn');
+  const sp=document.getElementById('mirrorStopBtn');
+  if(!cam||!ph||!st||!sp)return;
+
+  st.disabled=true;
+  st.textContent="⏳ Kamera ulanmoqda...";
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+    _mirrorStream=stream;
+    // Ruxsat qaytarib olinganda (yoki kamera uzilganda) stream tugaydi
+    const track = stream.getVideoTracks && stream.getVideoTracks()[0];
+    if(track){
+      track.onended = () => {
+        const ph=document.getElementById('mirrorPlaceholder');
+        if(ph){
+          ph.style.display='flex';
+          ph.textContent="Kamera ruxsati bekor qilindi yoki qurilma uzildi.";
+        }
+        stopMirrorCamera(true);
+        updateMirrorHint();
+      };
+    }
+    cam.srcObject=stream;
+    cam.style.display='block';
+    ph.style.display='none';
+    st.style.display='none';
+    sp.style.display='inline-block';
+    updateMirrorHint();
+  }catch(e){
+    ph.style.display='flex';
+    ph.textContent="Ruxsat berilmadi yoki kamera topilmadi. Xohlasangiz yana urinib ko'ring.";
+    st.disabled=false;
+    st.textContent="🔓 Kameraga ruxsat berish";
+  }
+}
+
+function stopMirrorCamera(silent=false){
+  const cam=document.getElementById('mirrorCam');
+  const ph=document.getElementById('mirrorPlaceholder');
+  const st=document.getElementById('mirrorStartBtn');
+  const sp=document.getElementById('mirrorStopBtn');
+  if(_mirrorStream){
+    _mirrorStream.getTracks().forEach(t=>t.stop());
+    _mirrorStream=null;
+  }
+  if(cam){
+    cam.pause();
+    cam.srcObject=null;
+    cam.style.display='none';
+  }
+  if(sp)sp.style.display='none';
+  if(st){
+    st.style.display='inline-block';
+    st.disabled=false;
+    st.textContent="🔓 Kameraga ruxsat berish";
+  }
+  if(ph){
+    ph.style.display='flex';
+    if(S.theme==='mirror'){
+      ph.textContent="Kamera to'xtatildi. Qayta yoqish uchun tugmani bosing.";
+    }else{
+      ph.textContent="Old kamerani ishga tushirishdan oldin Mirror temani tanlang.";
+    }
+  }
+  if(!silent)updateMirrorHint();
+}
+window.addEventListener('beforeunload',()=>stopMirrorCamera(true));
+
+// ── SIDEBAR ──
+let sOpen=LS('sb')!=='closed';
+const sEl=document.getElementById('sidebar');
+const arEl=document.getElementById('sideArrow');
+if(sOpen){sEl.classList.add('open');arEl.textContent='❮';}
+function toggleSidebar(){sOpen=!sOpen;sEl.classList.toggle('open',sOpen);arEl.textContent=sOpen?'❮':'❯';LSS('sb',sOpen?'open':'closed');}
+
+// ── PAGES ──
+const PT={animes:'Animelar',admins:'Adminlar',stats:'Statistika',report:'Shikoyat / Taklif',settings:'Sozlamalar',game:'🃏 O\'yinlar',global:'🌐 Global Qidiruv',gallery:'🖼️ Gallery',profile:'👤 Profil'};
+const PS={animes:'Barcha anime sarlavhalar',admins:'Bot boshqaruvchilari',stats:'Faoliyat ko\'rsatkichlari',report:'Xabaringiz adminga yetkaziladi',settings:'Interfeys sozlamalari',game:'Google bilan kiring va o\'ynang',global:'AniList orqali dunyo bo\'yicha qidiring',gallery:'Poster ko\'rinishda barcha animelar',profile:'Profil va saqlangan animelar'};
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.snav,.bnav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll(`[onclick*="'${name}'"]`).forEach(b=>b.classList.add('active'));
+  const tt=document.getElementById('topTitle');if(tt)tt.textContent=PT[name]||name;
+  const ts=document.getElementById('topSub');if(ts)ts.textContent=PS[name]||'';
+  if(name==='admins')renderAdmins();
+  if(name==='stats')renderStats();
+  if(name==='game')switchGameTab(_activeGameTab||'card');
+  if(name==='settings')syncSettingsUI();
+  if(name==='global')_checkAnilistStatus();
+  if(name==='gallery')renderGallery();
+  if(name==='profile')renderProfile();
+}
+
+// ── ANIMES ──
+const BOT='anime_uz_official_bot';
+let allAnimes=[],curFilter=S.def,srch='';
+
+// loadAnimes — see cached version below
+
+function applyFilter(){
+  let list=[...allAnimes];
+  if(srch){const q=srch.toLowerCase();list=list.filter(a=>(a.nom||'').toLowerCase().includes(q));}
+  if(curFilter==='ongoing')list=list.filter(a=>(a.aniType||'').toLowerCase().includes('ongoing'));
+  else if(curFilter==='completed')list=list.filter(a=>a.aniType&&!a.aniType.toLowerCase().includes('ongoing'));
+  else if(curFilter==='top')list=[...list].sort((a,b)=>(b.qidiruv||0)-(a.qidiruv||0));
+  else if(curFilter==='new')list=[...list].sort((a,b)=>b.id-a.id);
+  else if(curFilter==='age0'){const AGES=['0+'];list=list.filter(a=>AGES.includes(a.yosh_toifa));}
+  else if(curFilter==='age7'){const AGES=['0+','7+'];list=list.filter(a=>AGES.includes(a.yosh_toifa));}
+  else if(curFilter==='age13'){const AGES=['0+','7+','13+'];list=list.filter(a=>AGES.includes(a.yosh_toifa));}
+  else if(curFilter==='age16'){const AGES=['0+','7+','13+','16+'];list=list.filter(a=>AGES.includes(a.yosh_toifa));}
+  else if(curFilter==='age18')list=list.filter(a=>a.yosh_toifa==='18+');
+  const rc=document.getElementById('resultCount');if(rc)rc.textContent=list.length;
+  renderGrid(list);
+}
+
+// HUD card back HTML generator
+function _hudCardBack(a, idx) {
+  const og=(a.aniType||'').toLowerCase().includes('ongoing');
+  const delay = (idx * 0.15) % 2; // stagger per card, max 2s
+  // Pips: 8 total — ongoing=8, completed=5, unknown=3
+  const pipOn = og ? 8 : (a.aniType ? 5 : 3);
+  const pips = Array.from({length:8},(_,i)=>`<div class="hud-pip${i<pipOn?' on':''}"></div>`).join('');
+  // Truncate at 24 chars (was 18 — too aggressive)
+  const rawName = a.nom||'Nomsiz';
+  const shortName = rawName.length > 24 ? rawName.slice(0,22)+'…' : rawName;
+  // Dynamic typewriter steps matching actual name length
+  const nameSteps = shortName.length;
+  const views = a.qidiruv ? `👁 ${a.qidiruv}` : '—';
+  const fandub = a.fandub || '\u2014';
+
+  return `<div class="hud-cb" style="--hud-delay:${delay}s">
+    <div class="hud-top-line"></div>
+    <div class="hud-bot-line"></div>
+
+    <div class="hud-tag">ANIME DATA · ID ${String(a.id).padStart(3,'0')}</div>
+
+    <div style="display:flex;flex-direction:column;gap:1px">
+      <div class="hud-name" style="animation-timing-function:steps(${nameSteps},end)">${shortName}</div>
+      <div class="hud-div-wrap">
+        <div class="hud-div-line"></div>
+        <div class="hud-div-cap"></div>
+      </div>
+    </div>
+
+    <div class="hud-rows">
+      <div class="hud-row">
+        <div class="hud-dot"></div>
+        <div class="hud-key">Holat</div>
+        <div class="hud-sep"></div>
+        <div class="hud-val">${a.aniType||'—'}</div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-dot"></div>
+        <div class="hud-key">Qismlar</div>
+        <div class="hud-sep"></div>
+        <div class="hud-val">${a.ep_count||0} ta</div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-dot"></div>
+        <div class="hud-key">Janr</div>
+        <div class="hud-sep"></div>
+        <div class="hud-val">${(a.janri||'—').split(',').slice(0,2).join(',')}</div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-dot"></div>
+        <div class="hud-key">Yil</div>
+        <div class="hud-sep"></div>
+        <div class="hud-val">${a.yili||'—'}</div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-dot"></div>
+        <div class="hud-key">Ovoz</div>
+        <div class="hud-sep"></div>
+        <div class="hud-val">${fandub}</div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-dot"></div>
+        <div class="hud-key">Ko'rish</div>
+        <div class="hud-sep"></div>
+        <div class="hud-val">${views}</div>
+      </div>
+    </div>
+
+    <div class="hud-pips">${pips}</div>
+    <div class="hud-id">#${String(a.id).padStart(3,'0')}</div>
+  </div>`;
+}
+
+function renderGrid(list){
+  const g=document.getElementById('animeGrid');
+  if(!list.length){g.innerHTML=`<div class="empty"><div class="empty-ico">😔</div><h3>Topilmadi</h3><p>"${srch}" bo'yicha natija yo'q</p></div>`;return;}
+  g.innerHTML=list.map((a,idx)=>{
+    const likedCls=_isLiked(a.id)?'liked':'';
+    const savedCls=_isSaved(a.id)?'saved':'';
+    return `<div class="card-wrap" title="${a.nom}">
+      <div class="card-flipper" onclick="openModal(${a.id},this)">
+        <div class="cf">
+          <img class="card-poster" src="${a.rams_url||''}" loading="lazy" onerror="this.outerHTML='<div class=card-poster-ph>🎬</div>'">
+        </div>
+        <div class="cb">${_hudCardBack(a, idx)}</div>
+      </div>
+      <div class="card-action-bar">
+        <button class="ca-btn ${likedCls}" onclick="event.stopPropagation();toggleLike(${a.id})" id="like-${a.id}">❤️ Yoqtir</button>
+        <button class="ca-btn ${savedCls}" onclick="event.stopPropagation();toggleSave(${a.id})" id="save-${a.id}">💾 Saqlash</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input',e=>{srch=e.target.value.trim();applyFilter();});
+document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');curFilter=b.dataset.filter;applyFilter();
+}));
+
+// ── MODAL ──
+let _portalBusy=false;
+let _openingPosterFromRoute=false;
+function _posterRouteId(){
+  const m=location.pathname.match(/^\/poster\/(\d+)\/?$/);
+  return m?Number(m[1]):0;
+}
+function openModal(id,sourceEl,opts={}){
+  const a=allAnimes.find(x=>x.id===id);if(!a)return;
+  if(_portalBusy)return;
+  if(!opts.skipHistory&&location.pathname!==`/poster/${id}`){
+    history.pushState({poster:id},'',`/poster/${id}`);
+  }
+  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(typeof THREE==='undefined'||reduced||opts.skipFx){renderAnimeModal(a);return;}
+  _playPortalFx(sourceEl).then(()=>renderAnimeModal(a)).catch(()=>{_portalBusy=false;renderAnimeModal(a);});
+}
+function _playPortalFx(sourceEl){
+  return new Promise(resolve=>{
+    _portalBusy=true;
+    const wrap=document.getElementById('portalFx'),flash=document.getElementById('portalFlash');
+    wrap.innerHTML='';
+    wrap.classList.add('on');
+    const canvas=document.createElement('canvas');
+    wrap.appendChild(canvas);
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+    renderer.setSize(innerWidth,innerHeight);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,120);
+    camera.position.z=22;
+    const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#6c63ff';
+    const sphere=new THREE.Mesh(new THREE.SphereGeometry(7.5,64,32),new THREE.MeshBasicMaterial({color:new THREE.Color(accent),wireframe:true,transparent:true,opacity:.42}));
+    const inner=new THREE.Mesh(new THREE.IcosahedronGeometry(4.3,2),new THREE.MeshBasicMaterial({color:0xa78bfa,wireframe:true,transparent:true,opacity:.28}));
+    scene.add(sphere);scene.add(inner);
+    const ptsGeo=new THREE.BufferGeometry();
+    const count=innerWidth<640?150:280;
+    const pos=new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const radius=9+Math.random()*28,theta=Math.random()*Math.PI*2,phi=Math.acos(2*Math.random()-1);
+      pos[i*3]=radius*Math.sin(phi)*Math.cos(theta);
+      pos[i*3+1]=radius*Math.sin(phi)*Math.sin(theta);
+      pos[i*3+2]=radius*Math.cos(phi);
+    }
+    ptsGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const pts=new THREE.Points(ptsGeo,new THREE.PointsMaterial({color:0xffffff,size:.075,transparent:true,opacity:.62}));
+    scene.add(pts);
+    if(sourceEl){
+      const rect=sourceEl.getBoundingClientRect();
+      const x=((rect.left+rect.width/2)/innerWidth-.5)*8;
+      const y=-((rect.top+rect.height/2)/innerHeight-.5)*5;
+      sphere.position.set(x,y,0);inner.position.copy(sphere.position);
+    }
+    const start=performance.now(),duration=850;
+    function frame(now){
+      const t=Math.min(1,(now-start)/duration);
+      const ease=1-Math.pow(1-t,3);
+      sphere.rotation.x+=.012+ease*.02;sphere.rotation.y+=.018+ease*.03;
+      inner.rotation.x-=.021;inner.rotation.y+=.028;
+      pts.rotation.y+=.004+ease*.01;
+      camera.position.z=22-17*ease;
+      sphere.scale.setScalar(1+ease*2.6);
+      inner.scale.setScalar(1+ease*3.3);
+      renderer.render(scene,camera);
+      if(t<1){requestAnimationFrame(frame);return;}
+      flash.classList.add('on');
+      setTimeout(()=>flash.classList.remove('on'),130);
+      setTimeout(()=>{wrap.classList.remove('on');wrap.innerHTML='';renderer.dispose();_portalBusy=false;resolve();},160);
+    }
+    requestAnimationFrame(frame);
+  });
+}
+function renderAnimeModal(a){
+  document.getElementById('modalContent').innerHTML=`
+    <div class="m-media">
+      <img class="m-img" src="${a.rams_url||''}" onerror="this.outerHTML='<div class=m-img-ph>🎬</div>'">
+      <button class="play-btn" onclick="loadVideo(${a.id})">▶</button>
+    </div>
+    <div class="m-body">
+      <div class="m-title">${a.nom||'Nomsiz'}</div>
+      <div class="irow"><span class="ilbl">Holati</span><span class="ival">${a.aniType||'—'}</span></div>
+      <div class="irow"><span class="ilbl">Qismlar</span><span class="ival">${a.ep_count||0} ta</span></div>
+      <div class="irow"><span class="ilbl">Janr</span><span class="ival">${a.janri||'—'}</span></div>
+      <div class="irow"><span class="ilbl">Yili</span><span class="ival">${a.yili||'—'}</span></div>
+      <div class="irow"><span class="ilbl">Davlat</span><span class="ival">${a.davlat||'—'}</span></div>
+      <div class="irow"><span class="ilbl">Ovoz</span><span class="ival">${a.fandub||'—'}</span></div>
+      <div class="irow"><span class="ilbl">Yosh toifasi</span><span class="ival">${a.yosh_toifa||'Barcha yoshlar'}</span></div>
+      <div class="irow"><span class="ilbl">Ko'rish</span><span class="ival">👁 ${a.qidiruv||0}</span></div>
+      <a class="m-btn" href="https://t.me/${BOT}?start=${a.id}" target="_blank">▶ Botda tomosha qilish</a>
+      ${a.tavsif?`<div class="irow" style="display:block"><span class="ilbl">Tavsif</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.tavsif}</span></div>`:''}
+      <a class="m-btn" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
+    </div>`;
+  document.getElementById('modalBg').classList.add('open');
+}
+
+async function loadVideo(id){
+  const m=document.querySelector('.m-media');if(!m)return;
+  window._curAnimeId=id;
+  m.innerHTML=`<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
+  try{
+    const res=await fetch(`/api/episodes/${id}`);
+    const d=await res.json();
+    if(!d.episodes||!d.episodes.length){m.innerHTML=`<div class="verr">🎬 Hali qism yuklanmagan.<br><a href="https://t.me/${BOT}?start=${id}" target="_blank" style="color:var(--accent)">Botda ko'rish</a></div>`;return;}
+    _playEp(m,d.episodes,0);
+  }catch(e){m.innerHTML=`<div class="verr">⚠️ Xatolik: ${e.message}</div>`;}
+}
+function _playEp(mediaEl,eps,idx){
+  const ep=eps[idx];if(!ep)return;
+  window._epCache=eps;
+  const epBtns=eps.map((e,i)=>`<button class="ep-btn ${i===idx?'active':''}" onclick="_playEp(document.querySelector('.m-media'),window._epCache,${i})">${e.qism||(i+1)}-qism</button>`).join('');
+  const epList=eps.length>1?`<div class="ep-lbl">Qismlar (${eps.length} ta):</div><div class="ep-list">${epBtns}</div>`:'';
+  if(!ep.video_url||ep.too_big){
+    mediaEl.innerHTML=`<div class="verr" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 14px">
+      <div style="font-size:1.8rem">📦</div>
+      <div>${ep.too_big?'Video juda katta (20MB+), botda tomosha qiling.':'Video topilmadi.'}</div>
+      <a class="m-btn" href="https://t.me/${BOT}?start=${window._curAnimeId||''}" target="_blank" style="width:auto;padding:10px 20px">▶ Botda ko'rish</a>
+    </div>${epList}`;return;
+  }
+  mediaEl.innerHTML=`
+    <video id="epVid" class="modal-video" controls autoplay playsinline preload="auto">
+      <source src="${ep.video_url}" type="video/mp4">
+    </video>
+    <div id="vErr" style="display:none" class="verr">⚠️ Video ochilmadi.
+      <a href="https://t.me/${BOT}?start=${window._curAnimeId||''}" target="_blank" style="color:var(--accent)">Botda ko'rish</a>
+    </div>${epList}`;
+  const v=document.getElementById('epVid');
+  if(v)v.addEventListener('error',()=>{const e=document.getElementById('vErr');if(e)e.style.display='block';v.style.display='none';});
+}
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('open');
+  const v=document.querySelector('.m-media video');
+  if(v){v.pause();v.src='';}
+  window._epCache=[];
+  if(!_openingPosterFromRoute&&location.pathname.startsWith('/poster/')){
+    history.pushState({},'',location.origin+'/');
+  }
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+window.addEventListener('popstate',()=>{
+  const id=_posterRouteId();
+  if(id){_openPosterRoute(id);return;}
+  _openingPosterFromRoute=true;
+  closeModal();
+  _openingPosterFromRoute=false;
+});
+
+// ── ADMINS ──
+async function renderAdmins(){
+  const g=document.getElementById('adminGrid');
+  g.innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+  let admins=[];
+  try{const res=await fetch('/api/admins');if(res.ok){const d=await res.json();admins=d.admins||[];}else throw new Error();}
+  catch{g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-ico">⚠️</div><h3>Serverga ulanib bo\'lmadi</h3></div>';return;}
+  if(!admins.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-ico">👥</div><h3>Adminlar topilmadi</h3></div>';return;}
+  g.innerHTML=admins.map(a=>{
+    const sup=a.is_super;
+    const av=a.photo?`<img class="avt" src="${a.photo}" onerror="this.style.display='none'">`:`<div class="avt-ph">${(a.name[0]||'A').toUpperCase()}</div>`;
+    const rc=sup?'var(--accent3)':'var(--accent)';
+    return `<div class="aw" onclick="window.open('${a.link}','_blank')">
+      <div class="af-fl">
+        <div class="af${sup?' sup':''}">
+          ${av}
+          <div class="aname">${a.name}</div>
+          <div class="aun">${a.username}</div>
+          <span class="atag ${sup?'dev':'adm'}">${sup?'✦ Developer':'◈ Admin'}</span>
+        </div>
+        <div class="ab2${sup?' sup':''}">
+          <div class="ab2-r">
+            <div class="ab2-init">${(a.name[0]||'?').toUpperCase()}</div>
+            <div class="ab2-role" style="color:${rc}">${sup?'✦ Developer':'◈ Admin'}</div>
+            <div class="ab2-un">${a.username}</div>
+            <div class="ab2-div"></div>
+            <a class="ab2-btn" href="${a.link}" target="_blank" onclick="event.stopPropagation()">Telegram →</a>
+          </div>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+
+// ── STATS ──
+let _sl=false,_ci=null;
+const SDEFS=[
+  {key:'users',icon:'👥',label:'Foydalanuvchilar',color:'sc-cyan',desc:'Botga /start bosgan foydalanuvchilar'},
+  {key:'vip',icon:'👑',label:'VIP Obunachlar',color:'sc-purple',desc:"Faol VIP obuna bo'lganlar"},
+  {key:'animes',icon:'🎬',label:'Animelar',color:'sc-pink',desc:'Jami anime sarlavhalar'},
+  {key:'eps',icon:'🎞',label:'Jami Qismlar',color:'sc-green',desc:'Yuklangan qismlar soni'},
+];
+async function renderStats(){
+  if(_sl)return;_sl=true;
+  let st={users:0,vip:0,animes:0,eps:0};
+  try{const r=await fetch('/api/stats');if(r.ok)st=await r.json();}catch{}
+  document.getElementById('statGrid').innerHTML=SDEFS.map(d=>{
+    const v=st[d.key]||0;const dv=v>=1000?(v/1000).toFixed(1)+'K':v;
+    return `<div class="sc-w ${d.color}"><div class="sc-fl">
+      <div class="scf"><div class="sc-ico">${d.icon}</div><div class="sc-val">${dv}</div><div class="sc-lbl">${d.label}</div></div>
+      <div class="scb"><div class="sc-bi">${d.icon}</div><div class="sc-bt">${d.label}</div><div class="sc-bv">${dv}</div><div class="sc-bd">${d.desc}</div></div>
+    </div></div>`;
+  }).join('');
+  if(_ci){_ci.destroy();_ci=null;}
+  _ci=new Chart(document.getElementById('actChart'),{type:'bar',data:{labels:SDEFS.map(d=>d.label),datasets:[{data:SDEFS.map(d=>st[d.key]||0),backgroundColor:['rgba(0,212,255,.55)','rgba(139,92,246,.55)','rgba(240,171,252,.55)','rgba(16,255,160,.55)'],borderColor:['rgba(0,212,255,1)','rgba(139,92,246,1)','rgba(240,171,252,1)','rgba(16,255,160,1)'],borderWidth:1,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(4,4,18,.96)',borderColor:'rgba(0,212,255,.3)',borderWidth:1,titleColor:'#00d4ff',bodyColor:'#dde8ff',titleFont:{family:'Orbitron',size:10}}},scales:{x:{ticks:{color:'rgba(160,185,230,.6)',font:{family:'Orbitron',size:9}},grid:{color:'rgba(0,212,255,.06)'}},y:{ticks:{color:'rgba(160,185,230,.6)',font:{family:'Orbitron',size:9}},grid:{color:'rgba(0,212,255,.06)'}}}}});
+}
+
+// ── REPORT ──
+let rType='bug';
+function selectType(btn,type){document.querySelectorAll('.rf-type-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');rType=type;}
+function updateChar(){const v=document.getElementById('rMsg')?.value||'';document.getElementById('rCharCount').textContent=v.length;}
+async function sendReport(){
+  const msg=(document.getElementById('rMsg')?.value||'').trim();
+  if(!msg){document.getElementById('rMsg').focus();return;}
+  const btn=document.getElementById('rSendBtn');
+  btn.disabled=true;btn.textContent='⏳ Yuborilmoqda...';
+  const name=(document.getElementById('rName')?.value||'').trim();
+  const uname=(document.getElementById('rUsername')?.value||'').trim();
+  try{
+    const res=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:rType,name,username:uname,message:msg})});
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'Server xatosi');
+  }catch(e){btn.disabled=false;btn.textContent='🚀 Yuborish';alert('Xatolik: '+e.message);return;}
+  document.getElementById('rSuccess').classList.add('show');
+  btn.disabled=false;btn.textContent='🚀 Yuborish';
+  document.getElementById('rMsg').value='';
+  document.getElementById('rName').value='';
+  document.getElementById('rUsername').value='';
+  updateChar();
+  setTimeout(()=>document.getElementById('rSuccess').classList.remove('show'),5000);
+}
+
+// ── AI CHAT ──
+let _aiAdminPasswordMode=false;
+function toggleAi(){document.getElementById('aiBox').classList.toggle('open');}
+function _escHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async function sendAi(){
+  const inp=document.getElementById('chatInp');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  const m=document.getElementById('chatMsgs');
+  const pendingId='aiT'+Date.now();
+  const visibleMsg=_aiAdminPasswordMode?'••••••':msg;
+  m.innerHTML+=`<div class="msg user">${_escHtml(visibleMsg)}</div><div class="msg ai" id="${pendingId}">...</div>`;
+  m.scrollTop=m.scrollHeight;
+  try{
+    const res=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,admin_password_mode:_aiAdminPasswordMode})});
+    const d=await res.json();
+    _aiAdminPasswordMode=!!d.admin_password_required;
+    document.getElementById(pendingId).outerHTML=`<div class="msg ai">${_escHtml(d.reply||'❌ Xatolik')}</div>`;
+    if(d.admin_ok){
+      if(d.admin_token)localStorage.setItem('az_admin_token',d.admin_token);
+      setTimeout(()=>{window.location.href=d.admin_url||'/admin';},500);
+    }
+  }catch{document.getElementById(pendingId).outerHTML=`<div class="msg ai">⚠️ Serverga ulanib bo'lmadi.</div>`;}
+  m.scrollTop=m.scrollHeight;
+}
+
+loadAnimes();
+
+// ══ GAME ══
+let _gToken=localStorage.getItem('az_token')||'';
+let _gUser=JSON.parse(localStorage.getItem('az_user')||'null');
+let _gGameId=null,_gState=null,_gWaiting=false;
+function _authHeaders(){return{'Content-Type':'application/json','Authorization':'Bearer '+_gToken};}
+function initGame(){_refreshUserBadge();_refreshTopbarAuth&&_refreshTopbarAuth();if(_gUser&&_gToken){_renderGameReady();}else{_renderLoginScreen();}}
+function _refreshUserBadge(){const badge=document.getElementById('game-user-badge');if(!badge)return;if(_gUser){badge.style.display='flex';const av=document.getElementById('game-avatar');if(av){av.src=_gUser.picture||'';av.style.display=_gUser.picture?'block':'none';}const un=document.getElementById('game-uname');if(un)un.textContent=_gUser.name||'';}else{badge.style.display='none';}}
+function _renderLoginScreen(){const root=document.getElementById('game-root');if(!root)return;const clientId=document.querySelector('meta[name="google-client-id"]')?.content||'';const redirectUri=window.location.origin+'/callback';const scope='openid profile email';const authUrl=`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline`;root.innerHTML=`<div class="g-login-wrap"><div class="g-login-ico">🃏</div><div class="g-login-title">Anime Karta Jangi</div><div class="g-login-desc">Anime kartalaringiz bilan CPU ga qarshi jang qiling!</div><button class="g-google-btn" onclick="window.location.href='${authUrl}'"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google bilan kirish</button></div>`;}
+function _renderGameReady(){const root=document.getElementById('game-root');if(!root)return;root.innerHTML=`<div class="g-over" style="padding:40px 20px"><div class="g-over-ico">🃏</div><div class="g-over-title">Tayyor!</div><div class="g-over-score">Salom, <b>${_gUser.name}</b>! O'yinni boshlang.</div><button class="g-play-again" onclick="startGame()">▶ O'yinni Boshlash</button></div>`;}
+async function startGame(){const root=document.getElementById('game-root');root.innerHTML='<div class="g-loading"><div class="spinner" style="margin:0 auto 12px"></div>Kartalar tayyorlanmoqda...</div>';const res=await fetch('/api/game/start',{method:'POST',headers:_authHeaders()});const d=await res.json();if(!d.ok){root.innerHTML=`<div class="g-loading">❌ ${d.error}</div>`;return;}_gGameId=d.game_id;_gState=d.state;_gWaiting=false;_renderBoard();}
+function _renderBoard(){const root=document.getElementById('game-root');if(!root||!_gState)return;const st=_gState;if(st.finished){_renderGameOver();return;}const pc=st.player_card,cc=st.cpu_card,lastRound=st.history.length>0?st.history[st.history.length-1]:null;root.innerHTML=`<div class="g-board"><div class="g-score-bar"><div class="g-score-side"><div class="g-score-name">👤 Siz</div><div class="g-score-val player">${st.player_score}</div></div><div class="g-score-mid"><div class="g-round-info">Tur ${st.round+1}/${st.total_rounds}</div><div style="margin-top:3px">VS</div></div><div class="g-score-side"><div class="g-score-name">🤖 CPU</div><div class="g-score-val cpu">${st.cpu_score}</div></div></div>${lastRound&&_gWaiting?_roundResultHtml(lastRound):''} ${!_gWaiting?'<div class="g-choose-prompt">⬇ Statistika tanlang</div>':''}<div class="g-cards-row">${_cardHtml(pc,'you',lastRound,true)}<div class="g-vs-badge">VS</div>${_cardHtml(cc,'cpu',lastRound,false)}</div></div>`;}
+function _cardHtml(card,side,lastRound,isPlayer){if(!card)return'<div></div>';const poster=card.poster?`<img class="g-card-poster" src="${card.poster}" onerror="this.outerHTML='<div class=g-card-poster-ph>🎬</div>'">`:'<div class="g-card-poster-ph">🎬</div>';const ownerLabel=isPlayer?'Sizning karta':'CPU kartasi';const ownerClass=isPlayer?'you':'cpu-label';let winnerClass='';if(lastRound&&_gWaiting){if(lastRound.result==='player')winnerClass=isPlayer?'winner':'loser';else if(lastRound.result==='cpu')winnerClass=isPlayer?'loser':'winner';else winnerClass='draw-c';}const stats=_gState.stats.map(s=>{let cls='g-stat-row',txtCls='g-stat-lbl';if(_gWaiting&&lastRound&&lastRound.stat_key===s.key){cls+=' chosen';if(lastRound.result==='draw')cls='g-stat-row draw-s';else if((lastRound.result==='player')===isPlayer){cls='g-stat-row win';txtCls+=' colored';}else{cls='g-stat-row lose';txtCls+=' colored';}}const val=card[s.key]??'—';const clickable=!_gWaiting&&isPlayer;const onclick=clickable?`onclick="playMove('${s.key}')"`:'';return`<div class="${cls}" ${onclick}><span class="${txtCls}">${s.icon} ${s.label}</span><span class="g-stat-val">${val||'—'}</span></div>`;}).join('');return`<div class="g-card ${winnerClass}"><div class="g-card-owner ${ownerClass}">${ownerLabel}</div>${poster}<div class="g-card-body"><div class="g-card-title">${card.nom}</div><div class="g-card-stats">${stats}</div></div></div>`;}
+function _roundResultHtml(r){let cls,ico,txt,sub;if(r.result==='player'){cls='win';ico='🎉';txt='Siz yutdingiz!';sub=`${r.stat_icon} ${r.stat_label}: Siz <b>${r.player_val}</b> vs CPU <b>${r.cpu_val}</b>`;}else if(r.result==='cpu'){cls='lose';ico='😤';txt='CPU yutdi!';sub=`${r.stat_icon} ${r.stat_label}: Siz <b>${r.player_val}</b> vs CPU <b>${r.cpu_val}</b>`;}else{cls='draw-r';ico='🤝';txt='Durrang!';sub=`${r.stat_icon} ${r.stat_label}: Ikkalasi ham <b>${r.player_val}</b>`;}return`<div class="g-round-result ${cls}"><div class="g-rr-ico">${ico}</div><div class="g-rr-text">${txt}</div><div class="g-rr-sub">${sub}</div><button class="g-next-btn" onclick="nextRound()">Keyingi tur ➡</button></div>`;}
+function _renderGameOver(){const root=document.getElementById('game-root');const st=_gState;let ico,title,sub;if(st.winner==='player'){ico='🏆';title="G'alaba!";sub='Tabriklaymiz!';}else if(st.winner==='cpu'){ico='💀';title='Yutqazdingiz!';sub='CPU sizni yendi.';}else{ico='🤝';title='Durrang!';sub="Teng natija.";}root.innerHTML=`<div class="g-over"><div class="g-over-ico">${ico}</div><div class="g-over-title">${title}</div><div class="g-over-score">${sub}<br><b>${st.player_score}</b> : <b>${st.cpu_score}</b></div><button class="g-play-again" onclick="startGame()">🔁 Qayta O'ynash</button></div>`;}
+async function playMove(statKey){if(_gWaiting||!_gGameId)return;const res=await fetch(`/api/game/${_gGameId}/move`,{method:'POST',headers:_authHeaders(),body:JSON.stringify({stat:statKey})});const d=await res.json();if(!d.ok){alert(d.error);return;}_gState=d.state;_gWaiting=true;_renderBoard();}
+function nextRound(){_gWaiting=false;_renderBoard();}
+
+// ── GAME TABS ──
+let _activeGameTab='card';
+function switchGameTab(tab){
+  _activeGameTab=tab;
+  const cardRoot=document.getElementById('game-root'),guessRoot=document.getElementById('guess-root');
+  const tabCard=document.getElementById('gtab-card'),tabGuess=document.getElementById('gtab-guess');
+  if(tab==='card'){
+    cardRoot.style.display='';guessRoot.style.display='none';
+    tabCard.style.background='var(--accent)';tabCard.style.color='#000';tabCard.style.borderColor='var(--accent)';
+    tabGuess.style.background='var(--card-bg)';tabGuess.style.color='var(--muted)';tabGuess.style.borderColor='var(--border)';
+    initGame();
+  }else{
+    cardRoot.style.display='none';guessRoot.style.display='';
+    tabGuess.style.background='var(--accent)';tabGuess.style.color='#000';tabGuess.style.borderColor='var(--accent)';
+    tabCard.style.background='var(--card-bg)';tabCard.style.color='var(--muted)';tabCard.style.borderColor='var(--border)';
+    initGuessGame();
+  }
+}
+
+// ── GUESS GAME ──
+let _guessState=null;
+async function initGuessGame(){const root=document.getElementById('guess-root');if(!root)return;if(!_gUser||!_gToken){_renderGuessLogin(root);return;}if(_guessState&&!_guessState.finished){_renderGuessBoard(root);}else{_renderGuessMenu(root);}}
+function _renderGuessLogin(root){const url=_getGoogleAuthUrl();root.innerHTML=`<div class="g-login-wrap"><div class="g-login-ico">🎯</div><div class="g-login-title">Anime Taxminlash</div><div class="g-login-desc">Animening rasmini ko'rib, nomini toping!</div><button class="g-google-btn" onclick="window.location.href='${url}'"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google bilan kirish</button></div>`;}
+function _renderGuessMenu(root){root.innerHTML=`<div class="g-over" style="padding:40px 20px"><div class="g-over-ico">🎯</div><div class="g-over-title">Anime Taxminlash</div><div class="g-over-score">Salom, <b>${_gUser.name}</b>!</div><button class="g-play-again" onclick="startGuessGame()">▶ O'yinni Boshlash</button></div>`;}
+async function startGuessGame(){const root=document.getElementById('guess-root');root.innerHTML='<div class="g-loading"><div class="spinner" style="margin:0 auto 12px"></div>Savollar tayyorlanmoqda...</div>';try{const res=await fetch('/api/animes');const data=await res.json();let animes=data.animes||[];if(animes.length<8){root.innerHTML='<div class="g-loading">❌ DB da yetarli anime yo\'q</div>';return;}animes=animes.sort(()=>Math.random()-.5);const selected=animes.slice(0,6);const otherPool=animes.slice(6);const questions=selected.map(correct=>{const wrong=otherPool.filter(a=>a.id!==correct.id).sort(()=>Math.random()-.5).slice(0,3).map(a=>a.nom);const options=[correct.nom,...wrong].sort(()=>Math.random()-.5);return{anime:correct,options,correct:correct.nom};});_guessState={questions,current:0,score:0,total:6,answered:null,chosenOption:null,finished:false};_renderGuessBoard(root);}catch(e){root.innerHTML=`<div class="g-loading">❌ Xatolik: ${e.message}</div>`;}}
+function _renderGuessBoard(root){if(!_guessState)return;const st=_guessState;if(st.finished){_renderGuessOver(root);return;}const q=st.questions[st.current];const anime=q.anime;const imgUrl=anime.rams_url||'';const progress=Math.round((st.current/st.total)*100);let optionsHtml='';for(let i=0;i<q.options.length;i++){const opt=q.options[i];let cls='guess-opt',icon='';if(st.answered!==null){if(opt===q.correct){cls+=' correct';icon=' ✅';}else if(opt===st.chosenOption&&opt!==q.correct){cls+=' wrong';icon=' ❌';}else{cls+=' disabled';}}const clickAttr=st.answered===null?'onclick="guessAnswer('+i+')"':'';optionsHtml+='<button class="'+cls+'" '+clickAttr+'>'+opt+icon+'</button>';}let nextBtn='';if(st.answered!==null){const btnLabel=(st.current+1>=st.total)?'🏁 Natijani Ko\'rish':'Keyingi Savol ➡';nextBtn='<button class="g-next-btn" style="margin-top:14px;width:100%" onclick="guessNext()">'+btnLabel+'</button>';}root.innerHTML='<div style="max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:.78rem;color:var(--muted)">Savol '+(st.current+1)+' / '+st.total+'</span><span style="font-size:.78rem;font-weight:700;color:var(--accent)">🏆 '+st.score+' ball</span></div><div style="height:5px;background:var(--border);border-radius:4px;margin-bottom:16px;overflow:hidden"><div style="height:100%;width:'+progress+'%;background:var(--accent);border-radius:4px;transition:width .4s"></div></div><div style="position:relative;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;background:var(--card-bg)"><img src="'+imgUrl+'" style="width:100%;height:auto;max-height:320px;object-fit:contain;display:block;background:var(--border2)" onerror="this.style.display=\'none\'"><div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);padding:3px 10px;border-radius:20px;font-size:.72rem;color:#fff;font-weight:600">Bu anime nima? 🤔</div></div><div class="guess-opts-grid">'+optionsHtml+'</div>'+nextBtn+'</div>';}
+function guessAnswer(optIdx){if(!_guessState||_guessState.answered!==null)return;const q=_guessState.questions[_guessState.current];const chosen=q.options[optIdx];_guessState.chosenOption=chosen;if(chosen===q.correct){_guessState.answered='correct';_guessState.score++;}else{_guessState.answered='wrong';}_renderGuessBoard(document.getElementById('guess-root'));}
+function guessNext(){if(!_guessState)return;_guessState.current++;_guessState.answered=null;_guessState.chosenOption=null;if(_guessState.current>=_guessState.total){_guessState.finished=true;}_renderGuessBoard(document.getElementById('guess-root'));}
+function _renderGuessOver(root){const st=_guessState;const pct=Math.round((st.score/st.total)*100);let ico,title,sub;if(pct>=80){ico="🏆";title="Zo'r natija!";sub="Siz haqiqiy anime bilimdonisiz!";}else if(pct>=50){ico="😊";title="Yaxshi urinish!";sub="Yana mashq kerak.";}else{ico="😅";title="Qiyin ekan...";sub="Ko'proq anime ko'ring!";}root.innerHTML=`<div class="g-over"><div class="g-over-ico">${ico}</div><div class="g-over-title">${title}</div><div class="g-over-score">${sub}<br><b>${st.score}</b>/<b>${st.total}</b> to'g'ri • <b>${pct}%</b></div><button class="g-play-again" onclick="startGuessGame()">🔁 Qayta O'ynash</button></div>`;}
+
+// ── TOPBAR AUTH ──
+function _getGoogleAuthUrl(){const clientId=document.querySelector('meta[name="google-client-id"]')?.content||'';const redirectUri=window.location.origin+'/callback';const scope='openid profile email';return`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline`;}
+function topbarLogin(){const url=_getGoogleAuthUrl();if(!url.includes('client_id=&')){window.location.href=url;}else{alert("GOOGLE_CLIENT_ID sozlanmagan.");}}
+// ── ANILIST GLOBAL QIDIRUV ──
+const _alStatusLabels = {
+  RELEASING:       '🔴 OnGoing',
+  FINISHED:        '✅ Tugallangan',
+  NOT_YET_RELEASED:'⏳ Tez Kunda',
+  CANCELLED:       '❌ Bekor',
+  HIATUS:          '⏸ Pauza',
+};
+
+let _alCountdownTimer = null;
+
+function _alEscape(v) {
+  return String(v ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[ch]));
+}
+
+function _alFormatAiringDate(airingAt) {
+  if (!airingAt) return '';
+  try {
+    return new Intl.DateTimeFormat('uz-UZ', {
+      day:'2-digit', month:'short', year:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    }).format(new Date(airingAt * 1000));
+  } catch {
+    return new Date(airingAt * 1000).toLocaleString();
+  }
+}
+
+function _alCountdownParts(airingAt) {
+  const diff = Math.max(0, (airingAt * 1000) - Date.now());
+  const total = Math.floor(diff / 1000);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  return { diff, days, hours, mins, secs };
+}
+
+function _alRenderCountdowns() {
+  document.querySelectorAll('[data-airing-at]').forEach(el => {
+    const airingAt = Number(el.dataset.airingAt || 0);
+    const p = _alCountdownParts(airingAt);
+    if (!airingAt) return;
+    if (p.diff <= 0) {
+      el.innerHTML = '<div class="al-airing-ended">Chiqdi yoki AniList yangilanmoqda</div>';
+      return;
+    }
+    const pad = n => String(n).padStart(2, '0');
+    el.innerHTML = `
+      <div class="al-count-unit"><span class="al-count-num">${p.days}</span><span class="al-count-lbl">Kun</span></div>
+      <div class="al-count-unit"><span class="al-count-num">${pad(p.hours)}</span><span class="al-count-lbl">Soat</span></div>
+      <div class="al-count-unit"><span class="al-count-num">${pad(p.mins)}</span><span class="al-count-lbl">Daq</span></div>
+      <div class="al-count-unit"><span class="al-count-num">${pad(p.secs)}</span><span class="al-count-lbl">Son</span></div>`;
+  });
+}
+
+function _alStartCountdowns() {
+  if (_alCountdownTimer) clearInterval(_alCountdownTimer);
+  _alRenderCountdowns();
+  if (document.querySelector('[data-airing-at]')) {
+    _alCountdownTimer = setInterval(_alRenderCountdowns, 1000);
+  }
+}
+
+async function _checkAnilistStatus() {
+  const bar = document.getElementById('alConnectBar');
+  const btn = document.getElementById('alConnectBtn');
+  if (!bar) return;
+
+  if (!_gToken) {
+    // Google login qilinmagan — ulash tugmasi Google login ga yo'naltirsin
+    if (btn) { btn.textContent = 'Kirish kerak'; btn.onclick = () => topbarLogin(); }
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/anilist/status', { headers: _authHeaders() });
+    const d = await res.json();
+    if (d.ok && d.connected && d.anilist) {
+      // Ulangan
+      const av = d.anilist.avatar
+        ? `<img src="${d.anilist.avatar}" style="width:22px;height:22px;border-radius:50%;object-fit:cover">`
+        : '🟦';
+      bar.innerHTML = `
+        <div class="al-logo">${av}</div>
+        <div class="al-info">
+          <div class="al-title">AniList ulangan</div>
+          <div class="al-sub">${d.anilist.name || ''}</div>
+        </div>
+        <div class="al-connected-badge">✅ Ulangan</div>`;
+    }
+  } catch (_) {}
+}
+
+async function anilistConnect() {
+  if (!_gToken) { topbarLogin(); return; }
+  const btn = document.getElementById('alConnectBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Yo\'naltirilmoqda...'; }
+  try {
+    const res = await fetch('/api/auth/anilist', { headers: _authHeaders() });
+    const d = await res.json();
+    if (d.ok && d.url) {
+      const popup = window.open(d.url, 'anilist_oauth',
+        'width=520,height=640,menubar=no,toolbar=no,status=no');
+      // Popup yopilishini kuzatamiz
+      const timer = setInterval(async () => {
+        if (popup && popup.closed) {
+          clearInterval(timer);
+          await _checkAnilistStatus();
+        }
+      }, 800);
+    } else {
+      alert(d.error || 'AniList ulanishda xatolik');
+      if (btn) { btn.disabled = false; btn.textContent = 'Ulash'; }
+    }
+  } catch (e) {
+    alert('Xatolik: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Ulash'; }
+  }
+}
+
+async function glSearch() {
+  const q = (document.getElementById('glSearchInput')?.value || '').trim();
+  if (!q) return;
+
+  const grid   = document.getElementById('glResultGrid');
+  const bar    = document.getElementById('glResultBar');
+  const btn    = document.getElementById('glSearchBtn');
+  const cntEl  = document.getElementById('glResultCount');
+
+  if (!grid) return;
+  if (_alCountdownTimer) clearInterval(_alCountdownTimer);
+  btn.disabled = true;
+  grid.innerHTML = '<div class="gl-msg"><div class="spinner" style="margin:0 auto 14px"></div>Qidirilmoqda...</div>';
+  if (bar) bar.style.display = 'none';
+
+  try {
+    const res  = await fetch(`/api/anilist/search?q=${encodeURIComponent(q)}&per=24`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${data.error || 'Xatolik'}</div>`;
+      return;
+    }
+
+    const items = data.results || [];
+    if (cntEl) cntEl.textContent = items.length;
+    if (bar)   bar.style.display = '';
+
+    if (!items.length) {
+      grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${q}" bo'yicha hech narsa topilmadi.</div>`;
+      return;
+    }
+
+    grid.innerHTML = items.map(a => {
+      const safeTitle = _alEscape(a.title || 'Nomsiz');
+      const img = a.cover
+        ? `<img class="al-card-img" src="${_alEscape(a.cover)}" alt="${safeTitle}" loading="lazy" onerror="this.outerHTML='<div class=al-card-img-ph>🎬</div>'">`
+        : '<div class="al-card-img-ph">🎬</div>';
+
+      const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
+      const statusCls   = `al-badge status-${a.status || ''}`;
+      const scoreBadge  = a.score
+        ? `<span class="al-score">⭐ ${a.score}/100</span>`
+        : '';
+      const epBadge     = a.episodes
+        ? `<span class="al-badge">${a.episodes} qism</span>`
+        : '';
+      const yearBadge   = a.year
+        ? `<span class="al-badge">${a.year}</span>`
+        : '';
+      const fmtBadge    = a.format
+        ? `<span class="al-badge">${a.format}</span>`
+        : '';
+      const airing = a.next_airing && a.next_airing.airingAt
+        ? `<div class="al-airing">
+            <div class="al-airing-top">
+              <span>Keyingi qism</span>
+              <span>${a.next_airing.episode ? _alEscape(a.next_airing.episode) + '-qism' : ''}</span>
+            </div>
+            <div class="al-airing-date">Chiqish vaqti: ${_alEscape(_alFormatAiringDate(a.next_airing.airingAt))}</div>
+            <div class="al-countdown" data-airing-at="${Number(a.next_airing.airingAt)}"></div>
+          </div>`
+        : '';
+
+      return `<div class="al-card">
+        ${img}
+        <div class="al-card-body">
+          <div class="al-card-title" title="${safeTitle}">${safeTitle}</div>
+          <div class="al-card-meta">
+            <span class="${statusCls}">${statusLabel}</span>
+            ${scoreBadge}${epBadge}${yearBadge}${fmtBadge}
+          </div>
+          ${airing}
+        </div>
+      </div>`;
+    }).join('');
+    _alStartCountdowns();
+
+  } catch (e) {
+    grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>Xatolik: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Global sahifa ochilganda AniList statusini tekshir (showPage ichida handle qilinadi)
+
+async function topbarLogout(){await fetch('/api/auth/logout',{method:'POST',headers:_authHeaders()}).catch(()=>{});localStorage.removeItem('az_token');localStorage.removeItem('az_user');_gToken='';_gUser=null;_gGameId=null;_gState=null;_refreshTopbarAuth();_refreshUserBadge();if(document.getElementById('page-game').classList.contains('active')){_renderLoginScreen();}}
+function _refreshTopbarAuth(){const loginBtn=document.getElementById('topbar-login-btn'),userDiv=document.getElementById('topbar-user');if(!loginBtn||!userDiv)return;if(_gUser){loginBtn.style.display='none';userDiv.style.display='flex';const av=document.getElementById('topbar-avatar');if(av){av.src=_gUser.picture||'';av.style.display=_gUser.picture?'block':'none';}const un=document.getElementById('topbar-uname');if(un)un.textContent=_gUser.name||'';}else{loginBtn.style.display='flex';userDiv.style.display='none';}}
+(async function(){if(_gToken&&!_gUser){try{const res=await fetch('/api/auth/me',{headers:{'Authorization':'Bearer '+_gToken}});const d=await res.json();if(d.ok){_gUser=d.user;localStorage.setItem('az_user',JSON.stringify(_gUser));_refreshUserBadge();}else{localStorage.removeItem('az_token');_gToken='';}}catch{}}  _refreshTopbarAuth();})();
+async function gameLogout(){await fetch('/api/auth/logout',{method:'POST',headers:_authHeaders()}).catch(()=>{});localStorage.removeItem('az_token');localStorage.removeItem('az_user');_gToken='';_gUser=null;_gGameId=null;_gState=null;_refreshUserBadge();_refreshTopbarAuth();if(document.getElementById('page-game').classList.contains('active')){_renderLoginScreen();}}
+
+// ══ DEVICE ID — har qurilmaga unikal ══
+function _getDeviceId(){let id=localStorage.getItem('az_device_id');if(!id){id='dev_'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('az_device_id',id);}return id;}
+const _DEV=_getDeviceId();
+
+// ══ DEVICE CACHE — animelar keshlash ══
+const _CACHE_KEY='az_animes_cache_v2';
+const _CACHE_TTL=30*60*1000; // 30 daqiqa
+function _saveAnimeCache(data){try{localStorage.setItem(_CACHE_KEY,JSON.stringify({ts:Date.now(),data}));}catch{}}
+function _loadAnimeCache(){try{const c=JSON.parse(localStorage.getItem(_CACHE_KEY)||'null');if(c&&Date.now()-c.ts<_CACHE_TTL)return c.data;}catch{}return null;}
+
+// ══ SAVE / LIKE — localStorage per device ══
+function _getLiked(){try{return JSON.parse(localStorage.getItem('az_liked_'+_DEV)||'[]');}catch{return[];}}
+function _getSaved(){try{return JSON.parse(localStorage.getItem('az_saved_'+_DEV)||'[]');}catch{return[];}}
+function _saveLiked(arr){localStorage.setItem('az_liked_'+_DEV,JSON.stringify(arr));}
+function _saveSavedList(arr){localStorage.setItem('az_saved_'+_DEV,JSON.stringify(arr));}
+function _isLiked(id){return _getLiked().includes(id);}
+function _isSaved(id){return _getSaved().includes(id);}
+
+function toggleLike(id){
+  let arr=_getLiked();
+  if(arr.includes(id))arr=arr.filter(x=>x!==id);else arr.push(id);
+  _saveLiked(arr);
+  const btn=document.getElementById('like-'+id);
+  if(btn)btn.classList.toggle('liked',arr.includes(id));
+  // gallerydagi tugmani ham yangilaymiz
+  const gbtn=document.getElementById('glike-'+id);
+  if(gbtn)gbtn.classList.toggle('liked',arr.includes(id));
+}
+function toggleSave(id){
+  let arr=_getSaved();
+  if(arr.includes(id))arr=arr.filter(x=>x!==id);else arr.push(id);
+  _saveSavedList(arr);
+  const btn=document.getElementById('save-'+id);
+  if(btn)btn.classList.toggle('saved',arr.includes(id));
+  const gbtn=document.getElementById('gsave-'+id);
+  if(gbtn)gbtn.classList.toggle('saved',arr.includes(id));
+  _syncSavedToTelegram(id,arr.includes(id));
+}
+function removeFromSaved(id){let arr=_getSaved().filter(x=>x!==id);_saveSavedList(arr);_syncSavedToTelegram(id,false);renderProfile();}
+function removeFromLiked(id){let arr=_getLiked().filter(x=>x!==id);_saveLiked(arr);renderProfile();}
+
+// ══ GALLERY ══
+let _galFilter='all';
+function renderGallery(){
+  const g=document.getElementById('galGrid');
+  if(!allAnimes.length&&!g.querySelector('.gal-card')){
+    // Hali yuklanmagan
+    g.innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+    if(!allAnimes.length){loadAnimes().then(()=>renderGallery());return;}
+  }
+  _renderGalGrid();
+  // Filter buttonlar
+  document.querySelectorAll('[data-gf]').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('[data-gf]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      _galFilter=b.dataset.gf;
+      _renderGalGrid();
+    };
+    b.classList.toggle('active',b.dataset.gf===_galFilter);
+  });
+}
+function _renderGalGrid(){
+  const g=document.getElementById('galGrid');
+  let list=[...allAnimes];
+  if(_galFilter==='ongoing')list=list.filter(a=>(a.aniType||'').toLowerCase().includes('ongoing'));
+  else if(_galFilter==='completed')list=list.filter(a=>a.aniType&&!a.aniType.toLowerCase().includes('ongoing'));
+  else if(_galFilter==='saved'){const ids=_getSaved();list=list.filter(a=>ids.includes(a.id));}
+  else if(_galFilter==='liked'){const ids=_getLiked();list=list.filter(a=>ids.includes(a.id));}
+  if(!list.length){g.innerHTML='<div class="prof-empty" style="grid-column:1/-1">Hech narsa topilmadi 😔</div>';return;}
+  g.innerHTML=list.map(a=>{
+    const og=(a.aniType||'').toLowerCase().includes('ongoing');
+    const badgeCls=og?'on':'fin';const badgeTxt=og?'OnGoing':'Tugagan';
+    const likedCls=_isLiked(a.id)?'liked':'';
+    const savedCls=_isSaved(a.id)?'saved':'';
+    return`<div class="gal-card" onclick="openModal(${a.id},this)">
+      <img class="gal-img" src="${a.rams_url||''}" loading="lazy" onerror="this.outerHTML='<div class=gal-img-ph>🎬</div>'">
+      <span class="gal-badge ${badgeCls}">${badgeTxt}</span>
+      <div class="gal-overlay">
+        <div class="gal-title">${a.nom||'Nomsiz'}</div>
+        <div class="gal-actions">
+          <button class="ga-btn ${likedCls}" id="glike-${a.id}" onclick="event.stopPropagation();toggleLike(${a.id})">❤️ Yoqtir</button>
+          <button class="ga-btn ${savedCls}" id="gsave-${a.id}" onclick="event.stopPropagation();toggleSave(${a.id})">💾 Saqlash</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ PROFILE ══
+async function _fetchTelegramProfile(){
+  try{const r=await fetch('/api/telegram/profile?device_id='+encodeURIComponent(_DEV));return await r.json();}catch{return{ok:false,linked:false};}
+}
+async function _syncSavedToTelegram(animeId,saved){
+  fetch('/api/profile/saved',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:_DEV,anime_id:animeId,saved})}).catch(()=>{});
+}
+async function startTelegramLink(){
+  const input=document.getElementById('tg-link-id');
+  const status=document.getElementById('tg-link-status');
+  const telegramId=(input?.value||'').trim();
+  if(!telegramId){if(status)status.textContent='Telegram ID kiriting';return;}
+  if(status)status.textContent='Botga tasdiqlash xabari yuborilmoqda...';
+  try{
+    const res=await fetch('/api/telegram/link/start',{method:'POST',headers:_authHeaders(),body:JSON.stringify({device_id:_DEV,telegram_id:telegramId,saved_ids:_getSaved()})});
+    const d=await res.json();
+    if(!d.ok){if(status)status.textContent='❌ '+(d.error||'Xatolik');return;}
+    if(status)status.textContent='Botdagi xabar ostidan Tasdiqlash tugmasini bosing...';
+    pollTelegramLink(d.request_id);
+  }catch{if(status)status.textContent='❌ Serverga ulanib bo\'lmadi';}
+}
+async function pollTelegramLink(requestId){
+  const status=document.getElementById('tg-link-status');
+  for(let i=0;i<40;i++){
+    await new Promise(r=>setTimeout(r,2000));
+    try{
+      const res=await fetch(`/api/telegram/link/status?request_id=${encodeURIComponent(requestId)}&device_id=${encodeURIComponent(_DEV)}`);
+      const d=await res.json();
+      if(d.status==='approved'){if(status)status.textContent='✅ Telegram profil ulandi';renderProfile();return;}
+      if(d.status==='rejected'){if(status)status.textContent='❌ So\'rov rad etildi';return;}
+    }catch{}
+  }
+  if(status)status.textContent='⏳ Tasdiqlash kutilmoqda. Profilni qayta ochib tekshiring.';
+}
+function _telegramConnectBox(){
+  return `<div class="prof-card" style="padding:18px">
+    <div class="prof-sec-title">🔗 Telegram profilni ulash</div>
+    <div class="prof-login-desc" style="max-width:none;text-align:left;margin-bottom:12px">Telegram ID kiriting. Bot sizga tasdiqlash xabari yuboradi.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="tg-link-id" inputmode="numeric" placeholder="Telegram ID" style="flex:1;min-width:180px;padding:11px 13px;border-radius:10px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)">
+      <button class="prof-google-btn" onclick="startTelegramLink()" style="min-width:130px">Davom etish</button>
+    </div>
+    <div id="tg-link-status" style="font-size:.78rem;color:var(--muted);margin-top:10px"></div>
+  </div>`;
+}
+async function _fetchSpotifyStatus(){
+  if(!_gToken)return{ok:false,connected:false};
+  try{const r=await fetch('/api/auth/spotify/status',{headers:_authHeaders()});return await r.json();}catch{return{ok:false,connected:false};}
+}
+async function spotifyConnect(){
+  if(!_gToken){alert('Avval Google bilan kiring.');return;}
+  try{
+    const res=await fetch('/api/auth/spotify',{headers:_authHeaders()});
+    const d=await res.json();
+    if(d.ok&&d.url){window.location.href=d.url;return;}
+    alert(d.error||'Spotify ulashda xatolik');
+  }catch{alert('Serverga ulanib bo\'lmadi');}
+}
+function _spotifyConnectBox(status){
+  const s=status?.spotify||{};
+  if(status?.connected){
+    const av=s.image?`<img class="prof-spotify-avatar" src="${s.image}" onerror="this.style.display='none'">`:'<div class="prof-spotify-avatar" style="background:#1ed760"></div>';
+    const link=s.profile_url?`<a class="prof-spotify-btn" href="${s.profile_url}" target="_blank" rel="noopener">Spotify profil</a>`:'';
+    return `<div class="prof-card" style="padding:18px">
+      <div class="prof-sec-title">Spotify ulangan</div>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0">
+        ${av}
+        <div>
+          <div class="prof-name">${s.name||'Spotify foydalanuvchi'}</div>
+          <div class="prof-email">${s.email||s.country||''}</div>
+        </div>
+      </div>
+      ${link}
+    </div>`;
+  }
+  return `<div class="prof-card" style="padding:18px">
+    <div class="prof-sec-title">Spotify hisobini ulash</div>
+    <div class="prof-login-desc" style="max-width:none;text-align:left;margin:12px 0">Spotify profilingizni web profilingizga bog'lang.</div>
+    <button class="prof-spotify-btn" onclick="spotifyConnect()">Spotify bilan ulash</button>
+  </div>`;
+}
+async function renderProfile(){
+  const c=document.getElementById('profileContent');
+  if(!c)return;
+  c.innerHTML='<div class="loading"><div class="spinner"></div>Profil yuklanmoqda...</div>';
+  const tgProfile=await _fetchTelegramProfile();
+  if(!_gUser&&!tgProfile.linked){
+    const url=_getGoogleAuthUrl();
+    c.innerHTML=`<div class="prof-login-wrap">
+      <div class="prof-login-ico">👤</div>
+      <div class="prof-login-title">Profilga kirish</div>
+      <div class="prof-login-desc">Google hisobingiz bilan kiring. Saqlangan va yoqtirgan animelaringiz bu yerda saqlanadi.</div>
+      <button class="prof-google-btn" onclick="window.location.href='${url}'">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Google bilan kirish
+      </button>
+    </div>`;
+    c.innerHTML+=_telegramConnectBox();
+    return;
+  }
+  if(tgProfile.linked&&Array.isArray(tgProfile.watchlist)){
+    _saveSavedList(tgProfile.watchlist.map(Number));
+  }
+  const saved=_getSaved();const liked=_getLiked();
+  const savedAnimes=allAnimes.filter(a=>saved.includes(a.id));
+  const likedAnimes=allAnimes.filter(a=>liked.includes(a.id));
+  const displayUser=tgProfile.linked?{
+    name:tgProfile.telegram?.name||'Telegram foydalanuvchi',
+    email:(tgProfile.telegram?.username?'@'+tgProfile.telegram.username:'ID: '+tgProfile.telegram?.id),
+    picture:tgProfile.telegram?.photo_url||''
+  }:_gUser;
+  const avatarEl=displayUser.picture?`<img class="prof-av" src="${displayUser.picture}" onerror="this.outerHTML='<div class=prof-av-ph>👤</div>'">`:'<div class="prof-av-ph">👤</div>';
+  const _animeItem=(a,rmFn)=>`<div class="prof-anime-item" onclick="openModal(${a.id},this)">
+    <img class="prof-anime-img" src="${a.rams_url||''}" loading="lazy" onerror="this.style.display='none'">
+    <div class="prof-anime-label">${a.nom||'Nomsiz'}</div>
+    <button class="prof-anime-rm" onclick="event.stopPropagation();${rmFn}(${a.id})" title="O'chirish">✕</button>
+  </div>`;
+
+  c.innerHTML=`<div class="profile-wrap">
+    <div class="prof-card">
+      <div class="prof-cover"><div class="prof-cover::after"></div></div>
+      <div class="prof-av-wrap">${avatarEl}</div>
+      <div class="prof-body">
+        <div class="prof-name">${displayUser.name||'Foydalanuvchi'}</div>
+        <div class="prof-email">${displayUser.email||''}</div>
+        <div class="prof-stats-row">
+          <div class="prof-stat"><div class="prof-stat-val">${savedAnimes.length}</div><div class="prof-stat-lbl">Saqlangan</div></div>
+          <div class="prof-stat"><div class="prof-stat-val">${likedAnimes.length}</div><div class="prof-stat-lbl">Yoqtirilgan</div></div>
+          <div class="prof-stat"><div class="prof-stat-val">${tgProfile.linked?(tgProfile.bot_profile?.status||'Oddiy'):allAnimes.length}</div><div class="prof-stat-lbl">${tgProfile.linked?'Bot holati':'Jami Anime'}</div></div>
+        </div>
+        ${_gUser?'<button class="prof-logout-btn" onclick="topbarLogout();renderProfile()">🚪 Chiqish</button>':''}
+      </div>
+    </div>
+
+    ${tgProfile.linked?`<div class="prof-card">
+      <div class="prof-sec-title">🤖 Bot profili</div>
+      <div class="prof-stats-row">
+        <div class="prof-stat"><div class="prof-stat-val">${tgProfile.bot_profile?.balance||0}</div><div class="prof-stat-lbl">Hisob</div></div>
+        <div class="prof-stat"><div class="prof-stat-val">${tgProfile.bot_profile?.cashback||0}</div><div class="prof-stat-lbl">Cashback</div></div>
+        <div class="prof-stat"><div class="prof-stat-val">${tgProfile.bot_profile?.referrals||0}</div><div class="prof-stat-lbl">Referal</div></div>
+      </div>
+      <div class="prof-sec-title" style="margin-top:14px">▶️ Davom etish</div>
+      <div class="prof-empty" style="text-align:left">${(tgProfile.progress||[]).length?tgProfile.progress.map(p=>`${p.name||('Anime #'+p.anime_id)} — ${p.last_episode}-qism`).join('<br>'):'Hali ko\'rish tarixi yo\'q.'}</div>
+    </div>`:_telegramConnectBox()}
+
+    <div class="prof-card">
+      <div class="prof-sec-title">💾 Saqlangan Animelar (${savedAnimes.length})</div>
+      <div class="prof-anime-grid">${savedAnimes.length?savedAnimes.map(a=>_animeItem(a,'removeFromSaved')).join(''):'<div class="prof-empty">Saqlangan anime yo\'q.<br>Kartada 💾 tugmasini bosing.</div>'}</div>
+    </div>
+
+    <div class="prof-card">
+      <div class="prof-sec-title">❤️ Yoqtirilgan Animelar (${likedAnimes.length})</div>
+      <div class="prof-anime-grid">${likedAnimes.length?likedAnimes.map(a=>_animeItem(a,'removeFromLiked')).join(''):'<div class="prof-empty">Yoqtirilgan anime yo\'q.<br>Kartada ❤️ tugmasini bosing.</div>'}</div>
+    </div>
+  </div>`;
+}
+
+// ══ HERO + SPLASH BOTINFO ══
+async function _loadBotInfo(){
+  let BOT_UN='{{BOT_USERNAME}}'||'anime_uz_official_bot';
+  let displayName=BOT_UN.replace(/_/g,' ').toUpperCase().replace(' BOT','');
+  let botPhoto='';
+  try{
+    const res=await fetch('/api/bot-info');
+    const d=await res.json();
+    if(d.ok){
+      BOT_UN=(d.username||BOT_UN||'anime_uz_official_bot').replace(/^@/,'');
+      displayName=(d.name||BOT_UN).replace(/_/g,' ').toUpperCase().replace(' BOT','');
+      botPhoto=d.photo_url||'';
+    }
+  }catch{}
+  const setLogo=(id,cls,sizeLetter)=>{
+    const el=document.getElementById(id);if(!el)return;
+    if(botPhoto){el.innerHTML=`<img src="${botPhoto}" alt="${displayName}" onerror="this.remove();this.parentElement.textContent='${sizeLetter}'">`;}
+    else{el.textContent=sizeLetter;}
+  };
+  const setHeadImage=(selector,url)=>{
+    const el=document.querySelector(selector);if(el&&url)el.setAttribute(selector.startsWith('link')?'href':'content',url);
+  };
+  if(botPhoto){
+    setHeadImage('link[rel="icon"]',botPhoto);
+    setHeadImage('link[rel="apple-touch-icon"]',botPhoto);
+    setHeadImage('meta[property="og:image"]',botPhoto);
+    setHeadImage('meta[name="twitter:image"]',botPhoto);
+  }
+  // Splash update
+  const sn=document.getElementById('splashBotName');if(sn)sn.textContent=displayName;
+  const su=document.getElementById('splashBotUser');if(su)su.textContent='@'+BOT_UN;
+  setLogo('splashLogoEl','splash-logo-img',displayName[0]||'A');
+  // Hero update
+  const hn=document.getElementById('heroBotName');if(hn)hn.textContent=displayName;
+  const hu=document.getElementById('heroBotUser');if(hu)hu.textContent='@'+BOT_UN;
+  const tb=document.getElementById('heroTgBtn');if(tb)tb.href='https://t.me/'+BOT_UN;
+  setLogo('heroLogoEl','hero-logo-img',displayName[0]||'A');
+  // Sidebar
+  const sbn=document.getElementById('sideBotName');if(sbn)sbn.textContent=displayName.split(' ')[0];
+  setLogo('sideLogoEl','sidebar-logo-img',displayName[0]||'A');
+  // stats
+  try{
+    const res=await fetch('/api/stats');const d=await res.json();
+    const hu2=document.getElementById('heroUsers');if(hu2)hu2.textContent=d.users?.toLocaleString()||'—';
+    const ha=document.getElementById('heroAnimes');if(ha)ha.textContent=d.animes?.toLocaleString()||'—';
+    const ho=document.getElementById('heroOnline');if(ho){ho.textContent='● Online';ho.style.color='var(--green)';}
+  }catch{}
+}
+
+// ══ ANIME CACHE patching ══
+async function loadAnimes(){
+  // Cached version check
+  const cached=_loadAnimeCache();
+  if(cached&&cached.length){
+    allAnimes=cached;
+    const tcEl=document.getElementById('sideCount');if(tcEl)tcEl.textContent=allAnimes.length;
+    curFilter=S.def;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===curFilter));
+    applyFilter();
+    // Background refresh
+    _refreshAnimesFromServer();
+    return;
+  }
+  await _refreshAnimesFromServer();
+}
+async function _refreshAnimesFromServer(){
+  const g=document.getElementById('animeGrid');
+  if(!allAnimes.length&&g)g.innerHTML='<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+  try{
+    const res=await fetch('/api/animes');
+    if(!res.ok)throw new Error('Server xatosi');
+    const d=await res.json();
+    allAnimes=d.animes||[];
+    _saveAnimeCache(allAnimes);
+  }catch{
+    if(!allAnimes.length&&g)g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-ico">⚠️</div><h3>Serverga ulanib bo\'lmadi</h3></div>';
+    return;
+  }
+  const tcEl=document.getElementById('sideCount');if(tcEl)tcEl.textContent=allAnimes.length;
+  curFilter=S.def;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===curFilter));
+  applyFilter();
+}
+
+async function _openPosterRoute(id){
+  if(!id)return;
+  let anime=allAnimes.find(a=>a.id===id);
+  if(!anime){
+    try{
+      const res=await fetch(`/api/animes/${id}`);
+      const d=await res.json();
+      if(d.ok&&d.anime){
+        anime=d.anime;
+        allAnimes=[anime,...allAnimes.filter(a=>a.id!==id)];
+        _saveAnimeCache(allAnimes);
+      }
+    }catch{}
+  }
+  if(!anime)return;
+  showPage('animes',null);
+  _openingPosterFromRoute=true;
+  openModal(id,null,{skipHistory:true,skipFx:true});
+  _openingPosterFromRoute=false;
+}
+
+// ══ SPLASH HIDE ══
+function _hideSplash(){const s=document.getElementById('splash');if(s)s.classList.add('hidden');}
+// 2.5 soniyadan keyin yoki animelar yuklangandan keyin
+setTimeout(_hideSplash,2500);
+
+// ══ INIT ══
+_loadBotInfo();
+loadAnimes().then(()=>{const id=_posterRouteId();if(id)_openPosterRoute(id);});
+if(location.hash==='#profile'){
+  setTimeout(()=>showPage('profile',null),0);
+}
+
+</script>
+</body>
+  </html>
