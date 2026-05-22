@@ -150,6 +150,16 @@ def _is_allowed_redirect_uri(redirect_uri: str) -> bool:
     return not allowed or redirect_uri in allowed
 
 
+def _public_origin(request: web.Request) -> str:
+    if WEB_PUBLIC_ORIGIN:
+        return WEB_PUBLIC_ORIGIN
+    proto = (request.headers.get("X-Forwarded-Proto") or request.scheme or "https").split(",", 1)[0].strip()
+    host = (request.headers.get("X-Forwarded-Host") or request.host or "").split(",", 1)[0].strip()
+    if proto not in {"http", "https"}:
+        proto = "https"
+    return f"{proto}://{host}".rstrip("/")
+
+
 @web.middleware
 async def traffic_guard_middleware(request: web.Request, handler):
     if _is_suspicious_request(request):
@@ -573,7 +583,7 @@ async def _poster_page(request: web.Request, anime_id: str) -> web.Response:
     if not row:
         raise web.HTTPNotFound()
 
-    origin = WEB_PUBLIC_ORIGIN or f"{request.scheme}://{request.host}"
+    origin = _public_origin(request)
     description_parts = [
         row[2] or "",
         f"{row[6] or 0} qism",
@@ -703,6 +713,7 @@ async def index(request, meta: dict | None = None):
         html = html.replace(
             '<meta property="og:image" content="/bot-icon">',
             (
+                '<meta property="og:type" content="website">\n'
                 f'<meta property="og:title" content="{title}">\n'
                 f'<meta property="og:description" content="{description}">\n'
                 f'<meta property="og:url" content="{url}">\n'
