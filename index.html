@@ -790,7 +790,9 @@ html{scroll-behavior:smooth}
 .hero-stats-row{display:flex;gap:16px;margin-top:9px;flex-wrap:wrap}
 .hero-stat-val{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:900;color:var(--accent);line-height:1}
 .hero-stat-lbl{font-size:.57rem;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;font-family:'Orbitron',monospace;margin-top:1px}
+.hero-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
 .hero-tg-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;border-radius:18px;color:#fff;font-family:'Orbitron',monospace;font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.hero-tg-btn.download{background:linear-gradient(90deg,var(--green),var(--accent));box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
 .hero-tg-btn:hover{transform:translateY(-2px);box-shadow:0 5px 18px var(--glow-c)}
 
 /* ══ GALLERY PAGE ══ */
@@ -876,6 +878,8 @@ html{scroll-behavior:smooth}
   .pills{max-width:160px}
   .hero-header{padding:16px 14px 14px;gap:12px}
   .hero-bot-name{font-size:1rem}
+  .hero-actions{width:100%}
+  .hero-tg-btn{flex:1;justify-content:center;min-width:150px}
   #galGrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:12px}
   .prof-anime-grid{padding:10px}
 }
@@ -995,10 +999,16 @@ html{scroll-behavior:smooth}
             </div>
           </div>
         </div>
-        <a class="hero-tg-btn" id="heroTgBtn" href="https://t.me/anime_uz_official_bot" target="_blank">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
-          Botga o'tish
-        </a>
+        <div class="hero-actions">
+          <a class="hero-tg-btn download" href="https://github.com/stormdeveloper-glitch/animebot/releases/download/AnimeUZ/AnimeUZ.apk" target="_blank" rel="noopener" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Ilovani yuklash
+          </a>
+          <a class="hero-tg-btn" id="heroTgBtn" href="https://t.me/anime_uz_official_bot" target="_blank" rel="noopener">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+            Botga o'tish
+          </a>
+        </div>
       </div>
       <div style="padding:14px 14px 0">
       <div class="page-header" style="margin-bottom:10px">
