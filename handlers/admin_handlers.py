@@ -1922,6 +1922,8 @@ async def edit_anime_options(callback: CallbackQuery):
         [InlineKeyboardButton(text="Holati (OnGoing/Yakunlangan)", callback_data=f"editAField={anime_id}=aniType")],
         [InlineKeyboardButton(text="Janrini o'zgartirish", callback_data=f"editAField={anime_id}=janri")],
         [InlineKeyboardButton(text="Rasm/Video (Poster)", callback_data=f"editAField={anime_id}=rams")],
+        [InlineKeyboardButton(text="Filler qismlar", callback_data=f"editAField={anime_id}=filler_info")],
+        [InlineKeyboardButton(text="Filler rasmi", callback_data=f"editAField={anime_id}=filler_image")],
         [InlineKeyboardButton(text="🔞 Yosh toifasi", callback_data=f"editAge={anime_id}")],
         [InlineKeyboardButton(text="⬅️ Ortga", callback_data=f"manageAnime={anime_id}")]
     ]
@@ -1971,7 +1973,7 @@ async def edit_anime_field_prompt(callback: CallbackQuery, state: FSMContext):
     anime_id = int(parts[1])
     field = parts[2]
 
-    allowed_fields = {"nom", "qismi", "aniType", "janri", "rams"}
+    allowed_fields = {"nom", "qismi", "aniType", "janri", "rams", "filler_info", "filler_image"}
     if field not in allowed_fields:
         await callback.answer("❌ Noto'g'ri maydon tanlandi.", show_alert=True)
         return
@@ -1998,6 +2000,17 @@ async def edit_anime_field_prompt(callback: CallbackQuery, state: FSMContext):
         prompt = "<b>Yangi janr(lar)ni yuboring:</b>\n<i>Masalan: Action, Fantasy, Comedy</i>"
     elif field == "rams":
         prompt = "<b>Yangi rasm yoki 60 soniyali video yuboring:</b>"
+    elif field == "filler_info":
+        prompt = (
+            "<b>Filler qismlar oraliqlarini yuboring:</b>\n\n"
+            "<i>Masalan: <code>136-215</code> yoki <code>26, 97, 101-106</code>.</i>\n"
+            "<i>Tozalash uchun <code>-</code> yuboring.</i>"
+        )
+    elif field == "filler_image":
+        prompt = (
+            "<b>Filler uchun rasm yuboring:</b>\n\n"
+            "<i>Rasm yuboring yoki Telegram file_id/URL yuboring. Tozalash uchun <code>-</code>.</i>"
+        )
         
     await callback.message.answer(prompt, parse_mode="HTML")
     await state.set_state(EditAnimeStates.edit_field)
@@ -2010,7 +2023,7 @@ async def process_edit_anime_field(message: Message, state: FSMContext):
     anime_id = data['edit_anime_id']
     field = data['edit_field']
 
-    allowed_fields = {"nom", "qismi", "aniType", "janri", "rams", "yosh_toifa"}
+    allowed_fields = {"nom", "qismi", "aniType", "janri", "rams", "yosh_toifa", "filler_info", "filler_image"}
     if field not in allowed_fields:
         await state.clear()
         await message.answer("❌ Maydon noto'g'ri, qaytadan urinib ko'ring.", reply_markup=panel_kb())
@@ -2056,6 +2069,23 @@ async def process_edit_anime_field(message: Message, state: FSMContext):
         else:
             await message.answer("❌ Faqat rasm yoki video yuboring!")
             return
+    elif field == "filler_image":
+        if message.photo:
+            new_value = message.photo[-1].file_id
+        elif message.document and message.document.mime_type and message.document.mime_type.startswith("image/"):
+            new_value = message.document.file_id
+        else:
+            value = (message.text or "").strip()
+            if value == "-":
+                new_value = ""
+            elif value:
+                new_value = value
+            else:
+                await message.answer("Rasm, file_id yoki URL yuboring!")
+                return
+    elif field == "filler_info":
+        value = (message.text or "").strip()
+        new_value = "" if value == "-" else value
     else:
         value = (message.text or "").strip()
         if not value:

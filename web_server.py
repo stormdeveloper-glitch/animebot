@@ -441,7 +441,8 @@ async def api_animes(request):
                            a.fandub, a.yili, a.davlat, a.qidiruv,
                            COALESCE(a.liklar,0), COALESCE(a.desliklar,0),
                            COUNT(d.data_id) as ep_count, a.yosh_toifa,
-                           COALESCE(a.tavsif,'') as tavsif
+                           COALESCE(a.tavsif,'') as tavsif,
+                           COALESCE(a.filler_info,'') as filler_info
                     FROM animelar a
                     LEFT JOIN anime_datas d ON d.id = a.id
                     WHERE {conditions}
@@ -454,7 +455,8 @@ async def api_animes(request):
                            a.fandub, a.yili, a.davlat, a.qidiruv,
                            COALESCE(a.liklar,0), COALESCE(a.desliklar,0),
                            COUNT(d.data_id) as ep_count, a.yosh_toifa,
-                           COALESCE(a.tavsif,'') as tavsif
+                           COALESCE(a.tavsif,'') as tavsif,
+                           COALESCE(a.filler_info,'') as filler_info
                     FROM animelar a
                     LEFT JOIN anime_datas d ON d.id = a.id
                     GROUP BY a.id ORDER BY a.id DESC LIMIT 500
@@ -481,6 +483,7 @@ async def api_animes(request):
                 "ep_count":  row[12] or 0,
                 "yosh_toifa": row[13] or "Barcha yoshlar",
                 "tavsif":    row[14] or "",
+                "filler_info": row[15] or "",
                 "poster_page_url": f"/poster/{row[0]}",
             })
         return web.json_response({"animes": animes, "total": len(animes)})
@@ -496,7 +499,8 @@ async def api_anime_detail(request):
                    a.fandub, a.yili, a.davlat, a.qidiruv,
                    COALESCE(a.liklar,0), COALESCE(a.desliklar,0),
                    COUNT(d.data_id) as ep_count, a.yosh_toifa,
-                   COALESCE(a.tavsif,'') as tavsif
+                   COALESCE(a.tavsif,'') as tavsif,
+                   COALESCE(a.filler_info,'') as filler_info
             FROM animelar a
             LEFT JOIN anime_datas d ON d.id = a.id
             WHERE a.id = ?
@@ -527,6 +531,7 @@ async def api_anime_detail(request):
             "ep_count": row[12] or 0,
             "yosh_toifa": row[13] or "Barcha yoshlar",
             "tavsif": row[14] or "",
+            "filler_info": row[15] or "",
             "poster_page_url": f"/poster/{row[0]}",
         },
     })
@@ -1011,6 +1016,8 @@ async def _prepare_admin_anime_payload(body: dict, *, existing_rams: str = "") -
         "kanal": _clean_text(body.get("kanal")),
         "yosh_toifa": _clean_text(body.get("yosh_toifa"), "Barcha yoshlar") or "Barcha yoshlar",
         "tavsif": _clean_text(body.get("tavsif")),
+        "filler_info": _clean_text(body.get("filler_info")),
+        "filler_image": _clean_text(body.get("filler_image")),
     }
     meta = {"poster_source": "manual" if values["rams"] else "", "poster_url": "", "poster_file_id": ""}
     if not values["nom"]:
@@ -1101,7 +1108,8 @@ async def api_admin_animes(request):
                COALESCE(a.qidiruv,0), a.sana, a.aniType, a.fandub, a.kanal,
                COALESCE(a.liklar,0), COALESCE(a.desliklar,0), a.tavsif, a.nom_en,
                COALESCE(a.yosh_toifa,'Barcha yoshlar'), COALESCE(a.season_group_id,a.id),
-               COALESCE(a.season_number,1), COUNT(d.data_id) as ep_count
+               COALESCE(a.season_number,1), COALESCE(a.filler_info,''), COALESCE(a.filler_image,''),
+               COUNT(d.data_id) as ep_count
         FROM animelar a
         LEFT JOIN anime_datas d ON d.id=a.id
         {where}
@@ -1115,7 +1123,8 @@ async def api_admin_animes(request):
     keys = [
         "id", "nom", "rams", "qismi", "davlat", "tili", "yili", "janri",
         "qidiruv", "sana", "aniType", "fandub", "kanal", "liklar", "desliklar",
-        "tavsif", "nom_en", "yosh_toifa", "season_group_id", "season_number", "ep_count"
+        "tavsif", "nom_en", "yosh_toifa", "season_group_id", "season_number",
+        "filler_info", "filler_image", "ep_count"
     ]
     animes = []
     for row in rows:
@@ -1149,13 +1158,14 @@ async def api_admin_create_anime(request):
         await db.execute("""
             INSERT INTO animelar (
                 nom, rams, qismi, davlat, tili, yili, janri, qidiruv, sana,
-                aniType, fandub, kanal, yosh_toifa, tavsif, nom_en
+                aniType, fandub, kanal, yosh_toifa, tavsif, nom_en, filler_info, filler_image
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             values["nom"], values["rams"], values["qismi"], values["davlat"], values["tili"],
             values["yili"], values["janri"], sana, values["aniType"], values["fandub"],
             values["kanal"], values["yosh_toifa"], values["tavsif"], values["nom_en"],
+            values["filler_info"], values["filler_image"],
         ))
         await db.commit()
         async with db.execute("SELECT last_insert_rowid()") as c:

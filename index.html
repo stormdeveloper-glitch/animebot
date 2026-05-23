@@ -1737,6 +1737,7 @@ function renderAnimeModal(a){
       <div class="irow"><span class="ilbl">Ko'rish</span><span class="ival">👁 ${a.qidiruv||0}</span></div>
       <a class="m-btn" href="https://t.me/${BOT}?start=${a.id}" target="_blank">▶ Botda tomosha qilish</a>
       ${a.tavsif?`<div class="irow" style="display:block"><span class="ilbl">Tavsif</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.tavsif}</span></div>`:''}
+      ${a.filler_info?`<div class="irow" style="display:block"><span class="ilbl">Filler qismlar</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.filler_info}<br><small>Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.</small></span></div>`:''}
       <a class="m-btn" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
     </div>`;
   document.getElementById('modalBg').classList.add('open');
