@@ -133,6 +133,14 @@ async def init_db():
             await db.execute("ALTER TABLE animelar ADD COLUMN nom_en TEXT DEFAULT ''")
         except Exception:
             pass  # Ustun allaqachon bor
+        try:
+            await db.execute("ALTER TABLE animelar ADD COLUMN filler_info TEXT DEFAULT ''")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE animelar ADD COLUMN filler_image TEXT DEFAULT ''")
+        except Exception:
+            pass
 
         # Fasllarni bitta anime guruhida ko'rsatish uchun
         try:
