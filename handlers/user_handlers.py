@@ -96,6 +96,51 @@ async def set_watch_progress(user_id: int, anime_id: int, ep_num: int) -> None:
         await db.commit()
 
 
+DOWNLOAD_BATCH_SIZE = 50
+
+
+def download_next_range_kb(anime_id: int, next_offset: int, total_count: int, episodes: list):
+    if next_offset >= total_count:
+        return None
+    end_offset = min(next_offset + DOWNLOAD_BATCH_SIZE, total_count)
+    first_ep = episodes[next_offset][0]
+    last_ep = episodes[end_offset - 1][0]
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(
+            text=f"{first_ep}-{last_ep} qismlarni yuklash",
+            callback_data=f"dl_all={anime_id}={next_offset}"
+        )
+    ]])
+
+
+async def send_download_batch(message: Message, bot: Bot, anime_id: int, episodes: list, anime_name: str, restricted: bool):
+    import asyncio
+
+    success = 0
+    failed = 0
+    max_sent_ep = 0
+    for ep_num, file_id in episodes:
+        caption = await build_episode_caption(anime_id, ep_num, anime_name, bot)
+        try:
+            try:
+                await message.answer_video(
+                    video=file_id, caption=caption, parse_mode="HTML",
+                    protect_content=restricted
+                )
+            except Exception:
+                await message.answer_document(
+                    document=file_id, caption=caption, parse_mode="HTML",
+                    protect_content=restricted
+                )
+            success += 1
+            if ep_num > max_sent_ep:
+                max_sent_ep = ep_num
+        except Exception:
+            failed += 1
+        await asyncio.sleep(0.5)
+    return success, failed, max_sent_ep
+
+
 async def get_season_buttons(anime_id: int) -> list:
     """Shu anime bilan bog'langan fasllar uchun inline tugmalar."""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -946,7 +991,8 @@ async def load_anime_callback(callback: CallbackQuery):
     if not await is_admin(callback.from_user.id) and await is_maintenance():
         await callback.answer("⚠️ Bot tamirlanyapti, kuting...", show_alert=True)
         return
-    anime_id = int(callback.data.split("=")[1])
+    parts = callback.data.split("=")
+    anime_id = int(parts[1])
     try:
         await callback.message.delete()
     except:
@@ -1659,7 +1705,8 @@ async def ads_menu(message: Message):
 
 @router.callback_query(F.data.startswith("like="))
 async def like_callback(callback: CallbackQuery):
-    anime_id = int(callback.data.split("=")[1])
+    parts = callback.data.split("=")
+    anime_id = int(parts[1])
     user_id = callback.from_user.id
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("UPDATE animelar SET liklar=liklar+1 WHERE id=?", (anime_id,))
@@ -1686,7 +1733,8 @@ async def like_callback(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("dislike="))
 async def dislike_callback(callback: CallbackQuery):
-    anime_id = int(callback.data.split("=")[1])
+    parts = callback.data.split("=")
+    anime_id = int(parts[1])
     user_id = callback.from_user.id
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("UPDATE animelar SET desliklar=desliklar+1 WHERE id=?", (anime_id,))
@@ -1898,7 +1946,9 @@ async def dl_all_callback(callback: CallbackQuery):
         await callback.answer("⚠️ Bot tamirlanyapti, kuting...", show_alert=True)
         return
 
-    anime_id = int(callback.data.split("=")[1])
+    parts = callback.data.split("=")
+    anime_id = int(parts[1])
+    offset = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else 0
     await callback.answer("⏳ Barcha qismlar yuklanmoqda...", show_alert=True)
 
     async with aiosqlite.connect(DB_PATH) as db:
@@ -1917,6 +1967,44 @@ async def dl_all_callback(callback: CallbackQuery):
         return
 
     anime_name = anime_row[0] if anime_row else "Anime"
+
+    total_count = len(all_eps)
+    offset = max(0, min(offset, total_count))
+    batch = all_eps[offset:offset + DOWNLOAD_BATCH_SIZE]
+    if not batch:
+        await callback.message.answer("Yuklanadigan qism qolmadi.")
+        return
+
+    first_ep = batch[0][0]
+    last_ep = batch[-1][0]
+    await callback.message.answer(
+        f"<b>{anime_name}</b>\n"
+        f"<b>{first_ep}-{last_ep}</b> qismlar yuklanmoqda...\n"
+        f"Jami: <b>{total_count}</b> ta qism. Har safar <b>{DOWNLOAD_BATCH_SIZE}</b> tagacha yuboriladi.",
+        parse_mode="HTML"
+    )
+
+    success, failed, max_sent_ep = await send_download_batch(
+        callback.message, callback.bot, anime_id, batch, anime_name, restricted
+    )
+
+    next_offset = offset + DOWNLOAD_BATCH_SIZE
+    result_text = f"<b>{anime_name}</b> — {first_ep}-{last_ep} qismlar yuborildi!\nMuvaffaqiyatli: {success} ta"
+    if failed:
+        result_text += f"\nYuborilmadi: {failed} ta"
+    if max_sent_ep > 0:
+        await set_watch_progress(callback.from_user.id, anime_id, max_sent_ep)
+    if next_offset < total_count:
+        next_first = all_eps[next_offset][0]
+        next_last = all_eps[min(next_offset + DOWNLOAD_BATCH_SIZE, total_count) - 1][0]
+        result_text += f"\n\nDavom ettirish uchun: <b>{next_first}-{next_last}</b> qismlarni yuklang."
+
+    await callback.message.answer(
+        result_text,
+        reply_markup=download_next_range_kb(anime_id, next_offset, total_count, all_eps),
+        parse_mode="HTML"
+    )
+    return
 
     await callback.message.answer(
         f"📦 <b>{anime_name}</b>\n"
@@ -2381,6 +2469,44 @@ async def web_app_data_handler(message: Message, bot: Bot):
             return
 
         anime_name = anime_row[0] if anime_row else "Anime"
+        offset = int(data.get("offset", 0) or 0)
+        total_count = len(all_eps)
+        offset = max(0, min(offset, total_count))
+        batch = all_eps[offset:offset + DOWNLOAD_BATCH_SIZE]
+        if not batch:
+            await message.answer("Yuklanadigan qism qolmadi.")
+            return
+
+        first_ep = batch[0][0]
+        last_ep = batch[-1][0]
+        await message.answer(
+            f"<b>{anime_name}</b>\n"
+            f"<b>{first_ep}-{last_ep}</b> qismlar yuklanmoqda...\n"
+            f"Jami: <b>{total_count}</b> ta qism. Har safar <b>{DOWNLOAD_BATCH_SIZE}</b> tagacha yuboriladi.",
+            parse_mode="HTML"
+        )
+
+        success, failed, max_sent_ep = await send_download_batch(
+            message, bot, anime_id, batch, anime_name, restricted
+        )
+
+        next_offset = offset + DOWNLOAD_BATCH_SIZE
+        result = f"<b>{anime_name}</b> — {first_ep}-{last_ep} qismlar yuborildi!\nMuvaffaqiyatli: {success} ta"
+        if failed:
+            result += f"\nYuborilmadi: {failed} ta"
+        if max_sent_ep > 0:
+            await set_watch_progress(user_id, anime_id, max_sent_ep)
+        if next_offset < total_count:
+            next_first = all_eps[next_offset][0]
+            next_last = all_eps[min(next_offset + DOWNLOAD_BATCH_SIZE, total_count) - 1][0]
+            result += f"\n\nDavom ettirish uchun: <b>{next_first}-{next_last}</b> qismlarni yuklang."
+        await message.answer(
+            result,
+            reply_markup=download_next_range_kb(anime_id, next_offset, total_count, all_eps),
+            parse_mode="HTML"
+        )
+        return
+
         await message.answer(
             f"📦 <b>{anime_name}</b>\n"
             f"Jami <b>{len(all_eps)}</b> ta qism yuklanmoqda...\n"
