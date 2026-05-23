@@ -141,6 +141,64 @@ async def send_download_batch(message: Message, bot: Bot, anime_id: int, episode
     return success, failed, max_sent_ep
 
 
+def parse_episode_ranges(raw: str | None) -> list[tuple[int, int]]:
+    ranges = []
+    for chunk in (raw or "").replace(";", ",").split(","):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        if "-" in chunk:
+            start, end = chunk.split("-", 1)
+            if start.strip().isdigit() and end.strip().isdigit():
+                a, b = int(start), int(end)
+                if a > 0 and b > 0:
+                    ranges.append((min(a, b), max(a, b)))
+        elif chunk.isdigit():
+            ep = int(chunk)
+            if ep > 0:
+                ranges.append((ep, ep))
+    return ranges
+
+
+def is_filler_episode(ep_num: int, filler_info: str | None) -> bool:
+    return any(start <= ep_num <= end for start, end in parse_episode_ranges(filler_info))
+
+
+def filler_caption(anime_name: str, filler_info: str, ep_num: int | None = None) -> str:
+    ep_line = f"\nHozirgi qism: <b>{ep_num}-qism</b>\n" if ep_num else "\n"
+    return (
+        f"<b>{html.escape(anime_name)}</b>\n"
+        f"<b>Filler qismlar:</b> {html.escape(filler_info)}"
+        f"{ep_line}\n"
+        "Bu qismlar asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.\n"
+        "Xohlasangiz keyingi asosiy qismga o'tishingiz mumkin."
+    )
+
+
+async def get_filler_data(anime_id: int) -> tuple[str, str]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute(
+            "SELECT COALESCE(filler_info,''), COALESCE(filler_image,'') FROM animelar WHERE id=?",
+            (anime_id,)
+        ) as c:
+            row = await c.fetchone()
+    return (row[0] or "", row[1] or "") if row else ("", "")
+
+
+async def send_filler_notice(message: Message, anime_id: int, ep_num: int, anime_name: str) -> None:
+    filler_info, filler_image = await get_filler_data(anime_id)
+    if not filler_info or not is_filler_episode(ep_num, filler_info):
+        return
+    caption = filler_caption(anime_name, filler_info, ep_num)
+    if filler_image:
+        try:
+            await message.answer_photo(photo=filler_image, caption=caption, parse_mode="HTML")
+            return
+        except Exception:
+            pass
+    await message.answer(caption, parse_mode="HTML")
+
+
 async def get_season_buttons(anime_id: int) -> list:
     """Shu anime bilan bog'langan fasllar uchun inline tugmalar."""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -516,6 +574,7 @@ async def show_episode_direct(message: Message, anime_id: int, ep_num: int, view
     kb = episodes_kb(anime_id, ep_num, all_eps_list, page)
 
     caption = await build_episode_caption(anime_id, ep_num, anime_name, message.bot)
+    await send_filler_notice(message, anime_id, ep_num, anime_name)
 
     sent = None
     try:
@@ -578,6 +637,7 @@ async def show_anime(message: Message, anime_id: int):
     views    = anime[8] or 0
     kanal    = (anime[14] if len(anime) > 14 and anime[14] else None) or MAIN_CHANNEL_USERNAME or "—"
     tavsif   = anime[16] if len(anime) > 16 and anime[16] else ""
+    filler_info, _ = await get_filler_data(anime_id)
 
     if not tavsif:
         tavsif = await generate_anime_tavsif(
@@ -623,6 +683,13 @@ async def show_anime(message: Message, anime_id: int):
         continue_ep = last_ep
     season_buttons = await get_season_buttons(anime_id)
 
+    filler_line = ""
+    if filler_info:
+        filler_line = (
+            f"├‣  <b>Filler qismlar:</b> {html.escape(filler_info)}\n"
+            f"├‣  <b>Filler izoh:</b> Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.\n"
+        )
+
     caption = (
         f"{AE} <b>Anime nomi:</b> {nom}\n"
         f"╭────────────────\n"
@@ -633,6 +700,7 @@ async def show_anime(message: Message, anime_id: int):
         f"├‣  <b>Kanal:</b> {kanal}\n"
         f"├‣  <b>Ovoz:</b> {fandub}\n"
         f"├‣  <b>Tavsif:</b> {html.escape(tavsif)}\n"
+        f"{filler_line}"
         f"├‣  <b>Yosh toifasi:</b> {yosh_toifa}\n"
         f"╰────────────────\n"
         f"{AE}  <b>Botimiz:</b> @{bot_username}\n"
@@ -1058,6 +1126,7 @@ async def episode_list_callback(callback: CallbackQuery):
         pass
 
     caption = await build_episode_caption(anime_id, ep_num, anime_name, callback.bot)
+    await send_filler_notice(callback.message, anime_id, ep_num, anime_name)
 
     sent = None
     try:
@@ -1917,6 +1986,7 @@ async def dl_episode_callback(callback: CallbackQuery):
     anime_name = anime_row[0] if anime_row else "Anime"
     file_id = episode_data[2]
     caption = await build_episode_caption(anime_id, ep_num, anime_name, callback.bot)
+    await send_filler_notice(callback.message, anime_id, ep_num, anime_name)
 
     try:
         await callback.message.answer_video(
@@ -1977,6 +2047,17 @@ async def dl_all_callback(callback: CallbackQuery):
 
     first_ep = batch[0][0]
     last_ep = batch[-1][0]
+    filler_info, filler_image = await get_filler_data(anime_id)
+    batch_has_filler = filler_info and any(is_filler_episode(ep_num, filler_info) for ep_num, _ in batch)
+    if batch_has_filler:
+        caption = filler_caption(anime_name, filler_info)
+        if filler_image:
+            try:
+                await callback.message.answer_photo(photo=filler_image, caption=caption, parse_mode="HTML")
+            except Exception:
+                await callback.message.answer(caption, parse_mode="HTML")
+        else:
+            await callback.message.answer(caption, parse_mode="HTML")
     await callback.message.answer(
         f"<b>{anime_name}</b>\n"
         f"<b>{first_ep}-{last_ep}</b> qismlar yuklanmoqda...\n"
@@ -2425,6 +2506,7 @@ async def web_app_data_handler(message: Message, bot: Bot):
         page        = ep_index // EPISODES_PER_PAGE
         kb          = episodes_kb(anime_id, ep_num, all_eps_list, page)
         caption     = await build_episode_caption(anime_id, ep_num, anime_name, bot)
+        await send_filler_notice(message, anime_id, ep_num, anime_name)
 
         sent = None
         try:
@@ -2479,6 +2561,17 @@ async def web_app_data_handler(message: Message, bot: Bot):
 
         first_ep = batch[0][0]
         last_ep = batch[-1][0]
+        filler_info, filler_image = await get_filler_data(anime_id)
+        batch_has_filler = filler_info and any(is_filler_episode(ep_num, filler_info) for ep_num, _ in batch)
+        if batch_has_filler:
+            caption = filler_caption(anime_name, filler_info)
+            if filler_image:
+                try:
+                    await message.answer_photo(photo=filler_image, caption=caption, parse_mode="HTML")
+                except Exception:
+                    await message.answer(caption, parse_mode="HTML")
+            else:
+                await message.answer(caption, parse_mode="HTML")
         await message.answer(
             f"<b>{anime_name}</b>\n"
             f"<b>{first_ep}-{last_ep}</b> qismlar yuklanmoqda...\n"
