@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ["python311", "python311Packages.pip", "ffmpeg"]
+
+[phases.install]
+cmds = [
+  "python -m venv /opt/venv",
+  ". /opt/venv/bin/activate",
+  "pip install --upgrade pip",
+  "pip install -r requirements.txt"
+]
+
+[start]
+cmd = ". /opt/venv/bin/activate && python main.py"

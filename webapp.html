@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qismlar Tanlash</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Cyberpunk va Anime stili */
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h2 { color: #00d2ff; margin-bottom: 20px; text-shadow: 0 0 10px #00d2ff; }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 ta ustun */
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-episode {
+            background: #4caf50; /* Yashil rang (rasmdagidek) */
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 15px 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-episode:active {
+            transform: scale(0.9);
+            background: #45a049;
+        }
+
+        /* Alohida ranglar uchun klasslar */
+        .btn-close {
+            grid-column: span 4; /* Butun qatorni egallaydi */
+            background: #f44336; /* Qizil rang */
+            margin-top: 20px;
+        }
+
+        .btn-download {
+            grid-column: span 4;
+            background: #2196f3; /* Ko'k rang */
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Qismni tanlang</h2>
+
+    <div class="grid-container" id="buttons-grid">
+        </div>
+
+    <button class="btn-episode btn-close" onclick="sendToBot('Yopish')">❌ Yopish</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const grid = document.getElementById('buttons-grid');
+        const totalEpisodes = 12; // Qismlar sonini o'zgartirishingiz mumkin
+
+        // Dinamik tugmalarni yaratish
+        for (let i = 1; i <= totalEpisodes; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-episode';
+            btn.innerText = i;
+            btn.onclick = () => sendToBot(i + "-qism");
+            grid.appendChild(btn);
+        }
+
+        function sendToBot(data) {
+            // Telegram botga ma'lumot yuborish
+            if (tg.sendData) {
+                tg.sendData(data);
+                tg.close();
+            } else {
+                alert("Xato: WebApp klaviatura orqali ochilishi kerak!");
+            }
+        }
+    </script>
+</body>
+</html>
