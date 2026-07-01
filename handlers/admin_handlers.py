@@ -30,6 +30,55 @@ from utils.logger import get_logs_text
 router = Router()
 
 
+@router.callback_query(F.data.startswith("web2fa:"))
+async def web_admin_2fa_callback(callback: CallbackQuery):
+    try:
+        _, action, session_id = callback.data.split(":", 2)
+    except ValueError:
+        await callback.answer("Noto'g'ri so'rov", show_alert=True)
+        return
+
+    from web_server import approve_admin_2fa, reject_admin_2fa, disconnect_admin_2fa
+
+    admin_id = callback.from_user.id
+    if action == "approve":
+        ok, msg = approve_admin_2fa(session_id, admin_id)
+        if ok:
+            kb = InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(text="🔌 Uzish", callback_data=f"web2fa:disconnect:{session_id}")
+            ]])
+            try:
+                await callback.message.edit_text(
+                    "✅ <b>Admin panel kirishi tasdiqlandi.</b>\n\n"
+                    "Agar panelni yopmoqchi bo'lsangiz, pastdagi <b>Uzish</b> tugmasini bosing.",
+                    reply_markup=kb,
+                    parse_mode="HTML",
+                )
+            except Exception:
+                pass
+        await callback.answer(msg, show_alert=not ok)
+        return
+
+    if action == "reject":
+        ok, msg = reject_admin_2fa(session_id, admin_id)
+        if ok:
+            try:
+                await callback.message.edit_text("❌ <b>Admin panel kirishi bekor qilindi.</b>", parse_mode="HTML")
+            except Exception:
+                pass
+        await callback.answer(msg, show_alert=not ok)
+        return
+
+    if action == "disconnect":
+        ok, msg = disconnect_admin_2fa(session_id, admin_id)
+        if ok:
+            try:
+                await callback.message.edit_text("🔌 <b>Admin panel sessioni uzildi.</b>", parse_mode="HTML")
+            except Exception:
+                pass
+        await callback.answer(msg, show_alert=not ok)
+
+
 ANILIST_GRAPHQL_URL = "https://graphql.anilist.co"
 ANILIST_POSTER_QUERY = """
 query ($search: String) {
