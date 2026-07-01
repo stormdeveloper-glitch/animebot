@@ -552,6 +552,90 @@
       border: 1px solid var(--border)
     }
 
+    .season-link {
+      grid-column: 1/-1;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(108, 99, 255, .09), rgba(236, 72, 153, .08));
+      border-radius: 12px;
+      padding: 12px;
+      animation: softRise .28s ease both;
+    }
+
+    .season-link-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .season-link-head b {
+      color: var(--accent);
+      font-family: 'Orbitron', monospace;
+      font-size: .78rem;
+      letter-spacing: .04em;
+    }
+
+    .season-picked {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid rgba(16, 185, 129, .24);
+      border-radius: 10px;
+      background: rgba(16, 185, 129, .08);
+      color: var(--text2);
+    }
+
+    .season-picked.show {
+      display: flex;
+      animation: softRise .22s ease both;
+    }
+
+    .season-results {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      max-height: 230px;
+      overflow: auto;
+    }
+
+    .season-results.show {
+      display: grid;
+    }
+
+    .season-choice {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .62);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .18s, border-color .18s, box-shadow .18s;
+    }
+
+    .season-choice:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 10px 22px var(--shadow);
+    }
+
+    .season-choice span {
+      display: block;
+      color: var(--muted);
+      font-size: .72rem;
+      margin-top: 3px;
+    }
+
+    @keyframes softRise {
+      from { opacity: 0; transform: translateY(8px) scale(.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
     .notice a {
       color: var(--accent);
       font-weight: 900
@@ -687,10 +771,18 @@
 <body>
   <div id="accessLock" class="access-lock">
     <div class="access-card">
-      <h1>Ruxsatsiz kirish aniqlandi</h1>
-      <p>Admin panelga to'g'ridan-to'g'ri link orqali kirib bo'lmaydi. Faqat asosiy sahifadagi AI chat orqali login va
-        parol bilan kiring.</p>
-      <button class="btn primary" onclick="goHome()">Asosiy sahifaga qaytish</button>
+      <h1>Admin 2FA login</h1>
+      <p>Login, parol va Telegram ID kiriting. ID adminlar ro'yxatida bo'lsa, bot sizga tasdiqlash xabarini yuboradi.</p>
+      <div class="form-grid" style="text-align:left">
+        <label class="wide">Login<input id="loginName" autocomplete="username"></label>
+        <label class="wide">Parol<input id="loginPassword" type="password" autocomplete="current-password"></label>
+        <label class="wide">Telegram ID<input id="loginTelegramId" inputmode="numeric" placeholder="123456789"></label>
+      </div>
+      <div class="tools" style="margin:14px 0 0;justify-content:center">
+        <button class="btn primary" onclick="startAdminLogin()">Kirish</button>
+        <button class="btn" onclick="goHome()">Asosiy sahifa</button>
+      </div>
+      <p id="loginStatus" class="muted" style="margin-top:12px"></p>
     </div>
   </div>
   <div class="wrap">
@@ -709,7 +801,7 @@
           <h1 id="pageTitle">Dashboard</h1>
           <div class="muted">Qismlar bot ichida boshqariladi. Web faqat katalog va umumiy nazorat uchun.</div>
         </div>
-        <button class="btn" onclick="openToken()">Token</button>
+        <button class="btn" onclick="adminLogout()">Chiqish</button>
       </div>
       <div id="notice" class="notice hidden"></div>
       <section id="dashboardPage">
@@ -804,6 +896,24 @@
         </label>
         <input type="hidden" id="poster_url">
         <div id="selectedPoster" class="selected-poster"></div>
+        <input type="hidden" id="link_season_id">
+        <div class="season-link">
+          <div class="season-link-head">
+            <b>Linkseason</b>
+            <button class="btn small" type="button" onclick="clearSeasonLink()">Tozalash</button>
+          </div>
+          <div class="form-grid">
+            <label>Asosiy anime nomi
+              <div class="input-action">
+                <input id="seasonSearch" placeholder="Masalan: Naruto" oninput="queueSeasonSearch()">
+                <button class="btn icon-btn" type="button" onclick="searchSeasonAnimes()" title="Anime qidirish">⌕</button>
+              </div>
+            </label>
+            <label>Fasl raqami<input id="season_number" type="number" min="1" value="1"></label>
+          </div>
+          <div id="seasonPicked" class="season-picked"></div>
+          <div id="seasonResults" class="season-results"></div>
+        </div>
         <label>Qismi matni<input id="qismi" value="0"></label>
         <label>Davlat<input id="davlat" value="Yaponiya"></label>
         <label>Tili<input id="tili" value="O‘zbek"></label>
@@ -841,18 +951,6 @@
     </div>
   </div>
 
-  <div id="tokenModal" class="modal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>Admin token</h2><button class="x" onclick="closeToken()">×</button>
-      </div>
-      <p class="muted">Agar serverda WEB_ADMIN_TOKEN o‘rnatilgan bo‘lsa, shu tokenni kiriting.</p>
-      <input id="tokenInput" placeholder="WEB_ADMIN_TOKEN">
-      <div class="tools" style="margin-top:12px"><button class="btn primary"
-          onclick="saveToken()">Saqlash</button><button class="btn" onclick="closeToken()">Bekor qilish</button></div>
-    </div>
-  </div>
-
   <div id="posterModal" class="modal">
     <div class="modal-card">
       <div class="modal-head">
@@ -865,9 +963,13 @@
   <script>
     const qs = s => document.querySelector(s);
     const HAS_ADMIN_ACCESS = document.querySelector('meta[name="admin-access"]')?.content === '1';
-    let token = localStorage.getItem('az_admin_token') || '';
+    let token = '';
     let animes = [];
     let posterChoices = [];
+    let seasonChoices = [];
+    let seasonSearchTimer = null;
+    let adminLoginSession = '';
+    let adminLoginPoll = null;
     function goHome() {
       if (location.protocol === 'file:') {
         window.location.href = 'index.html';
@@ -875,28 +977,33 @@
         window.location.href = '/';
       }
     }
-    function headers() { return { 'Content-Type': 'application/json', 'X-Admin-Token': token }; }
+    function headers() { return { 'Content-Type': 'application/json' }; }
     function showNotice(text) { const n = qs('#notice'); n.textContent = text; n.classList.toggle('hidden', !text); }
     function showNoticeHtml(html) { const n = qs('#notice'); n.innerHTML = html; n.classList.toggle('hidden', !html); }
     async function api(url, opt = {}) { const r = await fetch(url, { ...opt, headers: { ...headers(), ...(opt.headers || {}) } }); const d = await r.json().catch(() => ({ ok: false, error: 'Server javobi noto‘g‘ri' })); if (!r.ok || d.ok === false) throw new Error(d.error || 'Xatolik'); return d; }
     document.querySelectorAll('.nav button').forEach(b => b.onclick = () => showPage(b.dataset.page));
     function showPage(p) { document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.page === p));['dashboard', 'animes', 'users', 'reports'].forEach(x => qs('#' + x + 'Page').classList.toggle('hidden', x !== p)); qs('#pageTitle').textContent = { dashboard: 'Dashboard', animes: 'Animelar', users: 'Foydalanuvchilar', reports: 'Reportlar' }[p]; if (p === 'animes') loadAnimes(); if (p === 'users') loadUsers(); }
-    async function loadStats() { try { const d = await api('/api/admin/stats'); qs('#stUsers').textContent = d.users; qs('#stAnimes').textContent = d.animes; qs('#stEpisodes').textContent = d.eps; qs('#stVip').textContent = d.vip; showNotice(d.auth_configured ? '' : 'WEB_ADMIN_TOKEN o‘rnatilmagan. Productionda token qo‘ying.'); } catch (e) { showNotice(e.message); } }
-    async function loadAnimes() { const q = encodeURIComponent(qs('#animeSearch')?.value || ''); try { const d = await api('/api/admin/animes?q=' + q); animes = d.animes || []; qs('#animeRows').innerHTML = animes.map(a => { const epBtn = a.add_episode_url ? `<a class="btn small primary" href="${esc(a.add_episode_url)}" target="_blank" rel="noopener">Qism qo'shish</a>` : ''; return `<tr><td>${a.id}</td><td>${a.rams_url ? `<img src="${a.rams_url}" onerror="this.style.display='none'">` : ''}</td><td><b>${esc(a.nom)}</b><div class="muted">${esc(a.nom_en || '')}</div></td><td>${esc(a.janri || '')}</td><td>${esc(a.yili || '')}</td><td>${esc(a.aniType || '')}</td><td>${a.ep_count}</td><td><div class="actions">${epBtn}<button class="btn small" onclick="editAnime(${a.id})">Edit</button><button class="btn small danger" onclick="deleteAnime(${a.id})">Delete</button></div></td></tr>`; }).join('') || '<tr><td colspan="8">Anime topilmadi</td></tr>'; } catch (e) { qs('#animeRows').innerHTML = '<tr><td colspan="8">' + esc(e.message) + '</td></tr>'; } }
+    async function loadStats() { try { const d = await api('/api/admin/stats'); qs('#stUsers').textContent = d.users; qs('#stAnimes').textContent = d.animes; qs('#stEpisodes').textContent = d.eps; qs('#stVip').textContent = d.vip; showNotice(''); } catch (e) { showNotice(e.message); } }
+    async function loadAnimes() { const q = encodeURIComponent(qs('#animeSearch')?.value || ''); try { const d = await api('/api/admin/animes?q=' + q); animes = d.animes || []; qs('#animeRows').innerHTML = animes.map(a => { const epBtn = a.add_episode_url ? `<a class="btn small primary" href="${esc(a.add_episode_url)}" target="_blank" rel="noopener">Qism qo'shish</a>` : ''; return `<tr><td>${a.id}</td><td>${a.rams_url ? `<img src="${a.rams_url}" onerror="this.outerHTML='<span class=&quot;muted&quot;>Poster yo‘q</span>'">` : '<span class="muted">Poster yo‘q</span>'}</td><td><b>${esc(a.nom)}</b><div class="muted">${esc(a.nom_en || '')}</div></td><td>${esc(a.janri || '')}</td><td>${esc(a.yili || '')}</td><td>${esc(a.aniType || '')}</td><td>${a.ep_count}</td><td><div class="actions">${epBtn}<button class="btn small" onclick="editAnime(${a.id})">Edit</button><button class="btn small danger" onclick="deleteAnime(${a.id})">Delete</button></div></td></tr>`; }).join('') || '<tr><td colspan="8">Anime topilmadi</td></tr>'; } catch (e) { qs('#animeRows').innerHTML = '<tr><td colspan="8">' + esc(e.message) + '</td></tr>'; } }
     async function loadUsers() { try { const d = await api('/api/admin/users'); qs('#userRows').innerHTML = (d.users || []).map(u => `<tr><td>${u.user_id}</td><td>${esc(u.status)}</td><td>${u.pul}</td><td>${u.pul2}</td><td>${u.odam}</td><td>${esc(u.ban)}</td></tr>`).join('') || '<tr><td colspan="6">Foydalanuvchi yo‘q</td></tr>'; } catch (e) { qs('#userRows').innerHTML = '<tr><td colspan="6">' + esc(e.message) + '</td></tr>'; } }
-    function openAnimeForm() { qs('#animeForm').reset(); qs('#animeId').value = ''; qs('#poster_url').value = ''; renderSelectedPoster(null); qs('#formTitle').textContent = 'Anime qo‘shish'; qs('#qismi').value = '0'; qs('#davlat').value = 'Yaponiya'; qs('#tili').value = 'O‘zbek'; qs('#animeModal').classList.add('open'); }
+    function openAnimeForm() { qs('#animeForm').reset(); qs('#animeId').value = ''; qs('#poster_url').value = ''; clearSeasonLink(); renderSelectedPoster(null); qs('#formTitle').textContent = 'Anime qo‘shish'; qs('#qismi').value = '0'; qs('#davlat').value = 'Yaponiya'; qs('#tili').value = 'O‘zbek'; qs('#season_number').value = '1'; qs('#animeModal').classList.add('open'); }
     function closeAnimeForm() { qs('#animeModal').classList.remove('open'); }
-    function editAnime(id) { const a = animes.find(x => x.id === id); if (!a) return; openAnimeForm(); qs('#formTitle').textContent = 'Anime tahrirlash'; for (const k of ['id', 'nom', 'nom_en', 'rams', 'qismi', 'davlat', 'tili', 'yili', 'janri', 'aniType', 'fandub', 'yosh_toifa', 'kanal', 'tavsif', 'filler_info', 'filler_image']) { const el = qs('#' + (k === 'id' ? 'animeId' : k)); if (el) el.value = a[k] || ''; } }
-    async function saveAnime(ev) { ev.preventDefault(); const id = qs('#animeId').value; const body = {}; for (const k of ['nom', 'nom_en', 'rams', 'qismi', 'davlat', 'tili', 'yili', 'janri', 'aniType', 'fandub', 'yosh_toifa', 'kanal', 'tavsif', 'filler_info', 'filler_image', 'poster_url']) body[k] = qs('#' + k).value.trim(); try { const d = await api(id ? '/api/admin/animes/' + id : '/api/admin/animes', { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); closeAnimeForm(); const m = d.meta || {}; const animeCode = d.id || id; const codeText = animeCode ? `Anime kodi: <b>${esc(animeCode)}</b>. ` : ''; const link = d.add_episode_url ? ` <a href="${d.add_episode_url}" target="_blank" rel="noopener">Botda qism qo'shish</a>` : ''; showNoticeHtml(`${codeText}Saqlash tayyor: poster=${esc(m.poster_source || 'manual')}, tavsif=${esc(m.tavsif_source || 'manual')}.${link}`); await loadStats(); await loadAnimes(); } catch (e) { alert(e.message); } }
+    function editAnime(id) { const a = animes.find(x => x.id === id); if (!a) return; openAnimeForm(); qs('#formTitle').textContent = 'Anime tahrirlash'; for (const k of ['id', 'nom', 'nom_en', 'rams', 'qismi', 'davlat', 'tili', 'yili', 'janri', 'aniType', 'fandub', 'yosh_toifa', 'kanal', 'tavsif', 'filler_info', 'filler_image']) { const el = qs('#' + (k === 'id' ? 'animeId' : k)); if (el) el.value = a[k] || ''; } qs('#season_number').value = a.season_number || 1; if (a.season_group_id && Number(a.season_group_id) !== Number(a.id)) { const main = animes.find(x => Number(x.id) === Number(a.season_group_id)); chooseSeasonAnime(main || { id: a.season_group_id, nom: 'Boglangan anime', nom_en: '' }); } }
+    async function saveAnime(ev) { ev.preventDefault(); const id = qs('#animeId').value; const body = {}; for (const k of ['nom', 'nom_en', 'rams', 'qismi', 'davlat', 'tili', 'yili', 'janri', 'aniType', 'fandub', 'yosh_toifa', 'kanal', 'tavsif', 'filler_info', 'filler_image', 'poster_url', 'link_season_id', 'season_number']) body[k] = qs('#' + k).value.trim(); try { const d = await api(id ? '/api/admin/animes/' + id : '/api/admin/animes', { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) }); closeAnimeForm(); const m = d.meta || {}; const animeCode = d.id || id; const codeText = animeCode ? `Anime kodi: <b>${esc(animeCode)}</b>. ` : ''; const seasonText = m.season_linked ? ` Linkseason: <b>${esc(m.season_number)}-fasl</b>.` : ''; const link = d.add_episode_url ? ` <a href="${d.add_episode_url}" target="_blank" rel="noopener">Botda qism qo'shish</a>` : ''; showNoticeHtml(`${codeText}Saqlash tayyor: poster=${esc(m.poster_source || 'manual')}, tavsif=${esc(m.tavsif_source || 'manual')}.${seasonText}${link}`); await loadStats(); await loadAnimes(); } catch (e) { alert(e.message); } }
     async function searchPosters() { const q = (qs('#nom_en').value || qs('#nom').value || '').trim(); if (!q) { alert('Avval inglizcha nom yoki anime nomini kiriting.'); return; } qs('#posterResults').innerHTML = '<div class="muted">Qidirilmoqda...</div>'; qs('#posterModal').classList.add('open'); try { const d = await api('/api/admin/anilist/posters?q=' + encodeURIComponent(q)); posterChoices = d.posters || []; qs('#posterResults').innerHTML = posterChoices.map((p, i) => `<button class="poster-choice" onclick="choosePosterIndex(${i})"><img src="${p.poster_url}" alt=""><div>${esc(p.title)}<span>${esc(p.year || '')} ${esc(p.romaji || '')}</span></div></button>`).join('') || '<div class="muted">Poster topilmadi. Nomni aniqroq kiriting.</div>'; } catch (e) { qs('#posterResults').innerHTML = '<div class="muted">' + esc(e.message) + '</div>'; } }
     function choosePosterIndex(i) { const p = posterChoices[i]; if (p) choosePoster(p); }
     function choosePoster(p) { qs('#poster_url').value = p.poster_url || ''; if (p.english) qs('#nom_en').value = p.english; if (!qs('#nom').value && p.title) qs('#nom').value = p.title; renderSelectedPoster(p); closePosterModal(); }
     function renderSelectedPoster(p) { const box = qs('#selectedPoster'); if (!p) { box.classList.remove('show'); box.innerHTML = ''; return; } box.classList.add('show'); box.innerHTML = `<img src="${p.poster_url}" alt=""><div><b>${esc(p.title)}</b><div class="muted">Tanlangan poster backendda Telegram file_id ga aylantiriladi.</div></div>`; }
     function closePosterModal() { qs('#posterModal').classList.remove('open'); }
+    function queueSeasonSearch() { clearTimeout(seasonSearchTimer); seasonSearchTimer = setTimeout(searchSeasonAnimes, 260); }
+    async function searchSeasonAnimes() { const q = (qs('#seasonSearch').value || '').trim(); const box = qs('#seasonResults'); if (q.length < 2) { box.classList.remove('show'); box.innerHTML = ''; return; } box.classList.add('show'); box.innerHTML = '<div class="muted">Qidirilmoqda...</div>'; try { const d = await api('/api/admin/animes?q=' + encodeURIComponent(q)); const currentId = Number(qs('#animeId').value || 0); seasonChoices = (d.animes || []).filter(a => Number(a.id) !== currentId).slice(0, 12); box.innerHTML = seasonChoices.map((a, i) => `<button class="season-choice" type="button" onclick="chooseSeasonIndex(${i})"><b>${esc(a.nom)}</b><span>ID: ${a.id}${a.nom_en ? ' · ' + esc(a.nom_en) : ''}</span></button>`).join('') || '<div class="muted">Anime topilmadi</div>'; } catch (e) { box.innerHTML = '<div class="muted">' + esc(e.message) + '</div>'; } }
+    function chooseSeasonIndex(i) { const a = seasonChoices[i]; if (a) chooseSeasonAnime(a); }
+    function chooseSeasonAnime(a) { qs('#link_season_id').value = a.id || ''; qs('#seasonSearch').value = a.nom || ''; const box = qs('#seasonPicked'); box.classList.add('show'); box.innerHTML = `<div><b>${esc(a.nom || '')}</b><div class="muted">Backendga yuboriladigan kod: ${esc(a.id || '')}</div></div><button class="btn small" type="button" onclick="clearSeasonLink()">Ajratish</button>`; qs('#seasonResults').classList.remove('show'); }
+    function clearSeasonLink() { if (qs('#link_season_id')) qs('#link_season_id').value = ''; if (qs('#seasonSearch')) qs('#seasonSearch').value = ''; if (qs('#seasonResults')) { qs('#seasonResults').classList.remove('show'); qs('#seasonResults').innerHTML = ''; } if (qs('#seasonPicked')) { qs('#seasonPicked').classList.remove('show'); qs('#seasonPicked').innerHTML = ''; } }
     async function deleteAnime(id) { if (!confirm('Anime va unga tegishli qismlar o‘chiriladi. Davom etamizmi?')) return; try { await api('/api/admin/animes/' + id, { method: 'DELETE' }); await loadStats(); await loadAnimes(); } catch (e) { alert(e.message); } }
-    function openToken() { qs('#tokenInput').value = token; qs('#tokenModal').classList.add('open'); }
-    function closeToken() { qs('#tokenModal').classList.remove('open'); }
-    function saveToken() { token = qs('#tokenInput').value.trim(); localStorage.setItem('az_admin_token', token); closeToken(); loadStats(); loadAnimes(); }
+    async function startAdminLogin() { const body = { login: qs('#loginName').value.trim(), password: qs('#loginPassword').value, telegram_id: qs('#loginTelegramId').value.trim() }; const st = qs('#loginStatus'); st.textContent = 'Tekshirilmoqda...'; try { const d = await api('/api/admin/login', { method: 'POST', body: JSON.stringify(body) }); adminLoginSession = d.session_id; st.textContent = 'Telegram botga tasdiqlash xabari yuborildi. Tasdiqlash tugmasini bosing.'; clearInterval(adminLoginPoll); adminLoginPoll = setInterval(checkAdminLoginStatus, 1800); await checkAdminLoginStatus(); } catch (e) { st.textContent = e.message; } }
+    async function checkAdminLoginStatus() { if (!adminLoginSession) return; const st = qs('#loginStatus'); try { const d = await api('/api/admin/login/status?session_id=' + encodeURIComponent(adminLoginSession)); if (d.status === 'approved') { clearInterval(adminLoginPoll); document.body.classList.remove('admin-locked'); qs('#accessLock')?.classList.remove('show'); st.textContent = ''; await loadStats(); await loadAnimes(); } else if (d.status === 'rejected') { clearInterval(adminLoginPoll); st.textContent = 'Kirish bekor qilindi.'; } else if (d.status === 'expired') { clearInterval(adminLoginPoll); st.textContent = 'Tasdiqlash vaqti tugadi. Qayta urinib ko‘ring.'; } } catch (e) { st.textContent = e.message; } }
+    async function adminLogout() { try { await api('/api/admin/logout', { method: 'POST', body: '{}' }); } catch (e) { } localStorage.removeItem('az_admin_token'); document.body.classList.add('admin-locked'); qs('#accessLock')?.classList.add('show'); }
     function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
     if (HAS_ADMIN_ACCESS) {
       loadStats();

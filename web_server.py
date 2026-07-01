@@ -15,6 +15,7 @@ from urllib.parse import urlencode, urlparse
 
 from config import (
     DB_PATH, BOT_TOKEN, BOT_USERNAME,
+    SUPER_ADMIN_ID, ADMIN_IDS,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI,
     SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI,
     ANILIST_CLIENT_ID, ANILIST_CLIENT_SECRET, ANILIST_REDIRECT_URI,
@@ -315,6 +316,9 @@ WEB_PORT = int(os.getenv("PORT", os.getenv("WEB_PORT", 8080)))
 _media_cache = {}
 _bot_info_cache = {"ts": 0, "data": None}
 WEB_ADMIN_TOKEN = os.getenv("WEB_ADMIN_TOKEN", "").strip()
+_admin_web_sessions: dict[str, dict] = {}
+_admin_2fa_sessions: dict[str, dict] = {}
+ADMIN_2FA_TTL_SECONDS = 300
 
 
 async def resolve_file_id(file_id: str) -> dict:
@@ -615,14 +619,16 @@ async def anime_poster(request):
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT rams FROM animelar WHERE id=?", (anime_id,)) as c:
             row = await c.fetchone()
-    if not row or not row[0]:
-        raise web.HTTPNotFound()
-    rams = row[0]
-    if rams.startswith("http"):
-        raise web.HTTPFound(rams)
-    info = await resolve_file_id(rams)
-    if info["url"]:
-        raise web.HTTPFound(f"/media/{rams}")
+    if row and row[0]:
+        rams = row[0]
+        if rams.startswith("http"):
+            raise web.HTTPFound(rams)
+        info = await resolve_file_id(rams)
+        if info["url"]:
+            raise web.HTTPFound(f"/media/{rams}")
+    fallback_url = await _fallback_poster_for_anime(anime_id)
+    if fallback_url:
+        raise web.HTTPFound(fallback_url)
     raise web.HTTPNotFound()
 
 
@@ -885,9 +891,12 @@ async def api_stats(request):
 
 
 def _admin_authorized(request: web.Request) -> bool:
-    session_secret = WEB_ADMIN_TOKEN or ADMIN_PASSWORD
+    session_secret = WEB_ADMIN_TOKEN
     session_token = request.cookies.get(ADMIN_SESSION_COOKIE, "").strip()
     if session_secret and secrets.compare_digest(session_token, session_secret):
+        return True
+    session = _admin_web_sessions.get(session_token)
+    if session and not session.get("revoked") and time.time() - float(session.get("created_ts") or 0) <= SESSION_TTL_SECONDS:
         return True
     if WEB_ADMIN_TOKEN:
         token = (
@@ -904,6 +913,105 @@ def _admin_denied() -> web.Response:
 
 def _clean_text(value, default: str = "") -> str:
     return str(value if value is not None else default).strip()
+
+
+async def _is_web_admin_id(user_id: int) -> bool:
+    if user_id == SUPER_ADMIN_ID or user_id in ADMIN_IDS:
+        return True
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT 1 FROM admins WHERE user_id=? LIMIT 1", (user_id,)) as c:
+                return await c.fetchone() is not None
+    except Exception:
+        return False
+
+
+def _cleanup_admin_auth() -> None:
+    now = time.time()
+    for key, item in list(_admin_2fa_sessions.items()):
+        if now - float(item.get("created_ts") or 0) > ADMIN_2FA_TTL_SECONDS:
+            item["status"] = "expired"
+    for token, item in list(_admin_web_sessions.items()):
+        if item.get("revoked") or now - float(item.get("created_ts") or 0) > SESSION_TTL_SECONDS:
+            _admin_web_sessions.pop(token, None)
+
+
+async def _send_admin_2fa_request(session_id: str, admin_id: int, request: web.Request) -> bool:
+    if not BOT_TOKEN:
+        return False
+    origin = _public_origin(request)
+    ip = _client_ip(request)
+    text = (
+        "🔐 <b>Admin panelga kirish so'rovi</b>\n\n"
+        f"👤 Telegram ID: <code>{admin_id}</code>\n"
+        f"🌐 IP: <code>{html.escape(ip)}</code>\n"
+        f"🔗 Sayt: {html.escape(origin)}\n\n"
+        "Agar bu siz bo'lsangiz, tasdiqlang."
+    )
+    keyboard = {
+        "inline_keyboard": [[
+            {"text": "✅ Tasdiqlash", "callback_data": f"web2fa:approve:{session_id}"},
+            {"text": "❌ Bekor qilish", "callback_data": f"web2fa:reject:{session_id}"},
+        ]]
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                json={
+                    "chat_id": admin_id,
+                    "text": text,
+                    "parse_mode": "HTML",
+                    "reply_markup": keyboard,
+                    "disable_web_page_preview": True,
+                },
+                timeout=aiohttp.ClientTimeout(total=12),
+            ) as resp:
+                data = await resp.json()
+        if data.get("ok"):
+            _admin_2fa_sessions[session_id]["message_id"] = data.get("result", {}).get("message_id")
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def approve_admin_2fa(session_id: str, admin_id: int) -> tuple[bool, str]:
+    session = _admin_2fa_sessions.get(session_id)
+    if not session:
+        return False, "So'rov topilmadi yoki eskirgan."
+    if int(session.get("admin_id") or 0) != int(admin_id):
+        return False, "Bu so'rov sizga tegishli emas."
+    if session.get("status") not in {"pending", "approved"}:
+        return False, "So'rov allaqachon yopilgan."
+    token = session.get("session_token") or _new_token()
+    session.update({"status": "approved", "approved_ts": time.time(), "session_token": token})
+    _admin_web_sessions[token] = {"admin_id": admin_id, "created_ts": time.time(), "revoked": False}
+    return True, "Admin panel kirishi tasdiqlandi."
+
+
+def reject_admin_2fa(session_id: str, admin_id: int) -> tuple[bool, str]:
+    session = _admin_2fa_sessions.get(session_id)
+    if not session:
+        return False, "So'rov topilmadi yoki eskirgan."
+    if int(session.get("admin_id") or 0) != int(admin_id):
+        return False, "Bu so'rov sizga tegishli emas."
+    session["status"] = "rejected"
+    return True, "Admin panel kirishi bekor qilindi."
+
+
+def disconnect_admin_2fa(session_id: str, admin_id: int) -> tuple[bool, str]:
+    session = _admin_2fa_sessions.get(session_id)
+    if not session:
+        return False, "Session topilmadi."
+    if int(session.get("admin_id") or 0) != int(admin_id):
+        return False, "Bu session sizga tegishli emas."
+    token = session.get("session_token", "")
+    if token:
+        _admin_web_sessions.pop(token, None)
+    session["status"] = "disconnected"
+    session["revoked"] = True
+    return True, "Admin panel sessioni uzildi."
 
 
 async def _fetch_anilist_poster(search_title: str) -> dict:
@@ -962,6 +1070,22 @@ async def _search_anilist_posters(search_title: str) -> list[dict]:
         return results
     except Exception:
         return []
+
+
+async def _fallback_poster_for_anime(anime_id: str) -> str:
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT nom, COALESCE(nom_en,'') FROM animelar WHERE id=?", (anime_id,)) as c:
+                row = await c.fetchone()
+        if not row:
+            return ""
+        for title in (row[1], row[0]):
+            poster = await _fetch_anilist_poster(title)
+            if poster.get("poster_url"):
+                return poster["poster_url"]
+    except Exception:
+        return ""
+    return ""
 
 
 async def _telegram_photo_file_id(photo_url: str, anime_name: str = "") -> str:
@@ -1068,6 +1192,48 @@ async def _prepare_admin_anime_payload(body: dict, *, existing_rams: str = "") -
     return values, meta
 
 
+async def _apply_season_link(db: aiosqlite.Connection, anime_id: int, body: dict) -> dict:
+    main_raw = _clean_text(body.get("link_season_id"))
+    number_raw = _clean_text(body.get("season_number"), "1") or "1"
+    try:
+        season_number = max(1, int(number_raw))
+    except ValueError:
+        raise ValueError("Fasl raqami noto'g'ri")
+
+    if not main_raw:
+        return {"season_linked": False}
+    try:
+        main_id = int(main_raw)
+    except ValueError:
+        raise ValueError("Ulanadigan anime kodi noto'g'ri")
+
+    async with db.execute(
+        "SELECT id, nom, COALESCE(season_group_id, id) FROM animelar WHERE id=?",
+        (main_id,)
+    ) as c:
+        main = await c.fetchone()
+    async with db.execute("SELECT id, nom FROM animelar WHERE id=?", (anime_id,)) as c:
+        season = await c.fetchone()
+    if not main or not season:
+        raise ValueError("Linkseason uchun tanlangan anime topilmadi")
+
+    group_id = main[2] or main_id
+    await db.execute(
+        "UPDATE animelar SET season_group_id=?, season_number=1 WHERE id=? AND (season_number IS NULL OR season_number < 1)",
+        (group_id, main_id),
+    )
+    await db.execute(
+        "UPDATE animelar SET season_group_id=?, season_number=? WHERE id=?",
+        (group_id, season_number, anime_id),
+    )
+    return {
+        "season_linked": True,
+        "season_group_id": group_id,
+        "season_main_id": main_id,
+        "season_number": season_number,
+    }
+
+
 def _bot_start_link(payload: str) -> str:
     bot_username = (BOT_USERNAME or "").lstrip("@")
     return f"https://t.me/{bot_username}?start={payload}" if bot_username else ""
@@ -1079,6 +1245,69 @@ async def serve_admin(request):
         page = f.read()
     page = page.replace("{{ADMIN_ACCESS}}", "1" if _admin_authorized(request) else "0")
     return web.Response(text=page, content_type="text/html", charset="utf-8")
+
+
+async def api_admin_login(request):
+    _cleanup_admin_auth()
+    body = await request.json()
+    login = _clean_text(body.get("login"))
+    password = _clean_text(body.get("password"))
+    admin_id_raw = _clean_text(body.get("telegram_id"))
+
+    if not ADMIN_LOGIN or not ADMIN_PASSWORD:
+        return web.json_response({"ok": False, "error": "ADMIN_LOGIN va ADMIN_PASSWORD serverda sozlanmagan"}, status=503)
+    if not secrets.compare_digest(login, ADMIN_LOGIN) or not secrets.compare_digest(password, ADMIN_PASSWORD):
+        return web.json_response({"ok": False, "error": "Login yoki parol noto'g'ri"}, status=401)
+    try:
+        admin_id = int(admin_id_raw)
+    except (TypeError, ValueError):
+        return web.json_response({"ok": False, "error": "Telegram ID raqam bo'lishi kerak"}, status=400)
+    if not await _is_web_admin_id(admin_id):
+        return web.json_response({"ok": False, "error": "Bu Telegram ID adminlar ro'yxatida yo'q"}, status=403)
+
+    session_id = secrets.token_urlsafe(18)
+    _admin_2fa_sessions[session_id] = {
+        "admin_id": admin_id,
+        "status": "pending",
+        "created_ts": time.time(),
+        "ip": _client_ip(request),
+        "session_token": "",
+    }
+    sent = await _send_admin_2fa_request(session_id, admin_id, request)
+    if not sent:
+        _admin_2fa_sessions[session_id]["status"] = "send_failed"
+        return web.json_response({"ok": False, "error": "Telegramga tasdiqlash xabari yuborilmadi"}, status=502)
+    return web.json_response({"ok": True, "session_id": session_id, "ttl": ADMIN_2FA_TTL_SECONDS})
+
+
+async def api_admin_login_status(request):
+    _cleanup_admin_auth()
+    session_id = request.rel_url.query.get("session_id", "").strip()
+    session = _admin_2fa_sessions.get(session_id)
+    if not session:
+        return web.json_response({"ok": False, "error": "2FA so'rovi topilmadi"}, status=404)
+    status = session.get("status", "pending")
+    resp = web.json_response({"ok": True, "status": status})
+    if status == "approved" and session.get("session_token"):
+        resp.set_cookie(
+            ADMIN_SESSION_COOKIE,
+            session["session_token"],
+            max_age=SESSION_TTL_SECONDS,
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
+    return resp
+
+
+async def api_admin_logout(request):
+    token = request.cookies.get(ADMIN_SESSION_COOKIE, "").strip()
+    if token:
+        _admin_web_sessions.pop(token, None)
+    resp = web.json_response({"ok": True})
+    resp.del_cookie(ADMIN_SESSION_COOKIE)
+    resp.del_cookie("admin_token")
+    return resp
 
 
 async def api_admin_stats(request):
@@ -1131,7 +1360,7 @@ async def api_admin_animes(request):
     animes = []
     for row in rows:
         item = dict(zip(keys, row))
-        item["rams_url"] = _poster_url(item["id"], item.get("rams") or "") if item.get("rams") else ""
+        item["rams_url"] = _poster_url(item["id"], item.get("rams") or "")
         item["add_episode_url"] = _bot_start_link(f"add_ep_{item['id']}")
         animes.append(item)
     return web.json_response({"ok": True, "animes": animes})
@@ -1169,10 +1398,15 @@ async def api_admin_create_anime(request):
             values["kanal"], values["yosh_toifa"], values["tavsif"], values["nom_en"],
             values["filler_info"], values["filler_image"],
         ))
-        await db.commit()
         async with db.execute("SELECT last_insert_rowid()") as c:
             anime_id = (await c.fetchone())[0]
         await db.execute("UPDATE animelar SET season_group_id=?, season_number=1 WHERE id=?", (anime_id, anime_id))
+        try:
+            season_meta = await _apply_season_link(db, anime_id, body)
+        except ValueError as exc:
+            await db.rollback()
+            return web.json_response({"ok": False, "error": str(exc)}, status=400)
+        meta.update(season_meta)
         await db.commit()
     return web.json_response({"ok": True, "id": anime_id, "meta": meta, "add_episode_url": _bot_start_link(f"add_ep_{anime_id}")})
 
@@ -1195,6 +1429,12 @@ async def api_admin_update_anime(request):
     params = list(values.values()) + [anime_id]
     async with aiosqlite.connect(DB_PATH) as db:
         cur = await db.execute(f"UPDATE animelar SET {set_sql} WHERE id=?", params)
+        try:
+            season_meta = await _apply_season_link(db, anime_id, body)
+        except ValueError as exc:
+            await db.rollback()
+            return web.json_response({"ok": False, "error": str(exc)}, status=400)
+        meta.update(season_meta)
         await db.commit()
     if cur.rowcount == 0:
         return web.json_response({"ok": False, "error": "Anime topilmadi"}, status=404)
@@ -1316,33 +1556,12 @@ async def api_ai_chat(request):
             if not ADMIN_LOGIN or not ADMIN_PASSWORD:
                 return web.json_response({"ok": True, "reply": "Admin login/parol serverda sozlanmagan."})
             if secrets.compare_digest(user_msg, ADMIN_PASSWORD):
-                session_secret = WEB_ADMIN_TOKEN or ADMIN_PASSWORD
-                response = web.json_response({
+                return web.json_response({
                     "ok": True,
-                    "reply": "Parol to'g'ri. Admin panel ochilmoqda...",
+                    "reply": "Parol to'g'ri. Admin panelda Telegram ID bilan 2FA tasdiqlashdan o'ting.",
                     "admin_ok": True,
                     "admin_url": "/admin",
-                    "admin_token": WEB_ADMIN_TOKEN,
                 })
-                if WEB_ADMIN_TOKEN:
-                    response.set_cookie(
-                        "admin_token",
-                        WEB_ADMIN_TOKEN,
-                        max_age=60 * 60 * 12,
-                        httponly=True,
-                        secure=request.scheme == "https",
-                        samesite="Strict",
-                    )
-                if session_secret:
-                    response.set_cookie(
-                        ADMIN_SESSION_COOKIE,
-                        session_secret,
-                        max_age=60 * 60 * 12,
-                        httponly=True,
-                        secure=request.scheme == "https",
-                        samesite="Strict",
-                    )
-                return response
             return web.json_response({"ok": True, "reply": "Parol noto'g'ri. Qayta urinib ko'ring.", "admin_password_required": True})
 
         if ADMIN_LOGIN and secrets.compare_digest(user_msg, ADMIN_LOGIN):
@@ -2232,6 +2451,9 @@ def create_app():
     app.router.add_get("/poster/{anime_id}", anime_poster)
     app.router.add_get("/api/admins", api_admins)
     app.router.add_get("/api/stats", api_stats)
+    app.router.add_post("/api/admin/login", api_admin_login)
+    app.router.add_get("/api/admin/login/status", api_admin_login_status)
+    app.router.add_post("/api/admin/logout", api_admin_logout)
     app.router.add_get("/api/admin/stats", api_admin_stats)
     app.router.add_get("/api/admin/animes", api_admin_animes)
     app.router.add_get("/api/admin/anilist/posters", api_admin_anilist_posters)
