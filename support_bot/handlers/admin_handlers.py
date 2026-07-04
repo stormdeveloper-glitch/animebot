@@ -28,18 +28,8 @@ async def _is_admin(user_id: int) -> bool:
 
 
 async def _get_ticket(ticket_id: int) -> dict | None:
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            "SELECT id, user_id, username, full_name, message, status FROM support_tickets WHERE id=?",
-            (ticket_id,)
-        ) as c:
-            row = await c.fetchone()
-    if not row:
-        return None
-    return {
-        "id": row[0], "user_id": row[1], "username": row[2],
-        "full_name": row[3], "message": row[4], "status": row[5]
-    }
+    from support_bot.db_helper import get_ticket
+    return await get_ticket(ticket_id)
 
 
 # ─── Guruh: Javob berish tugmasi ─────────────────────────────────────────────
@@ -112,11 +102,8 @@ async def cb_close_ticket(callback: CallbackQuery, bot: Bot):
         await callback.answer("❌ Murojaat topilmadi!", show_alert=True)
         return
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "UPDATE support_tickets SET status='closed' WHERE id=?", (ticket_id,)
-        )
-        await db.commit()
+    from support_bot.db_helper import update_ticket_status
+    await update_ticket_status(ticket_id, 'closed')
 
     # Guruh xabarini yangilash
     try:
@@ -151,21 +138,13 @@ async def cb_user_profile(callback: CallbackQuery):
 
     user_id = int(callback.data.split("=")[1])
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        # Asosiy bot DB dan ma'lumot
-        async with db.execute(
-            "SELECT status, pul, ban, joined_at FROM users WHERE user_id=?", (user_id,)
-        ) as c:
-            user_row = await c.fetchone()
+    from support_bot.db_helper import get_user_profile, fetch_val
+    user_row_dict = await get_user_profile(user_id)
+    ticket_count = await fetch_val("SELECT COUNT(*) FROM support_tickets WHERE user_id=$1", user_id)
+    ticket_count = ticket_count or 0
 
-        # Ticket soni
-        async with db.execute(
-            "SELECT COUNT(*) FROM support_tickets WHERE user_id=?", (user_id,)
-        ) as c:
-            ticket_count = (await c.fetchone())[0]
-
-    if user_row:
-        status, pul, ban, joined = user_row
+    if user_row_dict:
+        status, pul, ban, joined = user_row_dict["status"], user_row_dict["pul"], user_row_dict["ban"], user_row_dict["joined_at"]
         profile_text = (
             f"👤 <b>Foydalanuvchi profili</b>\n\n"
             f"🆔 ID: <code>{user_id}</code>\n"
@@ -271,22 +250,13 @@ async def confirm_reply(callback: CallbackQuery, bot: Bot):
         print(f"[SupportBot] Foydalanuvchiga yuborishda xato: {e}")
 
     # DB yangilash
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "UPDATE support_tickets SET status='answered' WHERE id=?", (ticket_id,)
-        )
-        await db.execute(
-            "INSERT INTO support_messages (ticket_id, sender_id, message, is_admin) VALUES (?, ?, ?, 1)",
-            (ticket_id, admin_id, draft)
-        )
-        await db.commit()
+    from support_bot.db_helper import update_ticket_status, add_ticket_message, get_ticket
+    await update_ticket_status(ticket_id, 'answered')
+    await add_ticket_message(ticket_id, admin_id, draft, is_admin=1)
 
-        # Guruh xabarini yangilash
-        async with db.execute(
-            "SELECT group_msg_id FROM support_tickets WHERE id=?", (ticket_id,)
-        ) as c:
-            row = await c.fetchone()
-            group_msg_id = row[0] if row else None
+    # Guruh xabarini yangilash
+    ticket = await get_ticket(ticket_id)
+    group_msg_id = ticket["group_msg_id"] if ticket else None
 
     if group_msg_id and SUPPORT_GROUP_ID:
         try:
@@ -342,22 +312,14 @@ async def support_stats(message: Message):
     if not await _is_admin(message.from_user.id):
         return
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT COUNT(*) FROM support_tickets") as c:
-            total = (await c.fetchone())[0]
-        async with db.execute("SELECT COUNT(*) FROM support_tickets WHERE status='open'") as c:
-            open_count = (await c.fetchone())[0]
-        async with db.execute("SELECT COUNT(*) FROM support_tickets WHERE status='answered'") as c:
-            answered = (await c.fetchone())[0]
-        async with db.execute("SELECT COUNT(*) FROM support_tickets WHERE status='closed'") as c:
-            closed = (await c.fetchone())[0]
-        async with db.execute("SELECT COUNT(DISTINCT user_id) FROM support_tickets") as c:
-            unique_users = (await c.fetchone())[0]
-        # Bugun
-        async with db.execute(
-            "SELECT COUNT(*) FROM support_tickets WHERE DATE(created_at)=DATE('now')"
-        ) as c:
-            today = (await c.fetchone())[0]
+    from support_bot.db_helper import get_detailed_stats
+    stats = await get_detailed_stats()
+    total = stats["total"]
+    open_count = stats["open"]
+    answered = stats["answered"]
+    closed = stats["closed"]
+    unique_users = stats["unique_users"]
+    today = stats["today"]
 
     await message.answer(
         f"📊 <b>Support statistikasi</b>\n\n"
@@ -378,13 +340,9 @@ async def open_tickets(message: Message):
     if not await _is_admin(message.from_user.id):
         return
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            """SELECT id, full_name, username, message, created_at
-               FROM support_tickets WHERE status='open'
-               ORDER BY created_at ASC LIMIT 15"""
-        ) as c:
-            tickets = await c.fetchall()
+    from support_bot.db_helper import get_open_tickets
+    rows = await get_open_tickets(limit=15)
+    tickets = [(x["id"], x["full_name"], x["username"], x["message"], x["created_at"]) for x in rows]
 
     if not tickets:
         await message.answer("✅ Ochiq murojaatlar yo'q!")
@@ -408,11 +366,9 @@ async def faq_manage(message: Message):
     if not await _is_admin(message.from_user.id):
         return
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            "SELECT id, question FROM support_faq ORDER BY order_num"
-        ) as c:
-            faqs = await c.fetchall()
+    from support_bot.db_helper import get_faq_headers
+    rows = await get_faq_headers()
+    faqs = [(x["id"], x["question"]) for x in rows]
 
     from aiogram.types import InlineKeyboardMarkup
     from support_bot.keyboards import InlineKeyboardButton
@@ -439,9 +395,8 @@ async def faq_delete(callback: CallbackQuery):
         return
 
     faq_id = int(callback.data.split("=")[1])
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("DELETE FROM support_faq WHERE id=?", (faq_id,))
-        await db.commit()
+    from support_bot.db_helper import delete_faq
+    await delete_faq(faq_id)
 
     await callback.answer(f"✅ FAQ #{faq_id} o'chirildi!", show_alert=True)
     await callback.message.delete()
@@ -472,15 +427,8 @@ async def faq_add_answer(message: Message, state: FSMContext):
     answer = message.text
     await state.clear()
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT MAX(order_num) FROM support_faq") as c:
-            row = await c.fetchone()
-            next_order = (row[0] or 0) + 1
-        await db.execute(
-            "INSERT INTO support_faq (question, answer, order_num) VALUES (?, ?, ?)",
-            (question, answer, next_order)
-        )
-        await db.commit()
+    from support_bot.db_helper import add_faq
+    await add_faq(question, answer)
 
     await message.answer(
         f"✅ <b>FAQ qo'shildi!</b>\n\n"

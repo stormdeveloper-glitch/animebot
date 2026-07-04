@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Bot Dashboard & Control Panel</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-primary: #6366f1;
+            --accent-primary-glow: rgba(99, 102, 241, 0.35);
+            --accent-success: #10b981;
+            --accent-success-glow: rgba(16, 185, 129, 0.2);
+            --accent-danger: #ef4444;
+            --accent-danger-glow: rgba(239, 68, 68, 0.3);
+            --accent-warning: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-blur: 16px;
+            --transition-speed: 0.3s;
+        }
+
+        /* Blinking Alarm class for Memory Leak */
+        .alarm-active {
+            animation: alarm-pulse 1s infinite alternate;
+            border-color: var(--accent-danger) !important;
+            box-shadow: 0 0 15px var(--accent-danger-glow) !important;
+        }
+
+        @keyframes alarm-pulse {
+            0% { background-color: rgba(239, 68, 68, 0.05); }
+            100% { background-color: rgba(239, 68, 68, 0.2); }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Layout & Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(var(--glass-blur));
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo i {
+            font-size: 1.75rem;
+            color: var(--accent-primary);
+            text-shadow: 0 0 15px var(--accent-primary-glow);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .system-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem 0.875rem;
+            border-radius: 99px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-success);
+            box-shadow: 0 0 8px var(--accent-success-glow);
+            display: inline-block;
+        }
+
+        .status-dot.danger {
+            background-color: var(--accent-danger);
+            box-shadow: 0 0 8px var(--accent-danger-glow);
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* Container & Tabs */
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            position: relative;
+            transition: color var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-primary);
+            box-shadow: 0 0 8px var(--accent-primary-glow);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards & Glassmorphism */
+        .glass-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: transform var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* --- OVERVIEW TAB --- */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bot-profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bot-avatar-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #312e81 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            font-size: 3.5rem;
+            color: #fff;
+            box-shadow: 0 0 30px var(--accent-primary-glow);
+            position: relative;
+        }
+
+        .bot-avatar-container img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .bot-details h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .bot-details p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .bot-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .bot-meta-table td {
+            padding: 0.6rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .bot-meta-table td:first-child {
+            color: var(--text-muted);
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .bot-meta-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-card.open .stat-icon {
+            color: var(--accent-warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .stat-card.answered .stat-icon {
+            color: var(--accent-success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .stat-card.closed .stat-icon {
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-val {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-lbl {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Server Metrics */
+        .metrics-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .metric-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .metric-progress-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .metric-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), #a855f7);
+            border-radius: 99px;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .metric-item.memory .metric-progress-fill {
+            background: linear-gradient(90deg, var(--accent-success), var(--accent-primary));
+        }
+
+        .metric-item.memory.critical .metric-progress-fill {
+            background: linear-gradient(90deg, var(--accent-danger), #b91c1c) !important;
+            animation: progress-blink 0.5s infinite alternate;
+        }
+
+        @keyframes progress-blink {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* --- TICKETS TAB --- */
+        .tickets-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 1.5rem;
+            height: 600px;
+        }
+
+        @media (max-width: 900px) {
+            .tickets-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        /* Ticket List Panel */
+        .ticket-list-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .ticket-list-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .ticket-filter {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0.25rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-btn {
+            flex-grow: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all var(--transition-speed);
+        }
+
+        .filter-btn:hover {
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .ticket-scroll {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-right: 0.25rem;
+        }
+
+        .ticket-item-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+        }
+
+        .ticket-item-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .ticket-item-card.active {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+        }
+
+        .ticket-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticket-id-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ticket-status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-open {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-answered {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-closed {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ticket-user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .ticket-preview {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ticket-time {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.3);
+            align-self: flex-end;
+        }
+
+        .empty-tickets {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .empty-tickets i {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+
+        /* Chat Panel */
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .chat-panel-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+            color: var(--text-muted);
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .chat-panel-placeholder i {
+            font-size: 3.5rem;
+            color: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .chat-user-info h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chat-user-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-sm:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-sm.success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-sm.success:hover:not(:disabled) {
+            background: rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-sm.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-sm.danger:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        /* Message Area */
+        .chat-messages-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg-bubble-wrapper {
+            display: flex;
+            width: 100%;
+        }
+
+        .msg-bubble-wrapper.user {
+            justify-content: flex-start;
+        }
+
+        .msg-bubble-wrapper.admin {
+            justify-content: flex-end;
+        }
+
+        .msg-bubble {
+            max-width: 70%;
+            padding: 0.85rem 1.1rem;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .msg-bubble-wrapper.user .msg-bubble {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-bubble-wrapper.admin .msg-bubble {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%);
+            color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg-time {
+            display: block;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0.4rem;
+            text-align: right;
+        }
+
+        .msg-bubble-wrapper.user .msg-time {
+            color: var(--text-muted);
+        }
+
+        /* Message Input Area */
+        .chat-input-area {
+            display: flex;
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .chat-input-area textarea {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem;
+            resize: none;
+            height: 48px;
+            transition: all var(--transition-speed);
+        }
+
+        .chat-input-area textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-primary-glow);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .chat-send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: var(--accent-primary);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 12px var(--accent-primary-glow);
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+            background: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        .chat-send-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .chat-send-btn:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* --- BUGS & GLITCHES TAB --- */
+        .bug-section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .bug-section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bug-controls h3 {
+            margin-bottom: 1.25rem;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bug-card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .bug-toggle-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all var(--transition-speed);
+        }
+
+        .bug-toggle-card.active {
+            border-color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.03);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.08);
+        }
+
+        .bug-info-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-width: 70%;
+        }
+
+        .bug-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bug-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Switch toggle UI */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #f3f4f6;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-danger);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* System Action Center */
+        .action-center {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--accent-success) 0%, #047857 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 12px var(--accent-success-glow);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--accent-success-glow);
+        }
+
+        .btn-action.disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Console/Logs Panel */
+        .console-panel {
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .console-header span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .console-screen {
+            flex-grow: 1;
+            background: #05070c;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.825rem;
+            color: #10b981;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .log-entry {
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .log-entry.info {
+            color: #a7f3d0;
+        }
+
+        .log-entry.warn {
+            color: var(--accent-warning);
+        }
+
+        .log-entry.error {
+            color: #fca5a5;
+        }
+
+        .log-entry.simulated {
+            color: #f43f5e;
+            font-weight: bold;
+            animation: pulse-log 1s alternate infinite;
+        }
+
+        @keyframes pulse-log {
+            from { text-shadow: 0 0 2px rgba(244, 63, 94, 0.2); }
+            to { text-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+        }
+
+        /* --- TELEGRAM TOOLS --- */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tool-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group textarea {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            padding: 0.65rem 0.85rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all var(--transition-speed);
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-primary-glow);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4f46e5;
+            box-shadow: 0 0 12px var(--accent-primary-glow);
+        }
+
+        .btn-primary:disabled {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* Webhook status */
+        .webhook-status-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Modal image view */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: rgba(17, 24, 39, 0.95);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-primary);
+            padding: 0.85rem 1.25rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 280px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: var(--accent-success);
+        }
+
+        .toast.error {
+            border-left-color: var(--accent-danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--accent-warning);
+        }
+
+        .toast i {
+            font-size: 1.1rem;
+        }
+
+        .toast.success i { color: var(--accent-success); }
+        .toast.error i { color: var(--accent-danger); }
+        .toast.warning i { color: var(--accent-warning); }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-headset"></i>
+            <h1>Support Control</h1>
+            <span>Subsystem</span>
+        </div>
+        <div class="header-actions">
+            <div class="system-status-indicator" id="system-status-container">
+                <span class="status-dot" id="system-status-dot"></span>
+                <span id="system-status-text">Tizim barqaror</span>
+            </div>
+            <button class="btn-sm success" onclick="fetchBotStatus()"><i class="fa-solid fa-rotate"></i> Yangilash</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Tabs Menu -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'tab-overview')">
+                <i class="fa-solid fa-chart-pie"></i> Umumiy ko'rinish
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-tickets')">
+                <i class="fa-solid fa-ticket"></i> Murojaatlar
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-bugs')">
+                <i class="fa-solid fa-bug"></i> Buzilishlar & Baglar
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-tools')">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Telegram Sandbox
+            </button>
+        </div>
+
+        <!-- OVERVIEW TAB -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="overview-grid">
+                
+                <!-- Bot Profile Info -->
+                <div class="glass-card bot-profile-card">
+                    <div class="bot-avatar-container">
+                        <span id="bot-avatar-fallback"><i class="fa-solid fa-robot"></i></span>
+                        <img id="bot-avatar-img" style="display: none;" src="" alt="Bot Avatar">
+                    </div>
+                    <div class="bot-details">
+                        <h2 id="bot-name">Yuklanmoqda...</h2>
+                        <p id="bot-username">@loading...</p>
+                    </div>
+                    <table class="bot-meta-table">
+                        <tr>
+                            <td>Bot ID:</td>
+                            <td id="bot-id">-</td>
+                        </tr>
+                        <tr>
+                            <td>Admin guruhi:</td>
+                            <td id="bot-group">-</td>
+                        </tr>
+                        <tr>
+                            <td>Webhook holati:</td>
+                            <td id="bot-webhook">-</td>
+                        </tr>
+                        <tr>
+                            <td>So'rovlar (Bugun):</td>
+                            <td id="bot-requests-today">0</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Asosiy Bot & Adminlar Info -->
+                <div class="glass-card admins-card" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem;">
+                    <h3 style="margin-bottom: 0.5rem; text-align: left; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; font-weight: 600;">
+                        <i class="fa-solid fa-users-gear" style="color: var(--accent-primary); margin-right: 0.5rem;"></i> Ma'murlar & Loyihalar
+                    </h3>
+                    
+                    <!-- Asosiy Bot Info -->
+                    <div id="main-bot-profile-container" style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255, 255, 255, 0.02); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-primary); flex-shrink: 0;">
+                            <img id="main-bot-avatar" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <i id="main-bot-fallback-avatar" class="fa-solid fa-robot" style="font-size: 1.1rem; color: var(--accent-primary);"></i>
+                        </div>
+                        <div style="text-align: left; flex-grow: 1; min-width: 0;">
+                            <div id="main-bot-name-txt" style="font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Asosiy Bot</div>
+                            <div id="main-bot-username-txt" style="font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@loading...</div>
+                        </div>
+                        <a id="main-bot-link" href="#" target="_blank" style="color: var(--accent-primary); font-size: 1.05rem; transition: transform 0.2s; flex-shrink: 0;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- Adminlar List -->
+                    <h4 style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted); text-align: left; margin-top: 0.25rem;">Bot Administratorlari</h4>
+                    <div id="admins-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">
+                            <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i> Yuklanmoqda...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats and Metrics -->
+                <div class="stats-container">
+                    
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+                            <div class="stat-val" id="stat-total">0</div>
+                            <div class="stat-lbl">Jami murojaatlar</div>
+                        </div>
+                        <div class="stat-card open">
+                            <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                            <div class="stat-val" id="stat-open">0</div>
+                            <div class="stat-lbl">Kutilmoqda</div>
+                        </div>
+                        <div class="stat-card answered">
+                            <div class="stat-icon"><i class="fa-solid fa-reply"></i></div>
+                            <div class="stat-val" id="stat-answered">0</div>
+                            <div class="stat-lbl">Javob berildi</div>
+                        </div>
+                        <div class="stat-card closed">
+                            <div class="stat-icon"><i class="fa-solid fa-lock"></i></div>
+                            <div class="stat-val" id="stat-closed">0</div>
+                            <div class="stat-lbl">Yopildi</div>
+                        </div>
+                    </div>
+
+                    <!-- Server Health Metrics -->
+                    <div class="glass-card metrics-card" id="health-card">
+                        <h3><i class="fa-solid fa-server"></i> Server resurslari va salomatligi</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-info">
+                                    <span>CPU yuklanishi</span>
+                                    <span id="metric-cpu-val">12%</span>
+                                </div>
+                                <div class="metric-progress-bg">
+                                    <div class="metric-progress-fill" id="metric-cpu-bar" style="width: 12%;"></div>
+                                </div>
+                            </div>
+                            <div class="metric-item memory" id="memory-metric-item">
+                                <div class="metric-info">
+                                    <span>Tezkor xotira (RAM)</span>
+                                    <span id="metric-ram-val">34%</span>
+                                </div>
+                                <div class="metric-progress-bg">
+                                    <div class="metric-progress-fill" id="metric-ram-bar" style="width: 34%;"></div>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-info">
+                                    <span>Ma'lumotlar bazasi (bot.db)</span>
+                                    <span id="metric-db-val">0 KB</span>
+                                </div>
+                                <div class="metric-progress-bg">
+                                    <div class="metric-progress-fill" id="metric-db-bar" style="width: 5%;"></div>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-info">
+                                    <span>Tarmoq ping ko'rsatkichi</span>
+                                    <span id="metric-ping-val">15 ms</span>
+                                </div>
+                                <div class="metric-progress-bg">
+                                    <div class="metric-progress-fill" id="metric-ping-bar" style="width: 15%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TICKETS TAB -->
+        <div id="tab-tickets" class="tab-content">
+            <div class="tickets-layout glass-card">
+                
+                <!-- Ticket List -->
+                <div class="ticket-list-panel">
+                    <div class="ticket-list-header">
+                        <div class="ticket-filter">
+                            <button class="filter-btn active" onclick="filterTickets('all', this)">Barchasi</button>
+                            <button class="filter-btn" onclick="filterTickets('open', this)">Ochiq</button>
+                            <button class="filter-btn" onclick="filterTickets('answered', this)">Javob berilgan</button>
+                            <button class="filter-btn" onclick="filterTickets('closed', this)">Yopilgan</button>
+                        </div>
+                    </div>
+                    
+                    <div class="ticket-scroll" id="ticket-list-container">
+                        <!-- Loaded dynamically -->
+                        <div class="empty-tickets">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <p>Murojaatlar yuklanmoqda...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat History & Details -->
+                <div class="chat-panel">
+                    <div id="chat-placeholder" class="chat-panel-placeholder">
+                        <i class="fa-solid fa-comments"></i>
+                        <p>Murojaat tafsilotlarini va xabarlar tarixini ko'rish uchun chap tomondan ticketni tanlang.</p>
+                    </div>
+
+                    <div id="chat-active" class="chat-panel" style="display: none;">
+                        <div class="chat-header">
+                            <div class="chat-user-info">
+                                <h4 id="chat-user-title">Foydalanuvchi</h4>
+                                <span class="chat-user-sub" id="chat-user-meta">ID: 0 | Username: -</span>
+                            </div>
+                            <div class="chat-actions">
+                                <button class="btn-sm success" id="btn-close-ticket" onclick="closeCurrentTicket()">
+                                    <i class="fa-solid fa-check-double"></i> Murojaatni yopish
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Messages Area -->
+                        <div class="chat-messages-area" id="chat-messages-container">
+                            <!-- Messages loaded here -->
+                        </div>
+
+                        <!-- Message Input Form -->
+                        <div class="chat-input-area">
+                            <textarea id="reply-textarea" placeholder="Admindan foydalanuvchiga javob xabari yozing... (Enter orqali yuborish)" onkeydown="checkSubmit(event)"></textarea>
+                            <button class="chat-send-btn" id="send-reply-btn" onclick="sendReply()">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- BUGS & GLITCHES TAB -->
+        <div id="tab-bugs" class="tab-content">
+            <div class="bug-section-grid">
+                
+                <!-- Bug Control Center -->
+                <div class="glass-card bug-controls">
+                    <h3><i class="fa-solid fa-toggle-on"></i> Tizim xatoliklarini simulyatsiya qilish</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Tizimning turli xil buzilish holatlarida o'zini qanday tutishini tekshirish uchun quyidagi tugmalarni faollashtiring.
+                        Har bir buzilish faollashtirilganda, u backend tizimida tegishli xatolarni yuzaga keltiradi.
+                    </p>
+
+                    <div class="bug-card-list">
+                        
+                        <!-- DB Latency/Lock Bug -->
+                        <div class="bug-toggle-card" id="card-bug-db">
+                            <div class="bug-info-text">
+                                <span class="bug-title"><i class="fa-solid fa-database"></i> SQLite DB Qulflanishi</span>
+                                <span class="bug-desc">Ma'lumotlar bazasiga bo'lgan har bir so'rovni 3 soniyaga kechiktiradi va tranzaksiyalarni qulflaydi.</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-bug-db" onchange="toggleBug('db_lock', this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Telegram API 429 Throttle Bug -->
+                        <div class="bug-toggle-card" id="card-bug-telegram-429">
+                            <div class="bug-info-text">
+                                <span class="bug-title"><i class="fa-solid fa-cloud-bolt"></i> Telegram API 429 (Flood)</span>
+                                <span class="bug-desc">Telegram bot orqali jo'natiladigan har bir xabarda 'Retry After 429' (limiti oshdi) xatosini qaytaradi.</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-bug-telegram-429" onchange="toggleBug('tg_rate_limit', this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Network outage Bug -->
+                        <div class="bug-toggle-card" id="card-bug-network">
+                            <div class="bug-info-text">
+                                <span class="bug-title"><i class="fa-solid fa-wifi-slash"></i> Telegram Server Outage</span>
+                                <span class="bug-desc">Telegram API xizmatlariga ulanish uzilganini simulyatsiya qiladi (Network Connection Timeout).</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-bug-network" onchange="toggleBug('tg_network_fail', this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Memory Leak Bug -->
+                        <div class="bug-toggle-card" id="card-bug-memory">
+                            <div class="bug-info-text">
+                                <span class="bug-title"><i class="fa-solid fa-memory"></i> RAM Xotira sizib chiqishi</span>
+                                <span class="bug-desc">Xotiradan yuklanishni sun'iy tarzda oshiradi. RAM hajmi ko'rsatkichi 98% gacha ko'tarilib qizil signal beradi.</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-bug-memory" onchange="toggleBug('memory_leak', this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <div class="action-center">
+                        <button class="btn-action" onclick="resolveAllBugs()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Tizimni qayta tiklash (Fix All Bugs)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Console Output Terminal -->
+                <div class="glass-card console-panel">
+                    <div class="console-header">
+                        <span><i class="fa-solid fa-terminal"></i> Tizim loglari (Console Output)</span>
+                        <button class="btn-sm" onclick="clearConsole()"><i class="fa-solid fa-trash"></i> Tozalash</button>
+                    </div>
+                    <div class="console-screen" id="console-terminal">
+                        <div class="log-entry info">[SYSTEM] Support bot boshqaruv konsoli faollashtirildi.</div>
+                        <div class="log-entry info">[SYSTEM] Loglar olinmoqda...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TELEGRAM TOOLS -->
+        <div id="tab-tools" class="tab-content">
+            <div class="tools-grid">
+                
+                <!-- Connection test -->
+                <div class="glass-card tool-card">
+                    <h3><i class="fa-solid fa-paper-plane"></i> Telegram Muloqot Testi</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                        Telegram guruhiga (SUPPORT_GROUP_ID) test rejimida adminlik ogohlantirishini yuborib bot ulanishini tekshiring.
+                    </p>
+                    
+                    <div class="form-group">
+                        <label for="test-alert-message">Xabar matni:</label>
+                        <textarea id="test-alert-message" rows="3" placeholder="Tizim sinov xabari. Salomatlik tekshiruvi muvaffaqiyatli yakunlandi.">⚠️ Tizim nazorati: Standalone support tizimi muvaffaqiyatli ishga tushdi va ulanish sinovdan o'tdi.</textarea>
+                    </div>
+
+                    <button class="btn-primary" id="btn-send-test" onclick="sendTestAlert()">
+                        <i class="fa-solid fa-circle-check"></i> Guruhga yuborish (Telegram API)
+                    </button>
+                </div>
+
+                <!-- Bot Info & Webhook Details -->
+                <div class="glass-card tool-card">
+                    <h3><i class="fa-solid fa-network-wired"></i> Telegram Webhook holati</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                        Hozirgi Telegram bot ulangan Webhook manzili haqida batafsil ma'lumotlar.
+                    </p>
+
+                    <div class="webhook-status-box" id="webhook-details">
+                        <!-- Loaded dynamically -->
+                        <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Ma'lumot yuklanmoqda...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="modal" onclick="closeImageModal()">
+        <span class="modal-close">&times;</span>
+        <img class="modal-content" id="modal-img">
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Support Bot Standalone Control Subsystem. Pair programmed with Antigravity.</p>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script>
+        let currentTabId = 'tab-overview';
+        let allTickets = [];
+        let activeTicketId = null;
+        let activeFilter = 'all';
+        let refreshInterval = null;
+        let logsInterval = null;
+        let bugStates = {
+            db_lock: false,
+            tg_rate_limit: false,
+            tg_network_fail: false,
+            memory_leak: false
+        };
+
+        // Initialize Page
+        window.addEventListener('load', () => {
+            fetchBotStatus();
+            fetchTickets();
+            fetchLogs();
+            
+            // Auto refresh stats and logs
+            refreshInterval = setInterval(fetchBotStatus, 5000);
+            logsInterval = setInterval(fetchLogs, 4000);
+        });
+
+        // Tab Switching
+        function switchTab(event, tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show active tab
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            currentTabId = tabId;
+
+            // Trigger fetch adjustments if necessary
+            if (tabId === 'tab-tickets') {
+                fetchTickets();
+            }
+        }
+
+        // Show Toast Notification
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-circle-check';
+            if (type === 'error') icon = 'fa-circle-xmark';
+            if (type === 'warning') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `
+                <i class="fa-solid ${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            // Remove toast after 4s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // Fetch Bot Status & Metrics from Backend
+        async function fetchBotStatus() {
+            try {
+                const response = await fetch('/api/bot-status');
+                if (!response.ok) throw new Error('API server status checking failed');
+                
+                const data = await response.json();
+                
+                // Update Bot Info
+                document.getElementById('bot-name').innerText = data.bot_name || 'Anigram Support Bot';
+                document.getElementById('bot-username').innerText = `@${data.bot_username || 'support_bot'}`;
+                document.getElementById('bot-id').innerText = data.bot_id || 'N/A';
+                document.getElementById('bot-group').innerText = data.support_group_id || 'N/A';
+                
+                const hasWebhook = data.webhook_url ? 'Webhook' : 'Polling';
+                document.getElementById('bot-webhook').innerText = hasWebhook;
+                
+                // Update Ticket Stats
+                document.getElementById('stat-total').innerText = data.stats.total || 0;
+                document.getElementById('stat-open').innerText = data.stats.open || 0;
+                document.getElementById('stat-answered').innerText = data.stats.answered || 0;
+                document.getElementById('stat-closed').innerText = data.stats.closed || 0;
+                
+                // Update Server Health Bar metrics
+                updateMetric('cpu', data.metrics.cpu);
+                updateMetric('ram', data.metrics.ram);
+                updateMetric('db', data.metrics.db_size_kb, data.metrics.db_percentage);
+                updateMetric('ping', data.metrics.ping);
+
+                // Memory Leak alarm triggers
+                const memoryMetricItem = document.getElementById('memory-metric-item');
+                const healthCard = document.getElementById('health-card');
+                if (data.metrics.ram > 85) {
+                    memoryMetricItem.classList.add('critical');
+                    healthCard.classList.add('alarm-active');
+                    document.getElementById('system-status-dot').className = 'status-dot danger';
+                    document.getElementById('system-status-text').innerText = 'RAM Avariya Holatida!';
+                } else {
+                    memoryMetricItem.classList.remove('critical');
+                    healthCard.classList.remove('alarm-active');
+                    
+                    // General status
+                    if (data.system_healthy) {
+                        document.getElementById('system-status-dot').className = 'status-dot';
+                        document.getElementById('system-status-text').innerText = 'Tizim barqaror';
+                    } else {
+                        document.getElementById('system-status-dot').className = 'status-dot danger';
+                        document.getElementById('system-status-text').innerText = 'Muammolar aniqlandi';
+                    }
+                }
+
+                // Render Webhook details
+                renderWebhookDetails(data.webhook_details);
+
+                // Render Main Bot and Admins profiles
+                renderAdmins(data.main_bot, data.admins);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('system-status-dot').className = 'status-dot danger';
+                document.getElementById('system-status-text').innerText = 'Backend Aloqasi Uzildi';
+            }
+        }
+
+        // Render Admins & Main Bot Profiles
+        function renderAdmins(mainBot, admins) {
+            // 1. Update Main Bot
+            const mainBotAvatar = document.getElementById('main-bot-avatar');
+            const mainBotFallback = document.getElementById('main-bot-fallback-avatar');
+            const mainBotName = document.getElementById('main-bot-name-txt');
+            const mainBotUsername = document.getElementById('main-bot-username-txt');
+            const mainBotLink = document.getElementById('main-bot-link');
+            
+            if (mainBot) {
+                mainBotName.innerText = mainBot.name || 'Asosiy Bot';
+                mainBotUsername.innerText = `@${mainBot.username || 'unknown'}`;
+                mainBotLink.href = mainBot.link || '#';
+                if (mainBot.photo_url) {
+                    mainBotAvatar.src = mainBot.photo_url;
+                    mainBotAvatar.style.display = 'block';
+                    mainBotFallback.style.display = 'none';
+                } else {
+                    mainBotAvatar.style.display = 'none';
+                    mainBotFallback.style.display = 'block';
+                }
+            }
+            
+            // 2. Update Admins List
+            const container = document.getElementById('admins-list-container');
+            container.innerHTML = '';
+            
+            if (!admins || admins.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">Adminlar ro'yxati bo'sh</div>`;
+                return;
+            }
+            
+            admins.forEach(admin => {
+                const item = document.createElement('div');
+                item.style.display = 'flex';
+                item.style.alignItems = 'center';
+                item.style.gap = '0.75rem';
+                item.style.padding = '0.5rem 0.75rem';
+                item.style.background = 'rgba(255, 255, 255, 0.01)';
+                item.style.borderRadius = '6px';
+                item.style.border = '1px solid rgba(255, 255, 255, 0.04)';
+                
+                const avatarHtml = admin.photo_url 
+                    ? `<img src="${admin.photo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">`
+                    : `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: bold; color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.08);">${admin.name.charAt(0).toUpperCase()}</div>`;
+                    
+                const roleBadgeColor = admin.role === 'Super Admin' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(99, 102, 241, 0.15)';
+                const roleTextColor = admin.role === 'Super Admin' ? 'var(--accent-danger)' : 'var(--accent-primary)';
+                
+                item.innerHTML = `
+                    <div style="flex-shrink: 0; display: flex; align-items: center;">${avatarHtml}</div>
+                    <div style="text-align: left; flex-grow: 1; min-width: 0;">
+                        <div style="font-weight: 500; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main);">${admin.name}</div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem; margin-top: 1px;">
+                            <span style="font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; background: ${roleBadgeColor}; color: ${roleTextColor}; font-weight: 500; white-space: nowrap;">${admin.role}</span>
+                            ${admin.username ? `<span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${admin.username}</span>` : ''}
+                        </div>
+                    </div>
+                    <a href="${admin.link}" target="_blank" style="color: var(--text-muted); font-size: 1rem; transition: color 0.2s; flex-shrink: 0; display: flex; align-items: center;">
+                        <i class="fa-brands fa-telegram"></i>
+                    </a>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Helper to update progress bars
+        function updateMetric(name, value, overrideBarWidth = null) {
+            const bar = document.getElementById(`metric-${name}-bar`);
+            const label = document.getElementById(`metric-${name}-val`);
+            
+            if (name === 'db') {
+                label.innerText = `${value} KB`;
+                bar.style.width = `${overrideBarWidth || 5}%`;
+            } else if (name === 'ping') {
+                label.innerText = `${value} ms`;
+                bar.style.width = `${Math.min(value, 100)}%`;
+            } else {
+                label.innerText = `${value}%`;
+                bar.style.width = `${value}%`;
+            }
+        }
+
+        // Render Webhook details
+        function renderWebhookDetails(info) {
+            const box = document.getElementById('webhook-details');
+            if (!info || Object.keys(info).length === 0) {
+                box.innerHTML = `
+                    <div><strong>Rejim:</strong> Polling (Telegram polling faol)</div>
+                    <div><strong>Kutilayotgan yangilanishlar:</strong> 0</div>
+                    <div><strong>So'nggi xatolik:</strong> Mavjud emas</div>
+                `;
+                return;
+            }
+
+            box.innerHTML = `
+                <div><strong>Webhook URL:</strong> ${info.url || 'O\'rnatilmagan'}</div>
+                <div><strong>Kutilayotgan xabarlar:</strong> ${info.pending_update_count || 0}</div>
+                <div><strong>Maksimal ulanishlar:</strong> ${info.max_connections || 'sukut bo\'yicha'}</div>
+                <div><strong>IP Manzil:</strong> ${info.ip_address || 'Yo\'q'}</div>
+                <div><strong>So'nggi xatolik vaqti:</strong> ${info.last_error_date ? new Date(info.last_error_date * 1000).toLocaleString() : 'Xatosiz'}</div>
+                <div><strong>Xatolik xabari:</strong> ${info.last_error_message || 'Mavjud emas'}</div>
+            `;
+        }
+
+        // Fetch support tickets
+        async function fetchTickets() {
+            try {
+                const response = await fetch('/api/tickets');
+                if (!response.ok) throw new Error('Tickets fetch failed');
+                
+                allTickets = await response.json();
+                renderTicketList();
+            } catch (err) {
+                console.error(err);
+                showToast('Murojaatlarni yuklashda xato yuz berdi', 'error');
+            }
+        }
+
+        // Render Ticket List inside Left Panel
+        function renderTicketList() {
+            const container = document.getElementById('ticket-list-container');
+            container.innerHTML = '';
+
+            const filtered = allTickets.filter(t => {
+                if (activeFilter === 'all') return true;
+                return t.status === activeFilter;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-tickets">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <p>Ushbu ruknda murojaatlar mavjud emas.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(ticket => {
+                const card = document.createElement('div');
+                card.className = `ticket-item-card ${activeTicketId === ticket.id ? 'active' : ''}`;
+                card.onclick = () => selectTicket(ticket.id);
+
+                const statusLabel = {
+                    open: 'Kutilmoqda',
+                    answered: 'Javob berilgan',
+                    closed: 'Yopilgan'
+                }[ticket.status] || ticket.status;
+
+                const statusClass = `badge-${ticket.status}`;
+
+                const cleanTime = ticket.created_at ? ticket.created_at.split(' ')[1] || ticket.created_at : '';
+
+                card.innerHTML = `
+                    <div class="ticket-item-top">
+                        <span class="ticket-id-tag">#${ticket.id}</span>
+                        <span class="ticket-status-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div class="ticket-user-name">${ticket.full_name || 'Telegram User'}</div>
+                    <div class="ticket-preview">${ticket.message || ''}</div>
+                    <div class="ticket-time">${ticket.created_at || ''}</div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Filter Tickets
+        function filterTickets(status, btnElement) {
+            document.querySelectorAll('.ticket-filter .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            btnElement.classList.add('active');
+            activeFilter = status;
+            renderTicketList();
+        }
+
+        // Select ticket and view chat details
+        async function selectTicket(ticketId) {
+            activeTicketId = ticketId;
+            
+            // Mark active element in UI list
+            document.querySelectorAll('.ticket-item-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Load ticket message history
+            try {
+                const ticket = allTickets.find(t => t.id === ticketId);
+                if (!ticket) return;
+
+                document.getElementById('chat-placeholder').style.display = 'none';
+                document.getElementById('chat-active').style.display = 'flex';
+                
+                // Set Header
+                document.getElementById('chat-user-title').innerText = ticket.full_name || 'Foydalanuvchi';
+                
+                const unameStr = ticket.username ? `@${ticket.username}` : 'username yo\'q';
+                document.getElementById('chat-user-meta').innerText = `ID: ${ticket.user_id} | Username: ${unameStr}`;
+
+                // Set Close ticket button state
+                const closeBtn = document.getElementById('btn-close-ticket');
+                if (ticket.status === 'closed') {
+                    closeBtn.innerText = 'Yopilgan';
+                    closeBtn.disabled = true;
+                    closeBtn.className = 'btn-sm';
+                } else {
+                    closeBtn.innerText = 'Murojaatni yopish';
+                    closeBtn.disabled = false;
+                    closeBtn.className = 'btn-sm danger';
+                }
+
+                // Fetch history messages
+                const response = await fetch(`/api/tickets/${ticketId}/messages`);
+                if (!response.ok) throw new Error('History load failed');
+                
+                const messages = await response.json();
+                renderChatMessages(messages);
+
+            } catch (err) {
+                console.error(err);
+                showToast('Suhbat tarixini olishda xatolik yuz berdi', 'error');
+            }
+
+            // re-render list to show active highlight
+            renderTicketList();
+        }
+
+        // Render Chat Messages bubble list
+        function renderChatMessages(messages) {
+            const container = document.getElementById('chat-messages-container');
+            container.innerHTML = '';
+
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        Xabarlar mavjud emas.
+                    </div>
+                `;
+                return;
+            }
+
+            messages.forEach(msg => {
+                const wrap = document.createElement('div');
+                const isAdmin = msg.is_admin === 1;
+                wrap.className = `msg-bubble-wrapper ${isAdmin ? 'admin' : 'user'}`;
+
+                const cleanText = escapeHTML(msg.message);
+
+                wrap.innerHTML = `
+                    <div class="msg-bubble">
+                        <div>${cleanText}</div>
+                        <span class="msg-time">${msg.created_at || ''}</span>
+                    </div>
+                `;
+
+                container.appendChild(wrap);
+            });
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Escape HTML for safety
+        function escapeHTML(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Submit message on Enter (without shift)
+        function checkSubmit(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendReply();
+            }
+        }
+
+        // Send Reply to User
+        async function sendReply() {
+            const textarea = document.getElementById('reply-textarea');
+            const text = textarea.value.trim();
+            if (!text || !activeTicketId) return;
+
+            const sendBtn = document.getElementById('send-reply-btn');
+            sendBtn.disabled = true;
+            textarea.disabled = true;
+
+            try {
+                const response = await fetch(`/api/tickets/${activeTicketId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Reply send failed');
+                }
+
+                showToast('Javob yuborildi va foydalanuvchiga yetkazildi!');
+                textarea.value = '';
+                
+                // Refresh list and reload current chat
+                await fetchTickets();
+                await selectTicket(activeTicketId);
+
+            } catch (err) {
+                console.error(err);
+                showToast(`Javob yuborishda xato: ${err.message}`, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                textarea.disabled = false;
+                textarea.focus();
+            }
+        }
+
+        // Close Support Ticket
+        async function closeCurrentTicket() {
+            if (!activeTicketId) return;
+            if (!confirm('Ushbu murojaatni rostdan ham yopmoqchimisiz?')) return;
+
+            try {
+                const response = await fetch(`/api/tickets/${activeTicketId}/close`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Ticket close failed');
+                }
+
+                showToast('Murojaat muvaffaqiyatli yopildi.');
+                await fetchTickets();
+                await selectTicket(activeTicketId);
+
+            } catch (err) {
+                console.error(err);
+                showToast(`Xatolik: ${err.message}`, 'error');
+            }
+        }
+
+        // Fetch logs for terminal console
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                if (!response.ok) throw new Error('Logs fetch failed');
+                const logs = await response.json();
+                
+                const terminal = document.getElementById('console-terminal');
+                // Save current scroll position
+                const isScrolledToBottom = terminal.scrollHeight - terminal.clientHeight <= terminal.scrollTop + 30;
+
+                terminal.innerHTML = '';
+                logs.forEach(log => {
+                    const div = document.createElement('div');
+                    let logClass = 'info';
+                    
+                    if (log.toLowerCase().includes('error') || log.toLowerCase().includes('fail') || log.toLowerCase().includes('exception')) {
+                        logClass = 'error';
+                    } else if (log.toLowerCase().includes('warning') || log.toLowerCase().includes('warn')) {
+                        logClass = 'warn';
+                    }
+                    
+                    if (log.includes('[SIMULATED]')) {
+                        logClass = 'simulated';
+                    }
+
+                    div.className = `log-entry ${logClass}`;
+                    div.innerText = log;
+                    terminal.appendChild(div);
+                });
+
+                if (isScrolledToBottom) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+
+            } catch (err) {
+                console.error('Log monitoring error:', err);
+            }
+        }
+
+        // Clear console log UI
+        function clearConsole() {
+            document.getElementById('console-terminal').innerHTML = `
+                <div class="log-entry info">[SYSTEM] Konsol foydalanuvchi tomonidan tozalandi. Yangi loglar kutilmoqda...</div>
+            `;
+        }
+
+        // Toggle simulated bug status
+        async function toggleBug(bugName, checkbox) {
+            const active = checkbox.checked;
+            const card = document.getElementById(`card-bug-${bugName === 'tg_rate_limit' ? 'telegram-429' : bugName === 'tg_network_fail' ? 'network' : bugName === 'db_lock' ? 'db' : 'memory'}`);
+            
+            if (active) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+
+            try {
+                const response = await fetch('/api/bugs/trigger', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bug: bugName, active: active })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                if (active) {
+                    showToast(`Bug faollashtirildi: ${bugName.toUpperCase()}`, 'warning');
+                } else {
+                    showToast(`Bug o'chirildi: ${bugName.toUpperCase()}`);
+                }
+
+                // Instantly fetch bot status & logs
+                fetchBotStatus();
+                fetchLogs();
+
+            } catch (err) {
+                console.error(err);
+                showToast(`Xatolik: ${err.message}`, 'error');
+                checkbox.checked = !active; // revert UI
+                card.classList.toggle('active');
+            }
+        }
+
+        // Reset/Resolve all simulated bugs
+        async function resolveAllBugs() {
+            try {
+                const response = await fetch('/api/bugs/resolve', { method: 'POST' });
+                if (!response.ok) throw new Error('Bugs resolving failed');
+                
+                showToast('Barcha sun\'iy xatoliklar bartaraf etildi. Tizim tiklanmoqda!');
+                
+                // Reset toggles in UI
+                document.getElementById('toggle-bug-db').checked = false;
+                document.getElementById('toggle-bug-telegram-429').checked = false;
+                document.getElementById('toggle-bug-network').checked = false;
+                document.getElementById('toggle-bug-memory').checked = false;
+                
+                document.querySelectorAll('.bug-toggle-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+
+                // Instantly fetch
+                fetchBotStatus();
+                fetchLogs();
+
+            } catch (err) {
+                console.error(err);
+                showToast('Tizimni qayta tiklashda xato yuz berdi', 'error');
+            }
+        }
+
+        // Send test alert to Telegram group via API tools
+        async function sendTestAlert() {
+            const textarea = document.getElementById('test-alert-message');
+            const text = textarea.value.trim();
+            if (!text) return;
+
+            const btn = document.getElementById('btn-send-test');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/telegram/send-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Connection failed');
+
+                showToast('Test xabari Telegram guruhiga muvaffaqiyatli jo\'natildi!');
+
+            } catch (err) {
+                console.error(err);
+                showToast(`Telegram API Xatosi: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Close image modal
+        function closeImageModal() {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

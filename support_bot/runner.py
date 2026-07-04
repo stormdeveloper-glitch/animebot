@@ -12,16 +12,21 @@ from support_bot.handlers import user_handlers, admin_handlers
 
 logger = logging.getLogger("support_bot")
 
+active_bot = None
 
-async def run_support_bot():
+
+async def run_support_bot(bot: Bot = None):
     """Support botni polling rejimida ishga tushiradi."""
-    if not SUPPORT_BOT_TOKEN:
+    global active_bot
+    if not SUPPORT_BOT_TOKEN and bot is None:
         logger.warning(
             "[SupportBot] SUPPORT_BOT_TOKEN o'rnatilmagan — support bot ishlamaydi."
         )
         return
 
-    bot = Bot(token=SUPPORT_BOT_TOKEN)
+    if bot is None:
+        bot = Bot(token=SUPPORT_BOT_TOKEN)
+    active_bot = bot
     dp = Dispatcher(storage=MemoryStorage())
 
     # Routerlar: admin_handlers OLDIN (guruh callbacklari uchun)

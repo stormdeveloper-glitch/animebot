@@ -52,6 +52,14 @@ else:
     DATA_DIR = os.path.join(BASE_DIR, "data")
 
 DB_PATH = os.path.join(DATA_DIR, "bot.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+MYSQL_URL = os.getenv("MYSQL_URL", "")
+
+BUCKET = os.getenv("BUCKET", "")
+REGION = os.getenv("REGION", "")
+ENDPOINT = os.getenv("ENDPOINT", "")
+ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID", "")
+SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", "")
 
 # Papkani yaratish (agar yo'q bo'lsa)
 os.makedirs(DATA_DIR, exist_ok=True)

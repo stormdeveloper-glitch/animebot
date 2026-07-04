@@ -28,11 +28,9 @@ async def _is_admin(user_id: int) -> bool:
 
 
 async def _get_faqs() -> list:
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            "SELECT id, question, answer, order_num FROM support_faq ORDER BY order_num ASC"
-        ) as c:
-            return await c.fetchall()
+    from support_bot.db_helper import get_faqs as fetch_faqs
+    items = await fetch_faqs()
+    return [(x["id"], x["question"], x["answer"], x["order_num"]) for x in items]
 
 
 async def _get_main_kb(user_id: int):
@@ -48,21 +46,8 @@ async def _create_support_ticket(
     text: str,
     bot: Bot
 ) -> int:
-
-    async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute(
-            """INSERT INTO support_tickets
-               (user_id, username, full_name, message, status)
-               VALUES (?, ?, ?, ?, 'open')""",
-            (user_id, username, full_name, text)
-        )
-        ticket_id = cursor.lastrowid
-
-        await db.execute(
-            "INSERT INTO support_messages (ticket_id, sender_id, message, is_admin) VALUES (?, ?, ?, 0)",
-            (ticket_id, user_id, text)
-        )
-        await db.commit()
+    from support_bot.db_helper import create_ticket, update_ticket_group_msg
+    ticket_id = await create_ticket(user_id, username, full_name, text)
 
     if SUPPORT_GROUP_ID:
         from support_bot.keyboards import ticket_admin_kb
@@ -82,12 +67,7 @@ async def _create_support_ticket(
                 reply_markup=ticket_admin_kb(ticket_id, user_id),
                 parse_mode="HTML"
             )
-            async with aiosqlite.connect(DB_PATH) as db:
-                await db.execute(
-                    "UPDATE support_tickets SET group_msg_id=? WHERE id=?",
-                    (sent.message_id, ticket_id)
-                )
-                await db.commit()
+            await update_ticket_group_msg(ticket_id, sent.message_id)
         except Exception as e:
             print(f"[SupportBot] Guruhga yuborishda xato: {e}")
 
@@ -218,15 +198,9 @@ async def send_to_admin_after_ai(callback: CallbackQuery, bot: Bot):
 async def my_tickets(message: Message):
     user_id = message.from_user.id
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            """SELECT id, message, status, created_at
-               FROM support_tickets
-               WHERE user_id=?
-               ORDER BY created_at DESC LIMIT 10""",
-            (user_id,)
-        ) as c:
-            tickets = await c.fetchall()
+    from support_bot.db_helper import get_tickets_for_user
+    rows = await get_tickets_for_user(user_id, limit=10)
+    tickets = [(x["id"], x["message"], x["status"], x["created_at"]) for x in rows]
 
     if not tickets:
         await message.answer(
