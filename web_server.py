@@ -1496,20 +1496,34 @@ def _extract_anime_search_query(user_msg: str) -> str:
         "nima", "haqida", "haqida.", "haqida!"
     }
     
-    # Stem/prefix matching for verbs to filter variations (like bering, ayting, yozing, etc.)
-    stem_stopwords = {"ber", "ayt", "yoz", "top", "qid", "ko'r", "kor", "tavs"}
+    # Suffix matching to filter verbs cleanly without side effects on proper nouns (like Kore, Yozakura, Top)
+    verb_bases = {"ber", "ayt", "yoz", "qidir", "ko'rsat", "tavsiya"}
+    all_bases = {"ber", "ayt", "yoz", "qidir", "ko'rsat", "tavsiya", "top"}
+    valid_suffixes = (
+        "ing", "ib", "gan", "asiz", "adi", "ish", "ishi", "ishni", 
+        "ishga", "ibdi", "yapti", "adi", "sangiz", "sang", "sa", 
+        "ay", "alik", "aylik", "sin"
+    )
     
     words = re.findall(r"\b[a-zA-Z0-9'’`‘-]+\b", text)
     filtered_words = []
     for w in words:
         if w in stopwords:
             continue
-        is_verb_stem = False
-        for stem in stem_stopwords:
-            if w.startswith(stem) and len(w) <= len(stem) + 5:
-                is_verb_stem = True
-                break
-        if is_verb_stem:
+            
+        # Check if the word is a helper/action verb
+        is_verb = False
+        if w in verb_bases:
+            is_verb = True
+        else:
+            for base in all_bases:
+                if w.startswith(base):
+                    suffix = w[len(base):]
+                    if suffix in valid_suffixes:
+                        is_verb = True
+                        break
+        
+        if is_verb:
             continue
         if len(w) < 2:
             continue
