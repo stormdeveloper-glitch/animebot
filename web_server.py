@@ -1496,8 +1496,24 @@ def _extract_anime_search_query(user_msg: str) -> str:
         "nima", "haqida", "haqida.", "haqida!"
     }
     
+    # Stem/prefix matching for verbs to filter variations (like bering, ayting, yozing, etc.)
+    stem_stopwords = {"ber", "ayt", "yoz", "top", "qid", "ko'r", "kor", "tavs"}
+    
     words = re.findall(r"\b[a-zA-Z0-9'’`‘-]+\b", text)
-    filtered_words = [w for w in words if w not in stopwords and len(w) >= 2]
+    filtered_words = []
+    for w in words:
+        if w in stopwords:
+            continue
+        is_verb_stem = False
+        for stem in stem_stopwords:
+            if w.startswith(stem) and len(w) <= len(stem) + 5:
+                is_verb_stem = True
+                break
+        if is_verb_stem:
+            continue
+        if len(w) < 2:
+            continue
+        filtered_words.append(w)
     
     if not filtered_words:
         words_any = re.findall(r"\b[a-zA-Z0-9'’`‘-]+\b", user_msg)
