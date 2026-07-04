@@ -1,3 +1,4 @@
+import re
 from collections import deque
 from datetime import datetime
 import asyncio
@@ -915,6 +916,15 @@ def _clean_text(value, default: str = "") -> str:
     return str(value if value is not None else default).strip()
 
 
+def _clean_description(html_text: str) -> str:
+    if not html_text:
+        return ""
+    clean = re.sub(r'<[^>]+>', '', html_text)
+    clean = re.sub(r'__|\*|`|#', '', clean)
+    clean = re.sub(r'\s+', ' ', clean)
+    return clean.strip()
+
+
 async def _is_web_admin_id(user_id: int) -> bool:
     if user_id == SUPER_ADMIN_ID or user_id in ADMIN_IDS:
         return True
@@ -1472,6 +1482,82 @@ async def api_admin_users(request):
     return web.json_response({"ok": True, "users": users})
 
 
+def _extract_anime_search_query(user_msg: str) -> str:
+    text = user_msg.lower()
+    if text.startswith("/ai"):
+        text = text[3:]
+    
+    stopwords = {
+        "menga", "haqida", "ma'lumot", "malumot", "ber", "ayt", "yoz", 
+        "tavsif", "top", "topib", "qidir", "qidirish", "anime", "animeni", 
+        "animelar", "haqidaxabar", "haqida,", "tasvirlab", "bormi", "bormi?",
+        "kinosi", "multfilm", "multfilmi", "uz", "uzbek", "tarjima", "o'zbekcha",
+        "ozbekcha", "skachat", "yuklash", "ko'rish", "korish", "qanaqa", "qanday",
+        "nima", "haqida", "haqida.", "haqida!"
+    }
+    
+    words = re.findall(r"\b[a-zA-Z0-9'’`‘-]+\b", text)
+    filtered_words = [w for w in words if w not in stopwords and len(w) >= 2]
+    
+    if not filtered_words:
+        words_any = re.findall(r"\b[a-zA-Z0-9'’`‘-]+\b", user_msg)
+        filtered_words = [w for w in words_any if len(w) >= 3][:3]
+        
+    return " ".join(filtered_words)
+
+
+async def _search_anilist_internal(search_title: str) -> list[dict]:
+    search_title = search_title.strip()
+    if not search_title:
+        return []
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                ANILIST_GRAPHQL,
+                json={
+                    "query": SEARCH_QUERY,
+                    "variables": {"search": search_title, "page": 1, "perPage": 3},
+                },
+                headers={"Content-Type": "application/json", "Accept": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=8),
+            ) as resp:
+                data = await resp.json()
+        
+        if "errors" in data or "data" not in data:
+            return []
+            
+        media_list = data.get("data", {}).get("Page", {}).get("media", []) or []
+        results = []
+        for m in media_list:
+            title = (
+                m["title"].get("english")
+                or m["title"].get("romaji")
+                or m["title"].get("native")
+                or "Nomsiz"
+            )
+            raw_desc = m.get("description") or ""
+            results.append({
+                "id":           m["id"],
+                "title":        title,
+                "title_romaji": m["title"].get("romaji") or "",
+                "title_native": m["title"].get("native") or "",
+                "cover":        m["coverImage"].get("large") or m["coverImage"].get("medium") or "",
+                "banner":       m.get("bannerImage") or "",
+                "description":  _clean_description(raw_desc),
+                "status":       m.get("status") or "UNKNOWN",
+                "score":        m.get("averageScore"),
+                "episodes":     m.get("episodes"),
+                "season":       m.get("season") or "",
+                "year":         m.get("seasonYear"),
+                "genres":       m.get("genres") or [],
+                "format":       m.get("format") or "",
+                "site_url":     m.get("siteUrl") or "",
+            })
+        return results
+    except Exception:
+        return []
+
+
 async def get_ai_reply(user_msg: str):
     """AI mantiqi — ham web, ham bot uchun umumiy."""
     if not AI_API_KEY:
@@ -1501,16 +1587,36 @@ async def get_ai_reply(user_msg: str):
                         for r in rows:
                             if r not in matched_animes: matched_animes.append(r)
 
+            # Global AniList search for AI using query extraction
+            anilist_matches = []
+            search_q = _extract_anime_search_query(user_msg)
+            if search_q:
+                anilist_matches = await _search_anilist_internal(search_q)
+
             async with db.execute("SELECT nom FROM animelar ORDER BY qidiruv DESC LIMIT 5") as c:
                 top_animes = [r[0] for r in await c.fetchall()]
 
         matched_str = ", ".join([f"{r[1]} (ID:{r[0]}, Img:/poster/{r[0]})" for r in matched_animes[:8]])
+        
+        anilist_str = ""
+        if anilist_matches:
+            lines = []
+            for m in anilist_matches:
+                desc_snippet = m['description'][:150] + "..." if len(m['description']) > 150 else m['description']
+                lines.append(
+                    f"- {m['title']} (ID: {m['id']}, Yil: {m['year']}, Janrlar: {', '.join(m['genres'])}, Qismlar: {m['episodes']}, Reyting: {m['score']}%). Tavsif: {desc_snippet}. Havola: {m['site_url']}"
+                )
+            anilist_str = "\nAniList global qidiruv natijalari:\n" + "\n".join(lines)
+            
         system_prompt = (
             f"Siz 'ANIME UZ' yordamchisisiz. Stats: {users}. "
             f"Bot: {bot_info}. Adminlar: {admins_info}. "
             f"Topilganlar: {matched_str or 'yoq'}. "
-            f"QOIDALAR: 1. Anime uchun FAQAT [ANIME_CARD:ID|Nom|RasmURL] formatini ishlating. "
-            f"2. Faqat o'zbek tilida qisqa javob bering."
+            f"{anilist_str}\n"
+            f"QOIDALAR:\n"
+            f"1. Mahalliy anime uchun FAQAT [ANIME_CARD:ID|Nom|RasmURL] formatini ishlating (agar u topilganlar orasida bo'lsa).\n"
+            f"2. Agar anime faqat AniList qidiruvida topilgan bo'lsa, foydalanuvchiga u haqida ma'lumot bering (tavsifi, yili, janrlari) va u mahalliy bazada yo'qligini, lekin AniList-da borligini tushuntiring, hamda havolasini taqdim eting. Bunday anime uchun [ANIME_CARD] formatini ISHLATMANG.\n"
+            f"3. Faqat o'zbek tilida qisqa javob bering."
         )
 
         payload = {
@@ -1666,6 +1772,8 @@ query ($search: String, $page: Int, $perPage: Int) {
       id
       title { romaji english native }
       coverImage { large medium }
+      bannerImage
+      description
       status
       averageScore
       episodes
@@ -1678,6 +1786,7 @@ query ($search: String, $page: Int, $perPage: Int) {
       seasonYear
       genres
       format
+      siteUrl
     }
   }
 }
@@ -1723,12 +1832,15 @@ async def api_anilist_search(request: web.Request) -> web.Response:
                 or m["title"].get("native")
                 or "Nomsiz"
             )
+            raw_desc = m.get("description") or ""
             results.append({
                 "id":           m["id"],
                 "title":        title,
                 "title_romaji": m["title"].get("romaji") or "",
                 "title_native": m["title"].get("native") or "",
                 "cover":        m["coverImage"].get("large") or m["coverImage"].get("medium") or "",
+                "banner":       m.get("bannerImage") or "",
+                "description":  _clean_description(raw_desc),
                 "status":       m.get("status") or "UNKNOWN",
                 "score":        m.get("averageScore"),   # 0-100 or null
                 "episodes":     m.get("episodes"),
@@ -1737,6 +1849,7 @@ async def api_anilist_search(request: web.Request) -> web.Response:
                 "year":         m.get("seasonYear"),
                 "genres":       m.get("genres") or [],
                 "format":       m.get("format") or "",
+                "site_url":     m.get("siteUrl") or "",
             })
 
         return web.json_response({"ok": True, "results": results, "total": len(results)})
@@ -2491,6 +2604,7 @@ def create_app():
     app.router.add_get( "/callback/anilist",         callback_anilist)
     # AniList search
     app.router.add_get( "/api/anilist/search",       api_anilist_search)
+    app.router.add_get( "/api/search",               api_anilist_search)
     # Game
     app.router.add_post("/api/game/start",          api_game_start)
     app.router.add_get( "/api/game/{game_id}",       api_game_state)

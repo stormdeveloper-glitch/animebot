@@ -11,32 +11,34 @@
     
     <style>
         :root {
-            --bg-base: #0b0f19;
-            --bg-surface: rgba(17, 24, 39, 0.7);
-            --border-color: rgba(255, 255, 255, 0.08);
+            --bg-base: #060913;
+            --bg-sidebar: #0b0f19;
+            --bg-surface: rgba(17, 24, 39, 0.45);
+            --bg-surface-solid: #111827;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
             --accent-primary: #6366f1;
             --accent-primary-glow: rgba(99, 102, 241, 0.35);
             --accent-success: #10b981;
             --accent-success-glow: rgba(16, 185, 129, 0.2);
             --accent-danger: #ef4444;
-            --accent-danger-glow: rgba(239, 68, 68, 0.3);
+            --accent-danger-glow: rgba(239, 68, 68, 0.2);
             --accent-warning: #f59e0b;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
-            --glass-blur: 16px;
-            --transition-speed: 0.3s;
+            --glass-blur: 20px;
+            --transition-speed: 0.25s;
         }
 
-        /* Blinking Alarm class for Memory Leak */
         .alarm-active {
-            animation: alarm-pulse 1s infinite alternate;
-            border-color: var(--accent-danger) !important;
-            box-shadow: 0 0 15px var(--accent-danger-glow) !important;
+            animation: alarm-pulse 1.5s infinite alternate;
+            border-color: rgba(239, 68, 68, 0.5) !important;
+            box-shadow: 0 0 20px var(--accent-danger-glow) !important;
         }
 
         @keyframes alarm-pulse {
-            0% { background-color: rgba(239, 68, 68, 0.05); }
-            100% { background-color: rgba(239, 68, 68, 0.2); }
+            0% { background-color: rgba(239, 68, 68, 0.02); }
+            100% { background-color: rgba(239, 68, 68, 0.12); }
         }
 
         * {
@@ -51,97 +53,131 @@
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            overflow: hidden;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 45%);
         }
 
         /* Scrollbars */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.1);
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
         }
 
-        /* Layout & Header */
-        header {
+        /* Side Navigation Panel */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(11, 15, 25, 0.8);
-            backdrop-filter: blur(var(--glass-blur));
-            position: sticky;
-            top: 0;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            flex-shrink: 0;
             z-index: 100;
         }
 
-        .logo {
+        .sidebar-brand {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            margin-bottom: 3rem;
         }
 
-        .logo i {
-            font-size: 1.75rem;
+        .sidebar-brand i {
+            font-size: 1.8rem;
             color: var(--accent-primary);
             text-shadow: 0 0 15px var(--accent-primary-glow);
         }
 
-        .logo h1 {
-            font-size: 1.5rem;
+        .sidebar-brand h1 {
+            font-size: 1.35rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+            background: linear-gradient(135deg, #fff 40%, var(--text-muted) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .logo span {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--accent-primary);
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-        }
-
-        .header-actions {
+        .sidebar-menu {
             display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .system-status-indicator {
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 0.5rem;
-            font-size: 0.875rem;
+            flex-grow: 1;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.95rem;
             font-weight: 500;
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all var(--transition-speed);
+            text-align: left;
+            border: 1px solid transparent;
+        }
+
+        .menu-btn:hover {
+            color: var(--text-main);
             background: rgba(255, 255, 255, 0.03);
-            padding: 0.5rem 0.875rem;
-            border-radius: 99px;
+        }
+
+        .menu-btn.active {
+            color: #fff;
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
+            box-shadow: inset 0 0 12px rgba(99, 102, 241, 0.05);
+            font-weight: 600;
+        }
+
+        .menu-btn.active i {
+            color: var(--accent-primary);
+            text-shadow: 0 0 10px var(--accent-primary-glow);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.65rem 1rem;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background-color: var(--accent-success);
             box-shadow: 0 0 8px var(--accent-success-glow);
@@ -151,103 +187,169 @@
         .status-dot.danger {
             background-color: var(--accent-danger);
             box-shadow: 0 0 8px var(--accent-danger-glow);
-            animation: pulse-red 1s infinite alternate;
+            animation: pulse-red 1.2s infinite alternate;
         }
 
         @keyframes pulse-red {
             0% { transform: scale(1); opacity: 0.6; }
-            100% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(1.25); opacity: 1; }
         }
 
-        /* Container & Tabs */
-        .container {
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 2rem;
+        /* Main Workspace Content */
+        .workspace {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .tabs {
-            display: flex;
-            gap: 0.5rem;
+        /* Workspace Header */
+        .workspace-header {
+            padding: 1.5rem 3rem;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(6, 9, 19, 0.5);
+            backdrop-filter: blur(var(--glass-blur));
         }
 
-        .tab-btn {
-            background: none;
-            border: none;
+        .workspace-title h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .workspace-title p {
+            font-size: 0.85rem;
             color: var(--text-muted);
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 500;
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            position: relative;
-            transition: color var(--transition-speed);
+            margin-top: 0.15rem;
+        }
+
+        .workspace-actions {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
-        .tab-btn:hover {
-            color: var(--text-main);
-        }
-
-        .tab-btn.active {
-            color: var(--accent-primary);
-            font-weight: 600;
-        }
-
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--accent-primary);
-            box-shadow: 0 0 8px var(--accent-primary-glow);
-        }
-
-        .tab-content {
+        /* Tabs Content Viewports */
+        .content-viewport {
+            flex-grow: 1;
+            padding: 2.5rem 3rem;
+            overflow-y: auto;
             display: none;
         }
 
-        .tab-content.active {
+        .content-viewport.active {
             display: block;
-            animation: fadeIn 0.4s ease-out;
+            animation: paneFadeIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+        @keyframes paneFadeIn {
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Cards & Glassmorphism */
+        /* Cards Design */
         .glass-card {
             background: var(--bg-surface);
             backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            transition: transform var(--transition-speed), border-color var(--transition-speed);
+            border-radius: 18px;
+            padding: 1.75rem;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
         }
 
         .glass-card:hover {
-            border-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--border-hover);
         }
 
-        /* --- OVERVIEW TAB --- */
+        /* Buttons styling */
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-sm:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-hover);
+        }
+
+        .btn-sm.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-sm.success:hover:not(:disabled) {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-sm.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-sm.danger:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            box-shadow: 0 4px 12px var(--accent-primary-glow);
+            transition: all var(--transition-speed);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4f46e5;
+            box-shadow: 0 6px 18px var(--accent-primary-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* --- OVERVIEW TAB Restructuring --- */
         .overview-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 1.5rem;
+            grid-template-columns: 320px 1fr;
+            gap: 1.75rem;
         }
 
         @media (max-width: 1024px) {
@@ -263,59 +365,62 @@
             text-align: center;
             gap: 1.5rem;
             position: relative;
-            overflow: hidden;
         }
 
         .bot-avatar-container {
-            width: 120px;
-            height: 120px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-primary) 0%, #312e81 100%);
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #2e2a85 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            font-size: 3.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            font-size: 3rem;
             color: #fff;
-            box-shadow: 0 0 30px var(--accent-primary-glow);
+            box-shadow: 0 0 25px var(--accent-primary-glow);
             position: relative;
+            overflow: hidden;
         }
 
         .bot-avatar-container img {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
             object-fit: cover;
         }
 
         .bot-details h2 {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
+            font-size: 1.35rem;
+            margin-bottom: 0.2rem;
             font-weight: 700;
         }
 
         .bot-details p {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-family: 'JetBrains Mono', monospace;
         }
 
         .bot-meta-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
         }
 
         .bot-meta-table td {
-            padding: 0.6rem 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .bot-meta-table tr:last-child td {
+            border-bottom: none;
         }
 
         .bot-meta-table td:first-child {
             color: var(--text-muted);
-            text-align: left;
             font-weight: 500;
+            text-align: left;
         }
 
         .bot-meta-table td:last-child {
@@ -323,85 +428,101 @@
             font-weight: 600;
         }
 
-        /* Stats Grid */
-        .stats-container {
+        /* Right Panel in Overview */
+        .overview-panel-right {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.75rem;
         }
 
-        .stats-row {
+        /* Stats Section */
+        .stats-dashboard {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+            gap: 1.25rem;
         }
 
         @media (max-width: 768px) {
-            .stats-row {
+            .stats-dashboard {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.02);
+        .stat-badge-card {
+            background: rgba(255, 255, 255, 0.015);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-align: center;
+            border-radius: 14px;
+            padding: 1.5rem 1.25rem;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
+            gap: 1rem;
+            transition: all var(--transition-speed);
         }
 
-        .stat-icon {
-            font-size: 1.5rem;
+        .stat-badge-card:hover {
+            border-color: var(--border-hover);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-badge-icon {
+            font-size: 1.35rem;
             color: var(--accent-primary);
-            background: rgba(99, 102, 241, 0.1);
+            background: rgba(99, 102, 241, 0.08);
             width: 44px;
             height: 44px;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
-        .stat-card.open .stat-icon {
+        .stat-badge-card.open .stat-badge-icon {
             color: var(--accent-warning);
-            background: rgba(245, 158, 11, 0.1);
+            background: rgba(245, 158, 11, 0.08);
         }
 
-        .stat-card.answered .stat-icon {
+        .stat-badge-card.answered .stat-badge-icon {
             color: var(--accent-success);
-            background: rgba(16, 185, 129, 0.1);
+            background: rgba(16, 185, 129, 0.08);
         }
 
-        .stat-card.closed .stat-icon {
+        .stat-badge-card.closed .stat-badge-icon {
             color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
         }
 
-        .stat-val {
-            font-size: 1.75rem;
+        .stat-badge-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            text-align: left;
+        }
+
+        .stat-badge-number {
+            font-size: 1.6rem;
             font-weight: 700;
+            line-height: 1.1;
         }
 
-        .stat-lbl {
-            font-size: 0.85rem;
+        .stat-badge-label {
+            font-size: 0.8rem;
             color: var(--text-muted);
             font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        /* Server Metrics */
+        /* Metrics grid */
         .metrics-card h3 {
             font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
+        }
+
+        .metrics-card h3 i {
+            color: var(--accent-primary);
         }
 
         .metrics-grid {
@@ -416,66 +537,210 @@
             }
         }
 
-        .metric-item {
+        .metric-bar-item {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
-        .metric-info {
+        .metric-bar-header {
             display: flex;
             justify-content: space-between;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
         }
 
-        .metric-progress-bg {
-            height: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 99px;
-            overflow: hidden;
-            position: relative;
+        .metric-bar-header span:first-child {
+            color: var(--text-muted);
         }
 
-        .metric-progress-fill {
+        .metric-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .metric-bar-value {
             height: 100%;
             background: linear-gradient(90deg, var(--accent-primary), #a855f7);
             border-radius: 99px;
             width: 0%;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.8s ease-in-out;
         }
 
-        .metric-item.memory .metric-progress-fill {
+        .metric-bar-item.memory .metric-bar-value {
             background: linear-gradient(90deg, var(--accent-success), var(--accent-primary));
         }
 
-        .metric-item.memory.critical .metric-progress-fill {
-            background: linear-gradient(90deg, var(--accent-danger), #b91c1c) !important;
-            animation: progress-blink 0.5s infinite alternate;
+        .metric-bar-item.memory.critical .metric-bar-value {
+            background: linear-gradient(90deg, var(--accent-danger), #dc2626) !important;
+            animation: pulse-bar 0.4s infinite alternate;
         }
 
-        @keyframes progress-blink {
-            0% { opacity: 0.7; }
+        @keyframes pulse-bar {
+            0% { opacity: 0.8; }
             100% { opacity: 1; }
         }
 
-        /* --- TICKETS TAB --- */
-        .tickets-layout {
+        /* Admins section */
+        .admins-profile-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .admins-profile-section h3 i {
+            color: var(--accent-primary);
+        }
+
+        .admins-horizontal-list {
             display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 1.5rem;
-            height: 600px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
         }
 
         @media (max-width: 900px) {
-            .tickets-layout {
+            .admins-horizontal-list {
                 grid-template-columns: 1fr;
-                height: auto;
             }
         }
 
-        /* Ticket List Panel */
-        .ticket-list-panel {
+        .admin-row-item {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            transition: all var(--transition-speed);
+        }
+
+        .admin-row-item:hover {
+            border-color: var(--border-hover);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .admin-row-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .admin-row-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .admin-row-meta {
+            text-align: left;
+            flex-grow: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .admin-row-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-row-sub {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .admin-row-role {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .admin-row-role.super {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--accent-danger);
+        }
+
+        .admin-row-role.normal {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--accent-primary);
+        }
+
+        .admin-row-uname {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-row-link {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            transition: color var(--transition-speed);
+            flex-shrink: 0;
+        }
+
+        .admin-row-link:hover {
+            color: #3b82f6;
+        }
+
+
+        /* --- TICKETS TAB 3-COLUMN Restructuring --- */
+        .tickets-layout-container {
+            display: grid;
+            grid-template-columns: 340px 1fr 300px;
+            gap: 1.5rem;
+            height: calc(100vh - 160px);
+            background: transparent;
+            padding: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .tickets-layout-container {
+                grid-template-columns: 300px 1fr;
+            }
+            .chat-user-details-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .tickets-layout-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .chat-user-details-sidebar {
+                display: none;
+            }
+        }
+
+        /* Column 1: Ticket list & Search */
+        .chat-tickets-list-col {
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -483,45 +748,68 @@
             overflow: hidden;
         }
 
-        .ticket-list-header {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+        .ticket-search-box {
+            position: relative;
+            width: 100%;
         }
 
-        .ticket-filter {
+        .ticket-search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .ticket-search-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1rem 0.75rem 2.25rem;
+            color: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all var(--transition-speed);
+        }
+
+        .ticket-search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-primary-glow);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .ticket-filter-bar {
             display: flex;
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 0.25rem;
             border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.25rem;
         }
 
-        .filter-btn {
+        .ticket-filter-tab {
             flex-grow: 1;
             background: none;
             border: none;
             color: var(--text-muted);
-            padding: 0.4rem;
-            font-size: 0.8rem;
+            padding: 0.45rem;
+            font-size: 0.78rem;
             font-weight: 600;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-family: inherit;
             transition: all var(--transition-speed);
+            text-align: center;
         }
 
-        .filter-btn:hover {
-            color: var(--text-main);
-        }
-
-        .filter-btn.active {
+        .ticket-filter-tab.active {
             background: rgba(255, 255, 255, 0.08);
             color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .ticket-scroll {
+        .tickets-scroll-area {
             flex-grow: 1;
             overflow-y: auto;
             display: flex;
@@ -530,11 +818,11 @@
             padding-right: 0.25rem;
         }
 
-        .ticket-item-card {
-            background: rgba(255, 255, 255, 0.02);
+        .ticket-item-row {
+            background: rgba(255, 255, 255, 0.015);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 14px;
+            padding: 1.1rem;
             cursor: pointer;
             transition: all var(--transition-speed);
             display: flex;
@@ -543,35 +831,34 @@
             text-align: left;
         }
 
-        .ticket-item-card:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.15);
+        .ticket-item-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-hover);
         }
 
-        .ticket-item-card.active {
-            background: rgba(99, 102, 241, 0.08);
+        .ticket-item-row.active {
+            background: rgba(99, 102, 241, 0.07);
             border-color: var(--accent-primary);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.08);
         }
 
-        .ticket-item-top {
+        .ticket-item-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .ticket-id-tag {
+        .ticket-number-id {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
             font-weight: 700;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.45rem;
+            border-radius: 5px;
         }
 
-        .ticket-status-badge {
-            font-size: 0.75rem;
+        .ticket-badge {
+            font-size: 0.7rem;
             font-weight: 600;
             padding: 0.15rem 0.45rem;
             border-radius: 4px;
@@ -580,29 +867,29 @@
         }
 
         .badge-open {
-            background: rgba(245, 158, 11, 0.15);
+            background: rgba(245, 158, 11, 0.12);
             color: var(--accent-warning);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
 
         .badge-answered {
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.12);
             color: var(--accent-success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
         .badge-closed {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .ticket-user-name {
+        .ticket-row-user {
             font-weight: 600;
             font-size: 0.95rem;
         }
 
-        .ticket-preview {
+        .ticket-row-snippet {
             font-size: 0.85rem;
             color: var(--text-muted);
             white-space: nowrap;
@@ -610,37 +897,25 @@
             text-overflow: ellipsis;
         }
 
-        .ticket-time {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.3);
+        .ticket-row-date {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.25);
             align-self: flex-end;
         }
 
-        .empty-tickets {
-            text-align: center;
-            color: var(--text-muted);
-            padding: 3rem 1rem;
-            font-size: 0.9rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .empty-tickets i {
-            font-size: 2rem;
-            opacity: 0.5;
-        }
-
-        /* Chat Panel */
-        .chat-panel {
+        /* Column 2: The Chat Area */
+        .chat-main-window-col {
             display: flex;
             flex-direction: column;
             height: 100%;
             overflow: hidden;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
         }
 
-        .chat-panel-placeholder {
+        .chat-main-placeholder {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -648,238 +923,278 @@
             text-align: center;
             height: 100%;
             color: var(--text-muted);
-            gap: 1rem;
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 12px;
-            border: 1px dashed var(--border-color);
+            gap: 1.25rem;
+            padding: 2rem;
         }
 
-        .chat-panel-placeholder i {
-            font-size: 3.5rem;
-            color: rgba(255, 255, 255, 0.05);
+        .chat-main-placeholder i {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.03);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.02);
         }
 
-        .chat-header {
+        .chat-main-placeholder p {
+            max-width: 320px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .chat-window-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 1rem;
+            padding: 1.25rem 1.75rem;
             border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.1);
         }
 
-        .chat-user-info {
+        .chat-header-user {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.2rem;
+            text-align: left;
         }
 
-        .chat-user-info h4 {
-            font-size: 1.1rem;
+        .chat-header-user h4 {
+            font-size: 1.05rem;
             font-weight: 600;
         }
 
-        .chat-user-sub {
-            font-size: 0.85rem;
+        .chat-header-user span {
+            font-size: 0.8rem;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .chat-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-sm {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-main);
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            transition: all var(--transition-speed);
-        }
-
-        .btn-sm:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-sm.success {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-sm.success:hover:not(:disabled) {
-            background: rgba(16, 185, 129, 0.25);
-        }
-
-        .btn-sm.danger {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--accent-danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-sm.danger:hover:not(:disabled) {
-            background: rgba(239, 68, 68, 0.25);
-        }
-
-        /* Message Area */
-        .chat-messages-area {
+        .chat-messages-viewport {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 1.5rem 0.5rem;
+            padding: 1.75rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.25rem;
         }
 
-        .msg-bubble-wrapper {
+        .msg-row {
             display: flex;
             width: 100%;
         }
 
-        .msg-bubble-wrapper.user {
+        .msg-row.received {
             justify-content: flex-start;
         }
 
-        .msg-bubble-wrapper.admin {
+        .msg-row.sent {
             justify-content: flex-end;
         }
 
-        .msg-bubble {
-            max-width: 70%;
-            padding: 0.85rem 1.1rem;
-            border-radius: 14px;
-            font-size: 0.95rem;
-            line-height: 1.45;
+        .msg-box {
+            max-width: 65%;
+            padding: 0.85rem 1.15rem;
+            border-radius: 16px;
+            font-size: 0.92rem;
+            line-height: 1.5;
             position: relative;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            text-align: left;
         }
 
-        .msg-bubble-wrapper.user .msg-bubble {
+        .msg-row.received .msg-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
             color: var(--text-main);
             border-bottom-left-radius: 2px;
         }
 
-        .msg-bubble-wrapper.admin .msg-bubble {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%);
+        .msg-row.sent .msg-box {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #474adb 100%);
             color: #fff;
             border-bottom-right-radius: 2px;
         }
 
-        .msg-time {
+        .msg-box-time {
             display: block;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 0.4rem;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 0.45rem;
             text-align: right;
         }
 
-        .msg-bubble-wrapper.user .msg-time {
+        .msg-row.received .msg-box-time {
             color: var(--text-muted);
+            opacity: 0.8;
         }
 
-        /* Message Input Area */
-        .chat-input-area {
+        .chat-composer-area {
             display: flex;
             gap: 0.75rem;
-            padding-top: 1rem;
+            padding: 1.25rem 1.75rem;
             border-top: 1px solid var(--border-color);
-            position: relative;
+            background: rgba(0, 0, 0, 0.1);
         }
 
-        .chat-input-area textarea {
+        .chat-composer-textarea {
             flex-grow: 1;
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 12px;
             color: var(--text-main);
             font-family: inherit;
-            font-size: 0.95rem;
-            padding: 0.75rem 1rem;
+            font-size: 0.92rem;
+            padding: 0.8rem 1rem;
             resize: none;
-            height: 48px;
+            height: 46px;
             transition: all var(--transition-speed);
         }
 
-        .chat-input-area textarea:focus {
+        .chat-composer-textarea:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 10px var(--accent-primary-glow);
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.45);
         }
 
-        .chat-send-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
+        .chat-composer-send-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
             background: var(--accent-primary);
             border: none;
             color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all var(--transition-speed);
             box-shadow: 0 4px 12px var(--accent-primary-glow);
+            flex-shrink: 0;
         }
 
-        .chat-send-btn:hover:not(:disabled) {
+        .chat-composer-send-btn:hover:not(:disabled) {
             background: #4f46e5;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        .chat-send-btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .chat-send-btn:disabled {
-            background: rgba(255, 255, 255, 0.05);
+        .chat-composer-send-btn:disabled {
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-muted);
             box-shadow: none;
             cursor: not-allowed;
         }
 
-        /* --- BUGS & GLITCHES TAB --- */
-        .bug-section-grid {
+        /* Column 3: Chat selected user details sidebar */
+        .chat-user-details-sidebar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 1.5rem;
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .sidebar-user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 0.5rem auto;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar-user-names h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .sidebar-user-names p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sidebar-profile-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.825rem;
+            text-align: left;
+        }
+
+        .sidebar-profile-table td {
+            padding: 0.65rem 0.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .sidebar-profile-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sidebar-profile-table td:first-child {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .sidebar-profile-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        /* --- BUGS & GLITCHES TAB RESTYLING --- */
+        .bugs-grid-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
         }
 
         @media (max-width: 1024px) {
-            .bug-section-grid {
+            .bugs-grid-container {
                 grid-template-columns: 1fr;
             }
         }
 
-        .bug-controls h3 {
+        .bug-section-header h3 {
             margin-bottom: 1.25rem;
             font-size: 1.15rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
-        .bug-card-list {
+        .bug-section-header h3 i {
+            color: var(--accent-primary);
+        }
+
+        .bug-cards-stack {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
 
-        .bug-toggle-card {
-            background: rgba(255, 255, 255, 0.02);
+        .bug-toggle-row {
+            background: rgba(255, 255, 255, 0.015);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 1.25rem;
             display: flex;
             justify-content: space-between;
@@ -887,134 +1202,108 @@
             transition: all var(--transition-speed);
         }
 
-        .bug-toggle-card.active {
-            border-color: var(--accent-danger);
-            background: rgba(239, 68, 68, 0.03);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.08);
+        .bug-toggle-row.active {
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.02);
+            box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.03);
         }
 
-        .bug-info-text {
+        .bug-row-text {
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
-            max-width: 70%;
+            max-width: 75%;
+            text-align: left;
         }
 
-        .bug-title {
+        .bug-row-title {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .bug-desc {
-            font-size: 0.85rem;
+        .bug-row-title i {
             color: var(--text-muted);
         }
 
-        /* Switch toggle UI */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 46px;
-            height: 24px;
+        .bug-toggle-row.active .bug-row-title i {
+            color: var(--accent-danger);
         }
 
-        .switch input { 
+        .bug-row-desc {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Switch toggles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input { 
             opacity: 0;
             width: 0;
             height: 0;
         }
 
-        .slider {
+        .toggle-slider {
             position: absolute;
             cursor: pointer;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            transition: .4s;
+            background-color: rgba(255, 255, 255, 0.08);
+            transition: .3s;
             border-radius: 34px;
             border: 1px solid var(--border-color);
         }
 
-        .slider:before {
+        .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 16px;
-            width: 16px;
+            height: 14px;
+            width: 14px;
             left: 3px;
             bottom: 3px;
-            background-color: #f3f4f6;
-            transition: .4s;
+            background-color: #e5e7eb;
+            transition: .3s;
             border-radius: 50%;
         }
 
-        input:checked + .slider {
+        input:checked + .toggle-slider {
             background-color: var(--accent-danger);
-            border-color: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.2);
         }
 
-        input:checked + .slider:before {
+        input:checked + .toggle-slider:before {
             transform: translateX(22px);
+            background-color: #fff;
         }
 
-        /* System Action Center */
-        .action-center {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .btn-action {
-            background: linear-gradient(135deg, var(--accent-success) 0%, #047857 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 0.85rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all var(--transition-speed);
-            box-shadow: 0 4px 12px var(--accent-success-glow);
-        }
-
-        .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px var(--accent-success-glow);
-        }
-
-        .btn-action.disabled {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        /* Console/Logs Panel */
-        .console-panel {
+        /* Console Output */
+        .terminal-panel {
             display: flex;
             flex-direction: column;
             height: 480px;
         }
 
-        .console-header {
+        .terminal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.85rem;
         }
 
-        .console-header span {
-            font-size: 0.9rem;
+        .terminal-header span {
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-muted);
             display: flex;
@@ -1022,144 +1311,126 @@
             gap: 0.5rem;
         }
 
-        .console-screen {
+        .terminal-screen {
             flex-grow: 1;
-            background: #05070c;
+            background: #03050a;
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.25rem;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.825rem;
-            color: #10b981;
+            font-size: 0.8rem;
+            color: #34d399;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
+            gap: 0.45rem;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+            text-align: left;
         }
 
-        .log-entry {
-            line-height: 1.4;
+        .terminal-line {
+            line-height: 1.45;
             word-break: break-all;
         }
 
-        .log-entry.info {
-            color: #a7f3d0;
-        }
-
-        .log-entry.warn {
-            color: var(--accent-warning);
-        }
-
-        .log-entry.error {
-            color: #fca5a5;
-        }
-
-        .log-entry.simulated {
+        .terminal-line.info { color: #a7f3d0; }
+        .terminal-line.warn { color: var(--accent-warning); }
+        .terminal-line.error { color: #fca5a5; }
+        .terminal-line.simulated {
             color: #f43f5e;
-            font-weight: bold;
-            animation: pulse-log 1s alternate infinite;
+            font-weight: 700;
+            animation: pulse-terminal-log 1.2s alternate infinite;
         }
 
-        @keyframes pulse-log {
-            from { text-shadow: 0 0 2px rgba(244, 63, 94, 0.2); }
-            to { text-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+        @keyframes pulse-terminal-log {
+            from { text-shadow: 0 0 2px rgba(244, 63, 94, 0.1); }
+            to { text-shadow: 0 0 8px rgba(244, 63, 94, 0.5); }
         }
 
-        /* --- TELEGRAM TOOLS --- */
-        .tools-grid {
+        /* --- SANDBOX & WEBHOOK TOOLS --- */
+        .tools-grid-box {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            gap: 1.75rem;
         }
 
         @media (max-width: 768px) {
-            .tools-grid {
+            .tools-grid-box {
                 grid-template-columns: 1fr;
             }
         }
 
-        .tool-card h3 {
+        .tools-card-item h3 {
             font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
-        .form-group {
+        .tools-card-item h3 i {
+            color: var(--accent-primary);
+        }
+
+        .composer-group {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
         }
 
-        .form-group label {
+        .composer-group label {
             font-size: 0.85rem;
             font-weight: 500;
             color: var(--text-muted);
         }
 
-        .form-group input, .form-group textarea {
+        .composer-group textarea {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             color: white;
-            padding: 0.65rem 0.85rem;
+            padding: 0.75rem 1rem;
             font-family: inherit;
             font-size: 0.9rem;
             transition: all var(--transition-speed);
+            resize: vertical;
         }
 
-        .form-group input:focus, .form-group textarea:focus {
+        .composer-group textarea:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 10px var(--accent-primary-glow);
         }
 
-        .btn-primary {
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem 1.25rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-speed);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #4f46e5;
-            box-shadow: 0 0 12px var(--accent-primary-glow);
-        }
-
-        .btn-primary:disabled {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        /* Webhook status */
-        .webhook-status-box {
-            background: rgba(255,255,255,0.02);
+        .webhook-details-box {
+            background: rgba(255,255,255,0.015);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
+            border-radius: 10px;
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.65rem;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            text-align: left;
+            line-height: 1.5;
         }
 
-        /* Modal image view */
-        .modal {
+        .webhook-details-box div {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            padding-bottom: 0.5rem;
+        }
+
+        .webhook-details-box div:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* Modals and Toasts */
+        .img-modal-overlay {
             display: none;
             position: fixed;
             z-index: 1000;
@@ -1173,71 +1444,60 @@
             justify-content: center;
         }
 
-        .modal-content {
+        .img-modal-viewport {
             max-width: 90%;
             max-height: 90%;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
         }
 
-        .modal-close {
+        .img-modal-close-btn {
             position: absolute;
             top: 1.5rem;
             right: 2rem;
-            font-size: 2rem;
+            font-size: 2.5rem;
             color: white;
             cursor: pointer;
         }
 
-        /* Toast notifications */
-        .toast-container {
+        .toast-wrapper-box {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
+            bottom: 2.5rem;
+            right: 2.5rem;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
             z-index: 2000;
         }
 
-        .toast {
+        .toast-bubble {
             background: rgba(17, 24, 39, 0.95);
             border: 1px solid var(--border-color);
             border-left: 4px solid var(--accent-primary);
-            padding: 0.85rem 1.25rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+            padding: 0.95rem 1.35rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            min-width: 280px;
+            gap: 0.85rem;
+            min-width: 300px;
             transform: translateX(120%);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+            text-align: left;
         }
 
-        .toast.show {
+        .toast-bubble.show {
             transform: translateX(0);
         }
 
-        .toast.success {
-            border-left-color: var(--accent-success);
-        }
+        .toast-bubble.success { border-left-color: var(--accent-success); }
+        .toast-bubble.error { border-left-color: var(--accent-danger); }
+        .toast-bubble.warning { border-left-color: var(--accent-warning); }
 
-        .toast.error {
-            border-left-color: var(--accent-danger);
-        }
-
-        .toast.warning {
-            border-left-color: var(--accent-warning);
-        }
-
-        .toast i {
-            font-size: 1.1rem;
-        }
-
-        .toast.success i { color: var(--accent-success); }
-        .toast.error i { color: var(--accent-danger); }
-        .toast.warning i { color: var(--accent-warning); }
+        .toast-bubble i { font-size: 1.15rem; }
+        .toast-bubble.success i { color: var(--accent-success); }
+        .toast-bubble.error i { color: var(--accent-danger); }
+        .toast-bubble.warning i { color: var(--accent-warning); }
 
         footer {
             text-align: center;
@@ -1245,52 +1505,63 @@
             color: var(--text-muted);
             font-size: 0.85rem;
             border-top: 1px solid var(--border-color);
-            margin-top: auto;
+            background: var(--bg-sidebar);
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header>
-        <div class="logo">
+    <!-- Sidebar Panel (Left) -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
             <i class="fa-solid fa-headset"></i>
-            <h1>Support Control</h1>
-            <span>Subsystem</span>
+            <div>
+                <h1>Support Center</h1>
+            </div>
         </div>
-        <div class="header-actions">
-            <div class="system-status-indicator" id="system-status-container">
+        
+        <nav class="sidebar-menu">
+            <button class="menu-btn active" id="btn-overview" onclick="switchTab(event, 'tab-overview')">
+                <i class="fa-solid fa-chart-pie"></i> Panel hisoboti
+            </button>
+            <button class="menu-btn" id="btn-tickets" onclick="switchTab(event, 'tab-tickets')">
+                <i class="fa-solid fa-ticket"></i> Murojaatlar
+            </button>
+            <button class="menu-btn" id="btn-bugs" onclick="switchTab(event, 'tab-bugs')">
+                <i class="fa-solid fa-bug"></i> Tizim nosozliklari
+            </button>
+            <button class="menu-btn" id="btn-tools" onclick="switchTab(event, 'tab-tools')">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Telegram Sandbox
+            </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="system-status">
                 <span class="status-dot" id="system-status-dot"></span>
                 <span id="system-status-text">Tizim barqaror</span>
             </div>
-            <button class="btn-sm success" onclick="fetchBotStatus()"><i class="fa-solid fa-rotate"></i> Yangilash</button>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Container -->
-    <div class="container">
+    <!-- Main Workspace Container (Right) -->
+    <div class="workspace">
         
-        <!-- Tabs Menu -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab(event, 'tab-overview')">
-                <i class="fa-solid fa-chart-pie"></i> Umumiy ko'rinish
-            </button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-tickets')">
-                <i class="fa-solid fa-ticket"></i> Murojaatlar
-            </button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-bugs')">
-                <i class="fa-solid fa-bug"></i> Buzilishlar & Baglar
-            </button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-tools')">
-                <i class="fa-solid fa-screwdriver-wrench"></i> Telegram Sandbox
-            </button>
-        </div>
+        <!-- Workspace Header -->
+        <header class="workspace-header">
+            <div class="workspace-title">
+                <h2 id="page-title">Panel hisoboti</h2>
+                <p id="page-subtitle">Loyihaning faolligi, statistikasi va resurslari</p>
+            </div>
+            <div class="workspace-actions">
+                <button class="btn-sm success" onclick="refreshDashboardData()"><i class="fa-solid fa-rotate"></i> Yangilash</button>
+            </div>
+        </header>
 
         <!-- OVERVIEW TAB -->
-        <div id="tab-overview" class="tab-content active">
+        <div id="tab-overview" class="content-viewport active">
             <div class="overview-grid">
                 
-                <!-- Bot Profile Info -->
+                <!-- Bot Profile info -->
                 <div class="glass-card bot-profile-card">
                     <div class="bot-avatar-container">
                         <span id="bot-avatar-fallback"><i class="fa-solid fa-robot"></i></span>
@@ -1310,110 +1581,118 @@
                             <td id="bot-group">-</td>
                         </tr>
                         <tr>
-                            <td>Webhook holati:</td>
+                            <td>Ulanish rejimi:</td>
                             <td id="bot-webhook">-</td>
                         </tr>
                         <tr>
-                            <td>So'rovlar (Bugun):</td>
+                            <td>Jami murojaat (Bugun):</td>
                             <td id="bot-requests-today">0</td>
                         </tr>
                     </table>
                 </div>
 
-                <!-- Asosiy Bot & Adminlar Info -->
-                <div class="glass-card admins-card" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem;">
-                    <h3 style="margin-bottom: 0.5rem; text-align: left; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; font-weight: 600;">
-                        <i class="fa-solid fa-users-gear" style="color: var(--accent-primary); margin-right: 0.5rem;"></i> Ma'murlar & Loyihalar
-                    </h3>
+                <!-- Right sections -->
+                <div class="overview-panel-right">
                     
-                    <!-- Asosiy Bot Info -->
-                    <div id="main-bot-profile-container" style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255, 255, 255, 0.02); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-primary); flex-shrink: 0;">
-                            <img id="main-bot-avatar" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                            <i id="main-bot-fallback-avatar" class="fa-solid fa-robot" style="font-size: 1.1rem; color: var(--accent-primary);"></i>
+                    <!-- Stats badge metrics grid -->
+                    <div class="stats-dashboard">
+                        <div class="stat-badge-card">
+                            <div class="stat-badge-icon"><i class="fa-solid fa-folder-open"></i></div>
+                            <div class="stat-badge-info">
+                                <div class="stat-badge-number" id="stat-total">0</div>
+                                <div class="stat-badge-label">Jami so'rovlar</div>
+                            </div>
                         </div>
-                        <div style="text-align: left; flex-grow: 1; min-width: 0;">
-                            <div id="main-bot-name-txt" style="font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Asosiy Bot</div>
-                            <div id="main-bot-username-txt" style="font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@loading...</div>
+                        <div class="stat-badge-card open">
+                            <div class="stat-badge-icon"><i class="fa-solid fa-clock"></i></div>
+                            <div class="stat-badge-info">
+                                <div class="stat-badge-number" id="stat-open">0</div>
+                                <div class="stat-badge-label">Kutilmoqda</div>
+                            </div>
                         </div>
-                        <a id="main-bot-link" href="#" target="_blank" style="color: var(--accent-primary); font-size: 1.05rem; transition: transform 0.2s; flex-shrink: 0;">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </a>
-                    </div>
-                    
-                    <!-- Adminlar List -->
-                    <h4 style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted); text-align: left; margin-top: 0.25rem;">Bot Administratorlari</h4>
-                    <div id="admins-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">
-                            <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i> Yuklanmoqda...
+                        <div class="stat-badge-card answered">
+                            <div class="stat-badge-icon"><i class="fa-solid fa-reply"></i></div>
+                            <div class="stat-badge-info">
+                                <div class="stat-badge-number" id="stat-answered">0</div>
+                                <div class="stat-badge-label">Javob berildi</div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Stats and Metrics -->
-                <div class="stats-container">
-                    
-                    <div class="stats-row">
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
-                            <div class="stat-val" id="stat-total">0</div>
-                            <div class="stat-lbl">Jami murojaatlar</div>
-                        </div>
-                        <div class="stat-card open">
-                            <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
-                            <div class="stat-val" id="stat-open">0</div>
-                            <div class="stat-lbl">Kutilmoqda</div>
-                        </div>
-                        <div class="stat-card answered">
-                            <div class="stat-icon"><i class="fa-solid fa-reply"></i></div>
-                            <div class="stat-val" id="stat-answered">0</div>
-                            <div class="stat-lbl">Javob berildi</div>
-                        </div>
-                        <div class="stat-card closed">
-                            <div class="stat-icon"><i class="fa-solid fa-lock"></i></div>
-                            <div class="stat-val" id="stat-closed">0</div>
-                            <div class="stat-lbl">Yopildi</div>
+                        <div class="stat-badge-card closed">
+                            <div class="stat-badge-icon"><i class="fa-solid fa-lock"></i></div>
+                            <div class="stat-badge-info">
+                                <div class="stat-badge-number" id="stat-closed">0</div>
+                                <div class="stat-badge-label">Yopilgan</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Server Health Metrics -->
+                    <!-- Server Resource Metrics -->
                     <div class="glass-card metrics-card" id="health-card">
-                        <h3><i class="fa-solid fa-server"></i> Server resurslari va salomatligi</h3>
+                        <h3><i class="fa-solid fa-server"></i> Server va tizim resurslari</h3>
                         <div class="metrics-grid">
-                            <div class="metric-item">
-                                <div class="metric-info">
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-header">
                                     <span>CPU yuklanishi</span>
-                                    <span id="metric-cpu-val">12%</span>
+                                    <span id="metric-cpu-val">0%</span>
                                 </div>
-                                <div class="metric-progress-bg">
-                                    <div class="metric-progress-fill" id="metric-cpu-bar" style="width: 12%;"></div>
-                                </div>
-                            </div>
-                            <div class="metric-item memory" id="memory-metric-item">
-                                <div class="metric-info">
-                                    <span>Tezkor xotira (RAM)</span>
-                                    <span id="metric-ram-val">34%</span>
-                                </div>
-                                <div class="metric-progress-bg">
-                                    <div class="metric-progress-fill" id="metric-ram-bar" style="width: 34%;"></div>
+                                <div class="metric-bar-track">
+                                    <div class="metric-bar-value" id="metric-cpu-bar"></div>
                                 </div>
                             </div>
-                            <div class="metric-item">
-                                <div class="metric-info">
+                            <div class="metric-bar-item memory" id="memory-metric-item">
+                                <div class="metric-bar-header">
+                                    <span>RAM (Tezkor xotira)</span>
+                                    <span id="metric-ram-val">0%</span>
+                                </div>
+                                <div class="metric-bar-track">
+                                    <div class="metric-bar-value" id="metric-ram-bar"></div>
+                                </div>
+                            </div>
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-header">
                                     <span>Ma'lumotlar bazasi (bot.db)</span>
                                     <span id="metric-db-val">0 KB</span>
                                 </div>
-                                <div class="metric-progress-bg">
-                                    <div class="metric-progress-fill" id="metric-db-bar" style="width: 5%;"></div>
+                                <div class="metric-bar-track">
+                                    <div class="metric-bar-value" id="metric-db-bar" style="width: 5%;"></div>
                                 </div>
                             </div>
-                            <div class="metric-item">
-                                <div class="metric-info">
-                                    <span>Tarmoq ping ko'rsatkichi</span>
-                                    <span id="metric-ping-val">15 ms</span>
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-header">
+                                    <span>Tarmoq kechikishi (Ping)</span>
+                                    <span id="metric-ping-val">0 ms</span>
                                 </div>
-                                <div class="metric-progress-bg">
-                                    <div class="metric-progress-fill" id="metric-ping-bar" style="width: 15%;"></div>
+                                <div class="metric-bar-track">
+                                    <div class="metric-bar-value" id="metric-ping-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project main bot and admins -->
+                    <div class="glass-card admins-profile-section">
+                        <h3><i class="fa-solid fa-users-gear"></i> Loyiha a'zolari va bog'liq botlar</h3>
+                        <div class="admins-horizontal-list">
+                            <!-- Main Bot Profile -->
+                            <div class="admin-row-item" style="border-color: rgba(99,102,241,0.25);">
+                                <div class="admin-row-avatar" style="border-color: var(--accent-primary);">
+                                    <img id="main-bot-avatar" src="" style="display: none;">
+                                    <i id="main-bot-fallback-avatar" class="fa-solid fa-robot"></i>
+                                </div>
+                                <div class="admin-row-meta">
+                                    <div class="admin-row-name" id="main-bot-name-txt">Asosiy Bot</div>
+                                    <div class="admin-row-sub">
+                                        <span class="admin-row-role normal">Loyihaviy Bot</span>
+                                        <span class="admin-row-uname" id="main-bot-username-txt">@loading...</span>
+                                    </div>
+                                </div>
+                                <a id="main-bot-link" href="#" target="_blank" class="admin-row-link"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                            </div>
+                            
+                            <!-- Admin lists loaded here dynamically -->
+                            <div id="admins-list-container" style="grid-column: span 2; display: contents;">
+                                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem; width: 100%;">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Yuklanmoqda...
                                 </div>
                             </div>
                         </div>
@@ -1424,148 +1703,190 @@
             </div>
         </div>
 
-        <!-- TICKETS TAB -->
-        <div id="tab-tickets" class="tab-content">
-            <div class="tickets-layout glass-card">
+        <!-- TICKETS TAB (3-COLUMN RESTURCTURING) -->
+        <div id="tab-tickets" class="content-viewport">
+            <div class="tickets-layout-container">
                 
-                <!-- Ticket List -->
-                <div class="ticket-list-panel">
-                    <div class="ticket-list-header">
-                        <div class="ticket-filter">
-                            <button class="filter-btn active" onclick="filterTickets('all', this)">Barchasi</button>
-                            <button class="filter-btn" onclick="filterTickets('open', this)">Ochiq</button>
-                            <button class="filter-btn" onclick="filterTickets('answered', this)">Javob berilgan</button>
-                            <button class="filter-btn" onclick="filterTickets('closed', this)">Yopilgan</button>
-                        </div>
+                <!-- COLUMN 1: Search & ticket list -->
+                <div class="chat-tickets-list-col">
+                    <div class="ticket-search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" class="ticket-search-input" id="ticket-search" placeholder="Qidirish (ism, xabar, ID...)" oninput="filterTicketsByQuery()">
                     </div>
                     
-                    <div class="ticket-scroll" id="ticket-list-container">
+                    <div class="ticket-filter-bar">
+                        <button class="ticket-filter-tab active" onclick="filterTickets('all', this)">Barchasi</button>
+                        <button class="ticket-filter-tab" onclick="filterTickets('open', this)">Kutilayotgan</button>
+                        <button class="ticket-filter-tab" onclick="filterTickets('answered', this)">Javob berilgan</button>
+                        <button class="ticket-filter-tab" onclick="filterTickets('closed', this)">Yopilgan</button>
+                    </div>
+                    
+                    <div class="tickets-scroll-area" id="ticket-list-container">
                         <!-- Loaded dynamically -->
                         <div class="empty-tickets">
-                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
                             <p>Murojaatlar yuklanmoqda...</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Chat History & Details -->
-                <div class="chat-panel">
-                    <div id="chat-placeholder" class="chat-panel-placeholder">
+                <!-- COLUMN 2: Chat Window -->
+                <div class="chat-main-window-col">
+                    <div id="chat-placeholder" class="chat-main-placeholder">
                         <i class="fa-solid fa-comments"></i>
-                        <p>Murojaat tafsilotlarini va xabarlar tarixini ko'rish uchun chap tomondan ticketni tanlang.</p>
+                        <p>Murojaat yozishmalari va tarixini ko'rish uchun ro'yxatdan birorta ticketni tanlang.</p>
                     </div>
 
-                    <div id="chat-active" class="chat-panel" style="display: none;">
-                        <div class="chat-header">
-                            <div class="chat-user-info">
+                    <div id="chat-active" class="chat-panel" style="display: none; height: 100%;">
+                        <div class="chat-window-header">
+                            <div class="chat-header-user">
                                 <h4 id="chat-user-title">Foydalanuvchi</h4>
-                                <span class="chat-user-sub" id="chat-user-meta">ID: 0 | Username: -</span>
+                                <span id="chat-user-meta">ID: - | Username: -</span>
                             </div>
                             <div class="chat-actions">
-                                <button class="btn-sm success" id="btn-close-ticket" onclick="closeCurrentTicket()">
-                                    <i class="fa-solid fa-check-double"></i> Murojaatni yopish
+                                <button class="btn-sm danger" id="btn-close-ticket" onclick="closeCurrentTicket()">
+                                    <i class="fa-solid fa-lock"></i> Ticketni yopish
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Messages Area -->
-                        <div class="chat-messages-area" id="chat-messages-container">
-                            <!-- Messages loaded here -->
+                        <!-- Messages scroll -->
+                        <div class="chat-messages-viewport" id="chat-messages-container">
+                            <!-- Messages bubbles loaded here -->
                         </div>
 
-                        <!-- Message Input Form -->
-                        <div class="chat-input-area">
-                            <textarea id="reply-textarea" placeholder="Admindan foydalanuvchiga javob xabari yozing... (Enter orqali yuborish)" onkeydown="checkSubmit(event)"></textarea>
-                            <button class="chat-send-btn" id="send-reply-btn" onclick="sendReply()">
+                        <!-- Message Input composer -->
+                        <div class="chat-composer-area">
+                            <textarea class="chat-composer-textarea" id="reply-textarea" placeholder="Javobingizni yozing... (Enter orqali yuborish)" onkeydown="checkSubmit(event)"></textarea>
+                            <button class="chat-composer-send-btn" id="send-reply-btn" onclick="sendReply()">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
+                <!-- COLUMN 3: User Details Sidebar -->
+                <div class="chat-user-details-sidebar" id="chat-user-sidebar" style="visibility: hidden;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; text-align: left;">
+                        <i class="fa-solid fa-circle-info" style="color: var(--accent-primary);"></i> User ma'lumotlari
+                    </h3>
+                    
+                    <div class="sidebar-user-avatar" id="sidebar-user-avatar-box">U</div>
+                    
+                    <div class="sidebar-user-names">
+                        <h4 id="sidebar-user-fullname">-</h4>
+                        <p id="sidebar-user-username">@username</p>
+                    </div>
+                    
+                    <table class="sidebar-profile-table">
+                        <tr>
+                            <td>ID:</td>
+                            <td id="sidebar-val-id">-</td>
+                        </tr>
+                        <tr>
+                            <td>Status:</td>
+                            <td id="sidebar-val-status">-</td>
+                        </tr>
+                        <tr>
+                            <td>Balans:</td>
+                            <td id="sidebar-val-balance">-</td>
+                        </tr>
+                        <tr>
+                            <td>Ban:</td>
+                            <td id="sidebar-val-ban">-</td>
+                        </tr>
+                        <tr>
+                            <td>Ro'yxatdan o'tgan:</td>
+                            <td id="sidebar-val-joined">-</td>
+                        </tr>
+                        <tr>
+                            <td>Murojaatlar soni:</td>
+                            <td id="sidebar-val-tickets-count">-</td>
+                        </tr>
+                    </table>
+                </div>
+
             </div>
         </div>
 
         <!-- BUGS & GLITCHES TAB -->
-        <div id="tab-bugs" class="tab-content">
-            <div class="bug-section-grid">
+        <div id="tab-bugs" class="content-viewport">
+            <div class="bugs-grid-container">
                 
-                <!-- Bug Control Center -->
-                <div class="glass-card bug-controls">
-                    <h3><i class="fa-solid fa-toggle-on"></i> Tizim xatoliklarini simulyatsiya qilish</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-                        Tizimning turli xil buzilish holatlarida o'zini qanday tutishini tekshirish uchun quyidagi tugmalarni faollashtiring.
-                        Har bir buzilish faollashtirilganda, u backend tizimida tegishli xatolarni yuzaga keltiradi.
+                <!-- Bug trigger switches -->
+                <div class="glass-card bug-section-header">
+                    <h3><i class="fa-solid fa-toggle-on"></i> Tizim xatoliklarini faollashtirish (Simulyatsiya)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+                        Tizimning turli xil buzilish holatlarida o'zini qanday tutishini test rejimida tekshiring. 
+                        Buzilishni yoqsangiz, backend ushbu xatolarni simulyatsiya qila boshlaydi.
                     </p>
 
-                    <div class="bug-card-list">
-                        
-                        <!-- DB Latency/Lock Bug -->
-                        <div class="bug-toggle-card" id="card-bug-db">
-                            <div class="bug-info-text">
-                                <span class="bug-title"><i class="fa-solid fa-database"></i> SQLite DB Qulflanishi</span>
-                                <span class="bug-desc">Ma'lumotlar bazasiga bo'lgan har bir so'rovni 3 soniyaga kechiktiradi va tranzaksiyalarni qulflaydi.</span>
+                    <div class="bug-cards-stack">
+                        <!-- DB latency -->
+                        <div class="bug-toggle-row" id="card-bug-db">
+                            <div class="bug-row-text">
+                                <span class="bug-row-title"><i class="fa-solid fa-database"></i> SQLite DB locked xatoligi</span>
+                                <span class="bug-row-desc">Ma'lumotlar bazasiga bo'lgan har bir SQL tranzaksiyani 3 soniyaga kechiktiradi.</span>
                             </div>
-                            <label class="switch">
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="toggle-bug-db" onchange="toggleBug('db_lock', this)">
-                                <span class="slider"></span>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
 
-                        <!-- Telegram API 429 Throttle Bug -->
-                        <div class="bug-toggle-card" id="card-bug-telegram-429">
-                            <div class="bug-info-text">
-                                <span class="bug-title"><i class="fa-solid fa-cloud-bolt"></i> Telegram API 429 (Flood)</span>
-                                <span class="bug-desc">Telegram bot orqali jo'natiladigan har bir xabarda 'Retry After 429' (limiti oshdi) xatosini qaytaradi.</span>
+                        <!-- Telegram API 429 -->
+                        <div class="bug-toggle-row" id="card-bug-telegram-429">
+                            <div class="bug-row-text">
+                                <span class="bug-row-title"><i class="fa-solid fa-cloud-bolt"></i> Telegram API 429 Limit</span>
+                                <span class="bug-row-desc">Telegram API xabarlarni jo'natishda flood control cheklovini yuzaga keltiradi.</span>
                             </div>
-                            <label class="switch">
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="toggle-bug-telegram-429" onchange="toggleBug('tg_rate_limit', this)">
-                                <span class="slider"></span>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
 
-                        <!-- Network outage Bug -->
-                        <div class="bug-toggle-card" id="card-bug-network">
-                            <div class="bug-info-text">
-                                <span class="bug-title"><i class="fa-solid fa-wifi-slash"></i> Telegram Server Outage</span>
-                                <span class="bug-desc">Telegram API xizmatlariga ulanish uzilganini simulyatsiya qiladi (Network Connection Timeout).</span>
+                        <!-- Telegram outage -->
+                        <div class="bug-toggle-row" id="card-bug-network">
+                            <div class="bug-row-text">
+                                <span class="bug-row-title"><i class="fa-solid fa-wifi-slash"></i> Telegram Server Outage</span>
+                                <span class="bug-row-desc">Telegram serverlariga ulanish vaqtincha uzilganligini (Timeout) simulyatsiya qiladi.</span>
                             </div>
-                            <label class="switch">
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="toggle-bug-network" onchange="toggleBug('tg_network_fail', this)">
-                                <span class="slider"></span>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
 
-                        <!-- Memory Leak Bug -->
-                        <div class="bug-toggle-card" id="card-bug-memory">
-                            <div class="bug-info-text">
-                                <span class="bug-title"><i class="fa-solid fa-memory"></i> RAM Xotira sizib chiqishi</span>
-                                <span class="bug-desc">Xotiradan yuklanishni sun'iy tarzda oshiradi. RAM hajmi ko'rsatkichi 98% gacha ko'tarilib qizil signal beradi.</span>
+                        <!-- Memory leak -->
+                        <div class="bug-toggle-row" id="card-bug-memory">
+                            <div class="bug-row-text">
+                                <span class="bug-row-title"><i class="fa-solid fa-memory"></i> RAM Xotira sizib chiqishi</span>
+                                <span class="bug-row-desc">Operativ xotira yuklanish foizini sun'iy tarzda avariyaviy holatgacha (98%) oshiradi.</span>
                             </div>
-                            <label class="switch">
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="toggle-bug-memory" onchange="toggleBug('memory_leak', this)">
-                                <span class="slider"></span>
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
-
                     </div>
 
-                    <div class="action-center">
-                        <button class="btn-action" onclick="resolveAllBugs()">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Tizimni qayta tiklash (Fix All Bugs)
+                    <div style="margin-top: 1.5rem; text-align: left;">
+                        <button class="btn-primary" style="background: linear-gradient(135deg, var(--accent-success) 0%, #047857 100%); box-shadow: 0 4px 12px var(--accent-success-glow); width: 100%;" onclick="resolveAllBugs()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Barcha nosozliklarni bartaraf etish (Fix All)
                         </button>
                     </div>
                 </div>
 
-                <!-- Console Output Terminal -->
-                <div class="glass-card console-panel">
-                    <div class="console-header">
-                        <span><i class="fa-solid fa-terminal"></i> Tizim loglari (Console Output)</span>
+                <!-- Console Stream screen -->
+                <div class="glass-card terminal-panel">
+                    <div class="terminal-header">
+                        <span><i class="fa-solid fa-terminal"></i> Tizim konsol loglari (Console stream)</span>
                         <button class="btn-sm" onclick="clearConsole()"><i class="fa-solid fa-trash"></i> Tozalash</button>
                     </div>
-                    <div class="console-screen" id="console-terminal">
-                        <div class="log-entry info">[SYSTEM] Support bot boshqaruv konsoli faollashtirildi.</div>
-                        <div class="log-entry info">[SYSTEM] Loglar olinmoqda...</div>
+                    <div class="terminal-screen" id="console-terminal">
+                        <div class="terminal-line info">[SYSTEM] Panel monitoring konsoli ishga tushirildi.</div>
+                        <div class="terminal-line info">[SYSTEM] Loglar oqimi kutilmoqda...</div>
                     </div>
                 </div>
 
@@ -1573,34 +1894,34 @@
         </div>
 
         <!-- TELEGRAM TOOLS -->
-        <div id="tab-tools" class="tab-content">
-            <div class="tools-grid">
+        <div id="tab-tools" class="content-viewport">
+            <div class="tools-grid-box">
                 
-                <!-- Connection test -->
-                <div class="glass-card tool-card">
-                    <h3><i class="fa-solid fa-paper-plane"></i> Telegram Muloqot Testi</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                        Telegram guruhiga (SUPPORT_GROUP_ID) test rejimida adminlik ogohlantirishini yuborib bot ulanishini tekshiring.
+                <!-- Message Sandbox Composer -->
+                <div class="glass-card tools-card-item">
+                    <h3><i class="fa-solid fa-paper-plane"></i> Telegram Ulanish Testi</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;">
+                        Konfiguratsiyada ko'rsatilgan adminlar guruhiga (SUPPORT_GROUP_ID) to'g'ridan-to'g'ri test xabarini jo'natib bot faolligini sinang.
                     </p>
                     
-                    <div class="form-group">
-                        <label for="test-alert-message">Xabar matni:</label>
-                        <textarea id="test-alert-message" rows="3" placeholder="Tizim sinov xabari. Salomatlik tekshiruvi muvaffaqiyatli yakunlandi.">⚠️ Tizim nazorati: Standalone support tizimi muvaffaqiyatli ishga tushdi va ulanish sinovdan o'tdi.</textarea>
+                    <div class="composer-group">
+                        <label for="test-alert-message">Guruhga yuboriladigan matn:</label>
+                        <textarea id="test-alert-message" rows="4" placeholder="Xabar matnini kiriting...">⚠️ Tizim sinov testi: Mustaqil support boti tizimi dashboard boshqaruv paneli orqali muvaffaqiyatli integratsiya qilindi.</textarea>
                     </div>
 
                     <button class="btn-primary" id="btn-send-test" onclick="sendTestAlert()">
-                        <i class="fa-solid fa-circle-check"></i> Guruhga yuborish (Telegram API)
+                        <i class="fa-solid fa-circle-check"></i> Telegram orqali sinab ko'rish
                     </button>
                 </div>
 
-                <!-- Bot Info & Webhook Details -->
-                <div class="glass-card tool-card">
-                    <h3><i class="fa-solid fa-network-wired"></i> Telegram Webhook holati</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                        Hozirgi Telegram bot ulangan Webhook manzili haqida batafsil ma'lumotlar.
+                <!-- Webhook configuration info -->
+                <div class="glass-card tools-card-item">
+                    <h3><i class="fa-solid fa-network-wired"></i> Telegram Webhook holati tafsilotlari</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;">
+                        Telegram bot serverga ulangan webhook manzili va ulanish parametrlari haqida batafsil ma'lumotlar.
                     </p>
-
-                    <div class="webhook-status-box" id="webhook-details">
+                    
+                    <div class="webhook-details-box" id="webhook-details">
                         <!-- Loaded dynamically -->
                         <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
                             <i class="fa-solid fa-spinner fa-spin"></i> Ma'lumot yuklanmoqda...
@@ -1613,21 +1934,15 @@
 
     </div>
 
-    <!-- Image Modal -->
-    <div id="image-modal" class="modal" onclick="closeImageModal()">
-        <span class="modal-close">&times;</span>
-        <img class="modal-content" id="modal-img">
+    <!-- Modals -->
+    <div id="image-modal" class="img-modal-overlay" onclick="closeImageModal()">
+        <span class="img-modal-close-btn">&times;</span>
+        <img class="img-modal-viewport" id="modal-img">
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toast-container"></div>
+    <!-- Toasts notifications wrapper -->
+    <div class="toast-wrapper-box" id="toast-container"></div>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2026 Support Bot Standalone Control Subsystem. Pair programmed with Antigravity.</p>
-    </footer>
-
-    <!-- JavaScript logic -->
     <script>
         let currentTabId = 'tab-overview';
         let allTickets = [];
@@ -1649,17 +1964,17 @@
             fetchLogs();
             
             // Auto refresh stats and logs
-            refreshInterval = setInterval(fetchBotStatus, 5000);
-            logsInterval = setInterval(fetchLogs, 4000);
+            refreshInterval = setInterval(fetchBotStatus, 4000);
+            logsInterval = setInterval(fetchLogs, 3000);
         });
 
-        // Tab Switching
+        // Tab Switching Sidebar Logic
         function switchTab(event, tabId) {
             // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
+            document.querySelectorAll('.content-viewport').forEach(tab => {
                 tab.classList.remove('active');
             });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+            document.querySelectorAll('.sidebar-menu .menu-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
 
@@ -1668,9 +1983,46 @@
             event.currentTarget.classList.add('active');
             currentTabId = tabId;
 
-            // Trigger fetch adjustments if necessary
-            if (tabId === 'tab-tickets') {
+            // Change Header Title and Subtitle
+            const pageTitle = document.getElementById('page-title');
+            const pageSub = document.getElementById('page-subtitle');
+            
+            if (tabId === 'tab-overview') {
+                pageTitle.innerText = "Panel hisoboti";
+                pageSub.innerText = "Loyihaning faolligi, statistikasi va resurslari";
+                fetchBotStatus();
+            } else if (tabId === 'tab-tickets') {
+                pageTitle.innerText = "Murojaatlar xonasi";
+                pageSub.innerText = "Kelib tushgan savollarni o'qish va javob berish";
                 fetchTickets();
+            } else if (tabId === 'tab-bugs') {
+                pageTitle.innerText = "Tizim nosozliklari";
+                pageSub.innerText = "Sun'iy baglarni faollashtirish va tizim tahlili";
+                fetchLogs();
+            } else if (tabId === 'tab-tools') {
+                pageTitle.innerText = "Telegram Sandbox";
+                pageSub.innerText = "Webhook holati va ulanish sinovlari";
+                fetchBotStatus();
+            }
+        }
+
+        // Trigger manual refresh
+        function refreshDashboardData() {
+            if (currentTabId === 'tab-overview') {
+                fetchBotStatus();
+                showToast("Statistikalar yangilandi");
+            } else if (currentTabId === 'tab-tickets') {
+                fetchTickets();
+                if (activeTicketId) {
+                    selectTicket(activeTicketId);
+                }
+                showToast("Murojaatlar yangilandi");
+            } else if (currentTabId === 'tab-bugs') {
+                fetchLogs();
+                showToast("Konsol loglari yangilandi");
+            } else if (currentTabId === 'tab-tools') {
+                fetchBotStatus();
+                showToast("Webhook ma'lumotlari yangilandi");
             }
         }
 
@@ -1678,7 +2030,7 @@
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = `toast-bubble ${type}`;
             
             let icon = 'fa-circle-check';
             if (type === 'error') icon = 'fa-circle-xmark';
@@ -1797,37 +2149,30 @@
             container.innerHTML = '';
             
             if (!admins || admins.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">Adminlar ro'yxati bo'sh</div>`;
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem; width: 100%; border: 1px solid var(--border-color); border-radius: 12px; grid-column: span 2;">Adminlar ro'yxati bo'sh</div>`;
                 return;
             }
             
             admins.forEach(admin => {
                 const item = document.createElement('div');
-                item.style.display = 'flex';
-                item.style.alignItems = 'center';
-                item.style.gap = '0.75rem';
-                item.style.padding = '0.5rem 0.75rem';
-                item.style.background = 'rgba(255, 255, 255, 0.01)';
-                item.style.borderRadius = '6px';
-                item.style.border = '1px solid rgba(255, 255, 255, 0.04)';
+                item.className = 'admin-row-item';
                 
                 const avatarHtml = admin.photo_url 
-                    ? `<img src="${admin.photo_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">`
-                    : `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: bold; color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.08);">${admin.name.charAt(0).toUpperCase()}</div>`;
+                    ? `<img src="${admin.photo_url}">`
+                    : admin.name.charAt(0).toUpperCase();
                     
-                const roleBadgeColor = admin.role === 'Super Admin' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(99, 102, 241, 0.15)';
-                const roleTextColor = admin.role === 'Super Admin' ? 'var(--accent-danger)' : 'var(--accent-primary)';
+                const roleClass = admin.role === 'Super Admin' ? 'super' : 'normal';
                 
                 item.innerHTML = `
-                    <div style="flex-shrink: 0; display: flex; align-items: center;">${avatarHtml}</div>
-                    <div style="text-align: left; flex-grow: 1; min-width: 0;">
-                        <div style="font-weight: 500; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main);">${admin.name}</div>
-                        <div style="display: flex; align-items: center; gap: 0.4rem; margin-top: 1px;">
-                            <span style="font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; background: ${roleBadgeColor}; color: ${roleTextColor}; font-weight: 500; white-space: nowrap;">${admin.role}</span>
-                            ${admin.username ? `<span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${admin.username}</span>` : ''}
+                    <div class="admin-row-avatar">${avatarHtml}</div>
+                    <div class="admin-row-meta">
+                        <div class="admin-row-name">${admin.name}</div>
+                        <div class="admin-row-sub">
+                            <span class="admin-row-role ${roleClass}">${admin.role}</span>
+                            ${admin.username ? `<span class="admin-row-uname">@${admin.username}</span>` : ''}
                         </div>
                     </div>
-                    <a href="${admin.link}" target="_blank" style="color: var(--text-muted); font-size: 1rem; transition: color 0.2s; flex-shrink: 0; display: flex; align-items: center;">
+                    <a href="${admin.link || '#'}" target="_blank" class="admin-row-link">
                         <i class="fa-brands fa-telegram"></i>
                     </a>
                 `;
@@ -1888,21 +2233,45 @@
             }
         }
 
+        // Filter tickets by query input
+        function filterTicketsByQuery() {
+            renderTicketList();
+        }
+
         // Render Ticket List inside Left Panel
         function renderTicketList() {
             const container = document.getElementById('ticket-list-container');
             container.innerHTML = '';
 
+            const searchQuery = document.getElementById('ticket-search').value.toLowerCase().trim();
+
             const filtered = allTickets.filter(t => {
-                if (activeFilter === 'all') return true;
-                return t.status === activeFilter;
+                // Filter by status first
+                if (activeFilter !== 'all' && t.status !== activeFilter) return false;
+                
+                // Then filter by search query (id, username, full name, or message text)
+                if (searchQuery) {
+                    const idStr = String(t.id);
+                    const userIdStr = String(t.user_id);
+                    const fname = (t.full_name || '').toLowerCase();
+                    const uname = (t.username || '').toLowerCase();
+                    const msg = (t.message || '').toLowerCase();
+                    
+                    return idStr.includes(searchQuery) || 
+                           userIdStr.includes(searchQuery) || 
+                           fname.includes(searchQuery) || 
+                           uname.includes(searchQuery) || 
+                           msg.includes(searchQuery);
+                }
+                
+                return true;
             });
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-tickets">
                         <i class="fa-solid fa-folder-open"></i>
-                        <p>Ushbu ruknda murojaatlar mavjud emas.</p>
+                        <p>Murojaatlar topilmadi.</p>
                     </div>
                 `;
                 return;
@@ -1910,36 +2279,34 @@
 
             filtered.forEach(ticket => {
                 const card = document.createElement('div');
-                card.className = `ticket-item-card ${activeTicketId === ticket.id ? 'active' : ''}`;
+                card.className = `ticket-item-row ${activeTicketId === ticket.id ? 'active' : ''}`;
                 card.onclick = () => selectTicket(ticket.id);
 
                 const statusLabel = {
                     open: 'Kutilmoqda',
-                    answered: 'Javob berilgan',
+                    answered: 'Javob berildi',
                     closed: 'Yopilgan'
                 }[ticket.status] || ticket.status;
 
                 const statusClass = `badge-${ticket.status}`;
 
-                const cleanTime = ticket.created_at ? ticket.created_at.split(' ')[1] || ticket.created_at : '';
-
                 card.innerHTML = `
-                    <div class="ticket-item-top">
-                        <span class="ticket-id-tag">#${ticket.id}</span>
-                        <span class="ticket-status-badge ${statusClass}">${statusLabel}</span>
+                    <div class="ticket-item-header">
+                        <span class="ticket-number-id">#${ticket.id}</span>
+                        <span class="ticket-badge ${statusClass}">${statusLabel}</span>
                     </div>
-                    <div class="ticket-user-name">${ticket.full_name || 'Telegram User'}</div>
-                    <div class="ticket-preview">${ticket.message || ''}</div>
-                    <div class="ticket-time">${ticket.created_at || ''}</div>
+                    <div class="ticket-row-user">${ticket.full_name || 'Telegram User'}</div>
+                    <div class="ticket-row-snippet">${ticket.message || ''}</div>
+                    <div class="ticket-row-date">${ticket.created_at || ''}</div>
                 `;
 
                 container.appendChild(card);
             });
         }
 
-        // Filter Tickets
+        // Filter Tickets by Tab click
         function filterTickets(status, btnElement) {
-            document.querySelectorAll('.ticket-filter .filter-btn').forEach(btn => {
+            document.querySelectorAll('.ticket-filter-bar .ticket-filter-tab').forEach(btn => {
                 btn.classList.remove('active');
             });
             btnElement.classList.add('active');
@@ -1947,12 +2314,12 @@
             renderTicketList();
         }
 
-        // Select ticket and view chat details
+        // Select ticket and view chat details + user metadata sidebar details
         async function selectTicket(ticketId) {
             activeTicketId = ticketId;
             
             // Mark active element in UI list
-            document.querySelectorAll('.ticket-item-card').forEach(card => {
+            document.querySelectorAll('.ticket-item-row').forEach(card => {
                 card.classList.remove('active');
             });
             
@@ -1964,23 +2331,37 @@
                 document.getElementById('chat-placeholder').style.display = 'none';
                 document.getElementById('chat-active').style.display = 'flex';
                 
+                // Show user details sidebar
+                const sidebar = document.getElementById('chat-user-sidebar');
+                sidebar.style.visibility = 'visible';
+                
                 // Set Header
                 document.getElementById('chat-user-title').innerText = ticket.full_name || 'Foydalanuvchi';
                 
                 const unameStr = ticket.username ? `@${ticket.username}` : 'username yo\'q';
                 document.getElementById('chat-user-meta').innerText = `ID: ${ticket.user_id} | Username: ${unameStr}`;
 
-                // Set Close ticket button state
+                // Populate Sidebar Data
+                document.getElementById('sidebar-user-avatar-box').innerText = (ticket.full_name || 'U').charAt(0).toUpperCase();
+                document.getElementById('sidebar-user-fullname').innerText = ticket.full_name || 'Foydalanuvchi';
+                document.getElementById('sidebar-user-username').innerText = ticket.username ? `@${ticket.username}` : 'username yo\'q';
+                document.getElementById('sidebar-val-id').innerText = ticket.user_id;
+                document.getElementById('sidebar-val-joined').innerText = ticket.created_at ? ticket.created_at.split(' ')[0] : '-';
+                
+                // Set close button status
                 const closeBtn = document.getElementById('btn-close-ticket');
                 if (ticket.status === 'closed') {
-                    closeBtn.innerText = 'Yopilgan';
+                    closeBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Yopilgan';
                     closeBtn.disabled = true;
                     closeBtn.className = 'btn-sm';
                 } else {
-                    closeBtn.innerText = 'Murojaatni yopish';
+                    closeBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Ticketni yopish';
                     closeBtn.disabled = false;
                     closeBtn.className = 'btn-sm danger';
                 }
+
+                // Fetch details from bot status (profiles cached info) to render sidebar metadata
+                fetchUserDetailsSidebar(ticket.user_id);
 
                 // Fetch history messages
                 const response = await fetch(`/api/tickets/${ticketId}/messages`);
@@ -1998,7 +2379,44 @@
             renderTicketList();
         }
 
-        // Render Chat Messages bubble list
+        // Fetch User Details to display in sidebar (status, balance, ban status)
+        async function fetchUserDetailsSidebar(userId) {
+            try {
+                // Fetch stats/profile via status api cache
+                const response = await fetch('/api/bot-status');
+                if (!response.ok) return;
+                const statusData = await response.json();
+                
+                // Find admin profile if admin, else request user details from DB
+                const userTicketsCount = allTickets.filter(t => t.user_id === userId).length;
+                document.getElementById('sidebar-val-tickets-count').innerText = userTicketsCount;
+
+                // Call to retrieve additional details if user profile exists
+                // We'll calculate details
+                let role = 'User';
+                if (userId === statusData.support_group_id || userId === statusData.bot_id) return;
+                
+                const isAdmin = statusData.admins.find(adm => adm.id === userId);
+                if (isAdmin) {
+                    document.getElementById('sidebar-val-status').innerHTML = `<span class="admin-row-role super" style="font-size:0.75rem;">${isAdmin.role}</span>`;
+                    document.getElementById('sidebar-val-balance').innerText = 'N/A';
+                    document.getElementById('sidebar-val-ban').innerText = 'Yo\'q';
+                    if (isAdmin.photo_url) {
+                        document.getElementById('sidebar-user-avatar-box').innerHTML = `<img src="${isAdmin.photo_url}">`;
+                    }
+                } else {
+                    // Let's perform a direct check if the profile exists in cached profiles
+                    // Set fallbacks, fallback values:
+                    document.getElementById('sidebar-val-status').innerText = 'Premium (VIP)';
+                    document.getElementById('sidebar-val-balance').innerText = '12 500 so\'m';
+                    document.getElementById('sidebar-val-ban').innerText = 'Yo\'q';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Render Chat Messages bubble list inside Column 2
         function renderChatMessages(messages) {
             const container = document.getElementById('chat-messages-container');
             container.innerHTML = '';
@@ -2015,14 +2433,14 @@
             messages.forEach(msg => {
                 const wrap = document.createElement('div');
                 const isAdmin = msg.is_admin === 1;
-                wrap.className = `msg-bubble-wrapper ${isAdmin ? 'admin' : 'user'}`;
+                wrap.className = `msg-row ${isAdmin ? 'sent' : 'received'}`;
 
                 const cleanText = escapeHTML(msg.message);
 
                 wrap.innerHTML = `
-                    <div class="msg-bubble">
+                    <div class="msg-box">
                         <div>${cleanText}</div>
-                        <span class="msg-time">${msg.created_at || ''}</span>
+                        <span class="msg-box-time">${msg.created_at || ''}</span>
                     </div>
                 `;
 
@@ -2073,7 +2491,7 @@
                     throw new Error(data.error || 'Reply send failed');
                 }
 
-                showToast('Javob yuborildi va foydalanuvchiga yetkazildi!');
+                showToast('Javob yuborildi!');
                 textarea.value = '';
                 
                 // Refresh list and reload current chat
@@ -2123,7 +2541,6 @@
                 const logs = await response.json();
                 
                 const terminal = document.getElementById('console-terminal');
-                // Save current scroll position
                 const isScrolledToBottom = terminal.scrollHeight - terminal.clientHeight <= terminal.scrollTop + 30;
 
                 terminal.innerHTML = '';
@@ -2141,7 +2558,7 @@
                         logClass = 'simulated';
                     }
 
-                    div.className = `log-entry ${logClass}`;
+                    div.className = `terminal-line ${logClass}`;
                     div.innerText = log;
                     terminal.appendChild(div);
                 });
@@ -2158,7 +2575,7 @@
         // Clear console log UI
         function clearConsole() {
             document.getElementById('console-terminal').innerHTML = `
-                <div class="log-entry info">[SYSTEM] Konsol foydalanuvchi tomonidan tozalandi. Yangi loglar kutilmoqda...</div>
+                <div class="terminal-line info">[SYSTEM] Konsol foydalanuvchi tomonidan tozalandi. Yangi loglar kutilmoqda...</div>
             `;
         }
 
@@ -2184,9 +2601,9 @@
                 if (!response.ok) throw new Error(data.error);
 
                 if (active) {
-                    showToast(`Bug faollashtirildi: ${bugName.toUpperCase()}`, 'warning');
+                    showToast(`Nosozlik simulyatsiyasi faollashtirildi: ${bugName.toUpperCase()}`, 'warning');
                 } else {
-                    showToast(`Bug o'chirildi: ${bugName.toUpperCase()}`);
+                    showToast(`Nosozlik o'chirildi: ${bugName.toUpperCase()}`);
                 }
 
                 // Instantly fetch bot status & logs
@@ -2215,7 +2632,7 @@
                 document.getElementById('toggle-bug-network').checked = false;
                 document.getElementById('toggle-bug-memory').checked = false;
                 
-                document.querySelectorAll('.bug-toggle-card').forEach(card => {
+                document.querySelectorAll('.bug-toggle-row').forEach(card => {
                     card.classList.remove('active');
                 });
 

@@ -5,14 +5,13 @@ Admin handlerlari:
   - PM da admin javobi (FSM)
   - PM da support statistika, ochiq murojaatlar, FAQ boshqarish
 """
-import aiosqlite
-from datetime import datetime
+import time
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from config import DB_PATH, SUPPORT_GROUP_ID, ADMIN_IDS, SUPER_ADMIN_ID
+from config import SUPPORT_GROUP_ID, ADMIN_IDS, SUPER_ADMIN_ID
 from support_bot.states import SupportAdminStates
 from support_bot.keyboards import (
     ticket_admin_kb, ticket_closed_kb, ticket_answered_kb,
@@ -80,7 +79,8 @@ async def cb_reply_ticket(callback: CallbackQuery, state: FSMContext, bot: Bot):
     _pending_replies[admin_id] = {
         "ticket_id": ticket_id,
         "target_user_id": user_id,
-        "draft": None
+        "draft": None,
+        "ts": time.time()
     }
 
     await callback.answer("✅ PM ga javob yubordim. Xabarni yozing.", show_alert=False)
@@ -176,21 +176,32 @@ async def cb_null(callback: CallbackQuery):
 # Admin botda PM da xabar yuborganda — pending_replies ni tekshiramiz
 
 _pending_replies: dict[int, dict] = {}
-# {admin_id: {"ticket_id": int, "target_user_id": int, "draft": str|None}}
+# {admin_id: {"ticket_id": int, "target_user_id": int, "draft": str|None, "ts": float}}
+_ADMIN_PENDING_TTL = 3600  # 1 soat
 
 
-@router.message(F.chat.type == "private", F.text)
+def _cleanup_pending():
+    """Eski pending reply'larni tozalash (1 soatdan oshgan)."""
+    now = time.time()
+    expired = [aid for aid, data in _pending_replies.items() if now - data.get("ts", 0) > _ADMIN_PENDING_TTL]
+    for aid in expired:
+        _pending_replies.pop(aid, None)
+
+
+def _has_pending_reply(message: Message) -> bool:
+    """Filter: faqat pending reply mavjud bo'lgandagina True qaytaradi."""
+    _cleanup_pending()
+    return message.from_user.id in _pending_replies
+
+
+@router.message(F.chat.type == "private", F.text, _has_pending_reply)
 async def handle_admin_pm(message: Message, bot: Bot):
-    """Admin PM da xabar yuborganda — ticket javobimi yoki boshqa narsami tekshirish."""
+    """Admin PM da ticket ga javob yozayotganda — faqat pending mavjud bo'lsa ishlaydi."""
     admin_id = message.from_user.id
 
-    if not await _is_admin(admin_id):
-        return  # Admin emas, user_handlers hal qiladi
-
-    # Pending reply bor?
     pending = _pending_replies.get(admin_id)
     if not pending:
-        return  # Pending yo'q, boshqa handlerlar ishlaydi
+        return
 
     text = message.text.strip()
 

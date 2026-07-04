@@ -9,6 +9,7 @@ SUPPORT_GROUP_ID     = int(os.getenv("SUPPORT_GROUP_ID", 0))    # Admin guruhi I
 SUPPORT_BOT_USERNAME = os.getenv("SUPPORT_BOT_USERNAME", "")   # Bot username
 SUPER_ADMIN_ID       = int(os.getenv("SUPER_ADMIN_ID", 0))
 ADMIN_IDS            = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x]
+MAIN_BOT_USERNAME    = os.getenv("MAIN_BOT_USERNAME", "")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,14 +24,6 @@ DB_PATH = os.path.join(DATA_DIR, "bot.db")
 
 # Ma'lumotlar bazasi ulanish sozlamalari
 DATABASE_URL = os.getenv("DATABASE_URL", "")
-MYSQL_URL = os.getenv("MYSQL_URL", "")
-
-# S3 Bucket (Chelak) sozlamalari
-BUCKET = os.getenv("BUCKET", "")
-REGION = os.getenv("REGION", "")
-ENDPOINT = os.getenv("ENDPOINT", "")
-ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID", "")
-SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", "")
 
 # Papkani yaratish
 os.makedirs(DATA_DIR, exist_ok=True)
