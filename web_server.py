@@ -1489,7 +1489,7 @@ def _extract_anime_search_query(user_msg: str) -> str:
     
     stopwords = {
         "menga", "haqida", "ma'lumot", "malumot", "ber", "ayt", "yoz", 
-        "tavsif", "top", "topib", "qidir", "qidirish", "anime", "animeni", 
+        "tavsif", "topib", "qidir", "qidirish", "anime", "animeni", 
         "animelar", "haqidaxabar", "haqida,", "tasvirlab", "bormi", "bormi?",
         "kinosi", "multfilm", "multfilmi", "uz", "uzbek", "tarjima", "o'zbekcha",
         "ozbekcha", "skachat", "yuklash", "ko'rish", "korish", "qanaqa", "qanday",
