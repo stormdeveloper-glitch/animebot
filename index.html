@@ -884,7 +884,274 @@ html{scroll-behavior:smooth}
   .hero-actions{width:100%}
   .hero-tg-btn{flex:1;justify-content:center;min-width:150px}
   #galGrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:12px}
-  .prof-anime-grid{padding:10px}
+
+/* ══ AniList Detailed Modal Styles ══ */
+.modal.al-detail {
+  max-width: 800px;
+  width: 95%;
+  padding: 0;
+  overflow-x: hidden;
+  background: var(--card-bg);
+  border-radius: 14px;
+}
+.al-detail-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+}
+.al-detail-banner-wrap {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--surface);
+}
+.al-detail-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 20%, var(--card-bg) 100%);
+}
+.al-detail-header-content {
+  position: relative;
+  margin-top: -110px;
+  padding: 0 24px 20px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+.al-detail-cover {
+  width: 130px;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 3px solid var(--border);
+  box-shadow: 0 8px 32px var(--shadow);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.al-detail-title-block {
+  flex-grow: 1;
+  padding-bottom: 5px;
+}
+.al-detail-main-title {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 850;
+  color: var(--text);
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+.al-detail-sub-titles {
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+.al-detail-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.al-detail-layout {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 24px;
+  padding: 10px 24px 24px;
+}
+.al-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.al-detail-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.al-sidebar-widget {
+  background: var(--border2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.al-widget-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+.al-widget-value {
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+.al-widget-item {
+  margin-bottom: 8px;
+}
+.al-widget-item:last-child {
+  margin-bottom: 0;
+}
+.al-genre-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 2px;
+  color: var(--text2);
+}
+.al-trailer-wrap {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+}
+.al-relations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+.al-relation-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.al-relation-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+.al-relation-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+}
+.al-relation-body {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+.al-relation-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  height: 2.5em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.al-relation-type {
+  font-size: 0.55rem;
+  color: var(--accent);
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.al-chars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.al-char-card {
+  display: flex;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 64px;
+}
+.al-char-entity, .al-va-entity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 48%;
+}
+.al-va-entity {
+  justify-content: flex-end;
+  text-align: right;
+}
+.al-char-img, .al-va-img {
+  width: 46px;
+  height: 64px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.al-char-info, .al-va-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.al-char-name, .al-va-name {
+  font-size: 0.7rem;
+  font-weight: 750;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.al-char-role, .al-va-lang {
+  font-size: 0.58rem;
+  color: var(--muted);
+}
+.al-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff !important;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  margin: 3px;
+}
+.al-link-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+@media (max-width: 768px) {
+  .al-detail-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 10px 14px 14px;
+  }
+  .al-detail-header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -90px;
+    padding: 0 14px 14px;
+  }
+  .al-detail-badges-row {
+    justify-content: center;
+  }
+}
 }
 </style>
 </head>
@@ -1780,9 +2047,16 @@ function _playEp(mediaEl,eps,idx){
   if(v)v.addEventListener('error',()=>{const e=document.getElementById('vErr');if(e)e.style.display='block';v.style.display='none';});
 }
 function closeModal(){
-  document.getElementById('modalBg').classList.remove('open');
-  const v=document.querySelector('.m-media video');
+  const modalBg = document.getElementById('modalBg');
+  modalBg.classList.remove('open');
+  modalBg.querySelector('.modal').classList.remove('al-detail');
+  
+  const v = document.querySelector('.m-media video');
   if(v){v.pause();v.src='';}
+  
+  // Clear innerHTML to stop any playing YouTube iframe trailers
+  document.getElementById('modalContent').innerHTML = '';
+  
   window._epCache=[];
   if(!_openingPosterFromRoute&&location.pathname.startsWith('/poster/')){
     history.pushState({},'',location.origin+'/');
@@ -1792,10 +2066,271 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 window.addEventListener('popstate',()=>{
   const id=_posterRouteId();
   if(id){_openPosterRoute(id);return;}
-  _openingPosterFromRoute=true;
-  closeModal();
   _openingPosterFromRoute=false;
 });
+
+async function openAlDetail(alId) {
+  const modalBg = document.getElementById('modalBg');
+  const modalContent = document.getElementById('modalContent');
+  const modal = modalBg.querySelector('.modal');
+  
+  // Apply the large detailed view class to modal
+  modal.classList.add('al-detail');
+  modalContent.innerHTML = `
+    <div class="al-detail-loader">
+      <div class="spinner"></div>
+      <div>AniList ma'lumotlari yuklanmoqda...</div>
+    </div>
+  `;
+  modalBg.classList.add('open');
+
+  try {
+    const res = await fetch(`/api/anilist/detail?id=${alId}`);
+    const d = await res.json();
+    if (!d.ok) {
+      modalContent.innerHTML = `<div class="verr">⚠️ Ma'lumotlarni yuklab bo'lmadi: ${d.error || 'Noma\'lum xato'}</div>`;
+      return;
+    }
+    const a = d.result;
+    
+    // Banner section HTML
+    const bannerStyle = a.banner ? `style="background-image: url('${a.banner}')"` : '';
+    const bannerHtml = `
+      <div class="al-detail-banner-wrap" ${bannerStyle}>
+        <div class="al-detail-banner-overlay"></div>
+      </div>
+    `;
+
+    // Title / cover image / badges row HTML
+    const safeTitle = _alEscape(a.title || 'Nomsiz');
+    const safeRomaji = _alEscape(a.title_romaji || '');
+    const safeNative = _alEscape(a.title_native || '');
+    
+    let subTitles = '';
+    if (safeRomaji && safeRomaji !== safeTitle) subTitles += `<div><b>Romaji:</b> ${safeRomaji}</div>`;
+    if (safeNative && safeNative !== safeTitle) subTitles += `<div><b>Native:</b> ${safeNative}</div>`;
+
+    const imgHtml = a.cover
+      ? `<img class="al-detail-cover" src="${_alEscape(a.cover)}" alt="${safeTitle}">`
+      : '<div class="al-detail-cover" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface)">🎬</div>';
+
+    const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
+    const statusCls = `al-badge status-${a.status || ''}`;
+    
+    const badgesHtml = `
+      <span class="${statusCls}">${statusLabel}</span>
+      ${a.score ? `<span class="al-score">⭐ ${a.score}/100</span>` : ''}
+      ${a.episodes ? `<span class="al-badge">${a.episodes} qism</span>` : ''}
+      ${a.year ? `<span class="al-badge">${a.year}</span>` : ''}
+      ${a.format ? `<span class="al-badge">${a.format}</span>` : ''}
+      ${a.season ? `<span class="al-badge" style="text-transform: uppercase;">${a.season}</span>` : ''}
+    `;
+
+    // Sidebar widgets HTML
+    let sidebarHtml = '';
+    
+    // Studios widget
+    if (a.studios && a.studios.length > 0) {
+      sidebarHtml += `
+        <div class="al-sidebar-widget">
+          <div class="al-widget-title">Studiyalar</div>
+          <div class="al-widget-value">${a.studios.map(s => _alEscape(s)).join(', ')}</div>
+        </div>
+      `;
+    }
+
+    // Genres widget
+    if (a.genres && a.genres.length > 0) {
+      sidebarHtml += `
+        <div class="al-sidebar-widget">
+          <div class="al-widget-title">Janrlar</div>
+          <div style="margin: -2px;">
+            ${a.genres.map(g => `<span class="al-genre-tag">${_alEscape(g)}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Synonyms / Alternative titles
+    if (a.synonyms && a.synonyms.length > 0) {
+      sidebarHtml += `
+        <div class="al-sidebar-widget">
+          <div class="al-widget-title">Muqobil Nomlar</div>
+          <div class="al-widget-value" style="font-size:0.72rem; max-height:100px; overflow-y:auto;">
+            ${a.synonyms.map(s => `• ${_alEscape(s)}`).join('<br>')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Main content details: Description, Trailer, Characters, Relations, Links, Tags
+    let mainContentHtml = '';
+
+    // Description
+    if (a.description) {
+      mainContentHtml += `
+        <div class="al-sidebar-widget" style="background: transparent; border-color: var(--border2); padding: 0;">
+          <div class="al-widget-title" style="font-size: 0.75rem;">Tavsif (Description)</div>
+          <div class="al-widget-value" style="font-size: 0.82rem; line-height: 1.6; text-align: justify;">${a.description}</div>
+        </div>
+      `;
+    }
+
+    // Trailer widget (YouTube iframe embed)
+    if (a.trailer && a.trailer.site === 'youtube' && a.trailer.id) {
+      mainContentHtml += `
+        <div>
+          <div class="al-widget-title" style="font-size: 0.75rem;">Treyler (Trailer)</div>
+          <div class="al-trailer-wrap">
+            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${a.trailer.id}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </div>
+        </div>
+      `;
+    }
+
+    // Relations widget
+    if (a.relations && a.relations.length > 0) {
+      const relationCardsHtml = a.relations.map(rel => {
+        const relTitle = _alEscape(rel.title || 'Nomsiz');
+        const relImg = rel.cover
+          ? `<img class="al-relation-img" src="${_alEscape(rel.cover)}" alt="${relTitle}" loading="lazy">`
+          : '<div class="al-relation-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface)">🎬</div>';
+        
+        // Translate relationType to user friendly labels
+        const relTypeLabels = {
+          'PREQUEL': 'Prequel (Avvalgi)',
+          'SEQUEL': 'Sequel (Keyingi)',
+          'PARENT': 'Asosiy hikoya',
+          'SIDE_STORY': 'Spin-off',
+          'SPIN_OFF': 'Spin-off',
+          'SUMMARY': 'Xulosa',
+          'ALTERNATIVE': 'Muqobil',
+          'CHARACTER': 'Qahramon',
+          'OTHER': 'Boshqa',
+        };
+        const relTypeLabel = relTypeLabels[rel.relation_type] || rel.relation_type;
+
+        return `
+          <div class="al-relation-card" onclick="event.stopPropagation(); openAlDetail(${rel.id})">
+            ${relImg}
+            <div class="al-relation-body">
+              <div class="al-relation-title" title="${relTitle}">${relTitle}</div>
+              <div class="al-relation-type">${_alEscape(relTypeLabel)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      mainContentHtml += `
+        <div>
+          <div class="al-widget-title" style="font-size: 0.75rem;">Aloqador Animelar (Relations)</div>
+          <div class="al-relations-grid">${relationCardsHtml}</div>
+        </div>
+      `;
+    }
+
+    // Characters widget
+    if (a.characters && a.characters.length > 0) {
+      const charCardsHtml = a.characters.map(char => {
+        const charName = _alEscape(char.name);
+        const charRole = char.role === 'MAIN' ? 'Bosh qahramon' : 'Yordamchi qahramon';
+        const charImg = char.image
+          ? `<img class="al-char-img" src="${_alEscape(char.image)}" alt="${charName}">`
+          : '<div class="al-char-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.2rem">👤</div>';
+
+        const vaName = _alEscape(char.va_name);
+        const vaImg = char.va_image
+          ? `<img class="al-va-img" src="${_alEscape(char.va_image)}" alt="${vaName}">`
+          : '<div class="al-va-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.2rem">👤</div>';
+
+        return `
+          <div class="al-char-card">
+            <div class="al-char-entity">
+              ${charImg}
+              <div class="al-char-info">
+                <div class="al-char-name" title="${charName}">${charName}</div>
+                <div class="al-char-role">${charRole}</div>
+              </div>
+            </div>
+            ${char.va_name ? `
+              <div class="al-va-entity">
+                <div class="al-va-info">
+                  <div class="al-va-name" title="${vaName}">${vaName}</div>
+                  <div class="al-va-lang">Seiyuu (JP)</div>
+                </div>
+                ${vaImg}
+              </div>
+            ` : '<div style="width:48%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:var(--muted)">Ovoz berilmagan</div>'}
+          </div>
+        `;
+      }).join('');
+
+      mainContentHtml += `
+        <div>
+          <div class="al-widget-title" style="font-size: 0.75rem;">Qahramonlar va Ovoz Beruvchilar (Characters & Staff)</div>
+          <div class="al-chars-grid">${charCardsHtml}</div>
+        </div>
+      `;
+    }
+
+    // External and streaming links widget
+    if (a.links && a.links.length > 0) {
+      const linksHtml = a.links.map(link => {
+        const linkBgColor = link.color || '#3f3f46';
+        return `
+          <a class="al-link-btn" href="${_alEscape(link.url)}" target="_blank" style="background-color: ${linkBgColor};">
+            <span>🔗</span>
+            <span>${_alEscape(link.site)}</span>
+          </a>
+        `;
+      }).join('');
+
+      mainContentHtml += `
+        <div>
+          <div class="al-widget-title" style="font-size: 0.75rem;">Rasmiy havolalar va Translyatsiya (Streaming & Links)</div>
+          <div style="margin: -3px;">${linksHtml}</div>
+        </div>
+      `;
+    }
+
+    // Tags widget
+    if (a.tags && a.tags.length > 0) {
+      const tagsHtml = a.tags.map(tag => `
+        <span class="al-genre-tag" style="border-color: var(--border2); padding: 4px 10px;" title="Rank: ${tag.rank}%">
+          #${_alEscape(tag.name)} <span style="opacity:0.6; font-size:0.55rem; margin-left:2px;">${tag.rank}%</span>
+        </span>
+      `).join('');
+      
+      mainContentHtml += `
+        <div>
+          <div class="al-widget-title" style="font-size: 0.75rem;">Teglar (Tags)</div>
+          <div style="margin: -2px;">${tagsHtml}</div>
+        </div>
+      `;
+    }
+
+    // Assemble the complete modal markup
+    modalContent.innerHTML = `
+      ${bannerHtml}
+      <div class="al-detail-header-content">
+        ${imgHtml}
+        <div class="al-detail-title-block">
+          <div class="al-detail-main-title">${safeTitle}</div>
+          <div class="al-detail-sub-titles">${subTitles}</div>
+          <div class="al-detail-badges-row">${badgesHtml}</div>
+        </div>
+      </div>
+      <div class="al-detail-layout">
+        <div class="al-detail-sidebar">${sidebarHtml}</div>
+        <div class="al-detail-main-content">${mainContentHtml}</div>
+      </div>
+    `;
+
+  } catch (e) {
+    modalContent.innerHTML = `<div class="verr">⚠️ Kutilmagan xatolik yuz berdi: ${e.message}</div>`;
+  }
+}
+
 
 // ── ADMINS ──
 async function renderAdmins(){
@@ -2142,7 +2677,7 @@ async function glSearch() {
           </div>`
         : '';
 
-      return `<div class="al-card">
+      return `<div class="al-card" onclick="openAlDetail(${a.id})" style="cursor: pointer;">
         ${img}
         <div class="al-card-body">
           <div class="al-card-title" title="${safeTitle}">${safeTitle}</div>

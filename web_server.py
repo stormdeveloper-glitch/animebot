@@ -1890,6 +1890,216 @@ async def api_anilist_search(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
 
 
+ANILIST_DETAIL_QUERY = """
+query ($id: Int) {
+  Media(id: $id, type: ANIME) {
+    id
+    title { romaji english native }
+    coverImage { extraLarge large medium }
+    bannerImage
+    description
+    status
+    averageScore
+    episodes
+    season
+    seasonYear
+    genres
+    format
+    siteUrl
+    synonyms
+    trailer { id site }
+    externalLinks { url site icon color type }
+    tags { name rank isMediaSpoiler }
+    studios(isMain: true) { nodes { name siteUrl } }
+    relations {
+      edges {
+        relationType
+        node {
+          id
+          title { romaji english native }
+          type
+          format
+          status
+          coverImage { large }
+        }
+      }
+    }
+    characters(perPage: 8, sort: [ROLE, RELEVANCE, ID]) {
+      edges {
+        role
+        node {
+          id
+          name { full }
+          image { large }
+        }
+        voiceActors(language: JAPANESE) {
+          id
+          name { full }
+          image { large }
+        }
+      }
+    }
+    staff(perPage: 6) {
+      edges {
+        role
+        node {
+          id
+          name { full }
+          image { large }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+async def api_anilist_detail(request: web.Request) -> web.Response:
+    """
+    GET /api/anilist/detail?id=12345
+    AniList media ID orqali anime tafsilotlarini olish.
+    """
+    try:
+        anime_id_str = request.rel_url.query.get("id", "").strip()
+        if not anime_id_str:
+            return web.json_response({"ok": False, "error": "id parametri kerak"}, status=400)
+        try:
+            anime_id = int(anime_id_str)
+        except ValueError:
+            return web.json_response({"ok": False, "error": "id son bo'lishi kerak"}, status=400)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                ANILIST_GRAPHQL,
+                json={
+                    "query": ANILIST_DETAIL_QUERY,
+                    "variables": {"id": anime_id},
+                },
+                headers={"Content-Type": "application/json", "Accept": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=15),
+            ) as resp:
+                data = await resp.json()
+
+        if "errors" in data:
+            errs = "; ".join(e.get("message", "?") for e in data["errors"])
+            return web.json_response({"ok": False, "error": errs}, status=502)
+
+        media = data.get("data", {}).get("Media")
+        if not media:
+            return web.json_response({"ok": False, "error": "Anime topilmadi"}, status=404)
+
+        # Title formatting
+        title_eng = media["title"].get("english")
+        title_rom = media["title"].get("romaji")
+        title_nat = media["title"].get("native")
+        title = title_eng or title_rom or title_nat or "Nomsiz"
+
+        # Description cleaning
+        raw_desc = media.get("description") or ""
+        clean_desc = _clean_description(raw_desc)
+
+        # Parse relations
+        relations = []
+        rel_edges = media.get("relations", {}).get("edges") or []
+        for edge in rel_edges:
+            node = edge.get("node") or {}
+            if node.get("type") == "ANIME":
+                r_title = node["title"].get("english") or node["title"].get("romaji") or node["title"].get("native") or "Nomsiz"
+                relations.append({
+                    "id": node.get("id"),
+                    "title": r_title,
+                    "relation_type": edge.get("relationType", ""),
+                    "format": node.get("format", ""),
+                    "status": node.get("status", ""),
+                    "cover": node.get("coverImage", {}).get("large") or node.get("coverImage", {}).get("medium") or "",
+                })
+
+        # Parse characters
+        characters = []
+        char_edges = media.get("characters", {}).get("edges") or []
+        for edge in char_edges:
+            node = edge.get("node") or {}
+            vas = edge.get("voiceActors") or []
+            va = vas[0] if vas else {}
+            characters.append({
+                "role": edge.get("role", "SUPPORTING"),
+                "name": node.get("name", {}).get("full") or "Nomsiz",
+                "image": node.get("image", {}).get("large") or "",
+                "va_name": va.get("name", {}).get("full") or "",
+                "va_image": va.get("image", {}).get("large") or "",
+            })
+
+        # Parse staff
+        staff = []
+        staff_edges = media.get("staff", {}).get("edges") or []
+        for edge in staff_edges:
+            node = edge.get("node") or {}
+            staff.append({
+                "role": edge.get("role", ""),
+                "name": node.get("name", {}).get("full") or "Nomsiz",
+                "image": node.get("image", {}).get("large") or "",
+            })
+
+        # Parse studios
+        studios = [s.get("name") for s in media.get("studios", {}).get("nodes") or [] if s.get("name")]
+
+        # Parse external links
+        links = []
+        ext_links = media.get("externalLinks") or []
+        for el in ext_links:
+            links.append({
+                "url": el.get("url"),
+                "site": el.get("site"),
+                "icon": el.get("icon"),
+                "color": el.get("color"),
+                "type": el.get("type"),
+            })
+
+        # Parse tags
+        tags = []
+        all_tags = media.get("tags") or []
+        for tag in all_tags:
+            if not tag.get("isMediaSpoiler"):
+                tags.append({
+                    "name": tag.get("name"),
+                    "rank": tag.get("rank"),
+                })
+        tags = sorted(tags, key=lambda t: t.get("rank") or 0, reverse=True)[:10]
+
+        result = {
+            "id": media.get("id"),
+            "title": title,
+            "title_romaji": title_rom or "",
+            "title_native": title_nat or "",
+            "cover": media.get("coverImage", {}).get("extraLarge") or media.get("coverImage", {}).get("large") or "",
+            "banner": media.get("bannerImage") or "",
+            "description": clean_desc,
+            "status": media.get("status") or "UNKNOWN",
+            "score": media.get("averageScore"),
+            "episodes": media.get("episodes"),
+            "season": media.get("season") or "",
+            "year": media.get("seasonYear"),
+            "genres": media.get("genres") or [],
+            "format": media.get("format") or "",
+            "site_url": media.get("siteUrl") or "",
+            "synonyms": media.get("synonyms") or [],
+            "trailer": media.get("trailer"),
+            "relations": relations,
+            "characters": characters,
+            "staff": staff,
+            "studios": studios,
+            "links": links,
+            "tags": tags,
+        }
+
+        return web.json_response({"ok": True, "result": result})
+
+    except asyncio.TimeoutError:
+        return web.json_response({"ok": False, "error": "AniList timeout"}, status=504)
+    except Exception as e:
+        return web.json_response({"ok": False, "error": f"Server xatosi: {str(e)}"}, status=500)
+
+
 async def api_auth_anilist(request: web.Request) -> web.Response:
     """
     GET /api/auth/anilist  (Authorization: Bearer <session_token>)
@@ -2635,6 +2845,7 @@ def create_app():
     # AniList search
     app.router.add_get( "/api/anilist/search",       api_anilist_search)
     app.router.add_get( "/api/search",               api_anilist_search)
+    app.router.add_get( "/api/anilist/detail",       api_anilist_detail)
     # Game
     app.router.add_post("/api/game/start",          api_game_start)
     app.router.add_get( "/api/game/{game_id}",       api_game_state)
