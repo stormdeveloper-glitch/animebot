@@ -14,11 +14,11 @@ AI_API_KEY = os.getenv("AI_API_KEY", OPENAI_API_KEY or "")
 AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
 AI_MODEL = os.getenv("AI_MODEL", "gpt-4o-mini")
 
-# --- OLLAMA UZGPT 4 ---
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434").rstrip("/")
-OLLAMA_MODEL_GENERAL = os.getenv("OLLAMA_MODEL_GENERAL", "qwen3.5")
-OLLAMA_MODEL_CREATIVE = os.getenv("OLLAMA_MODEL_CREATIVE", "gamma4")
-OLLAMA_MODEL_CODER = os.getenv("OLLAMA_MODEL_CODER", "qwen3:coder")
+# --- GROQ AI (UZGPT 4) ---
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL_GENERAL = os.getenv("GROQ_MODEL_GENERAL", "llama-3.3-70b-versatile")
+GROQ_MODEL_CREATIVE = os.getenv("GROQ_MODEL_CREATIVE", "llama-3.3-70b-versatile")
+GROQ_MODEL_CODER = os.getenv("GROQ_MODEL_CODER", "llama-3.3-70b-versatile")
 WEB_PUBLIC_ORIGIN = os.getenv("WEB_PUBLIC_ORIGIN", "").rstrip("/")
 WEB_SESSION_TTL_HOURS = int(os.getenv("WEB_SESSION_TTL_HOURS", "24"))
 WEB_RATE_LIMIT_PER_MIN = int(os.getenv("WEB_RATE_LIMIT_PER_MIN", "180"))

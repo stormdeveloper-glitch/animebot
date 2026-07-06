@@ -32,7 +32,7 @@ from config import (
     WEB_RATE_LIMIT_PER_MIN, WEB_API_RATE_LIMIT_PER_MIN,
     WEB_MEDIA_RATE_LIMIT_PER_MIN, WEB_MAX_CONCURRENT_REQUESTS,
     WEB_REQUEST_TIMEOUT_SECONDS,
-    OLLAMA_URL, OLLAMA_MODEL_GENERAL, OLLAMA_MODEL_CREATIVE, OLLAMA_MODEL_CODER,
+    GROQ_API_KEY, GROQ_MODEL_GENERAL, GROQ_MODEL_CREATIVE, GROQ_MODEL_CODER,
 )
 from utils.ai_assistant import generate_anime_tavsif
 
@@ -1599,21 +1599,21 @@ async def _search_anilist_internal(search_title: str) -> list[dict]:
 import re
 
 
-def select_ollama_model(user_msg: str) -> str:
-    """Prompt mazmuniga qarab to'g'ri Ollama modelini tanlaydi (Mixture of Experts)."""
+def select_groq_model(user_msg: str) -> str:
+    """Prompt mazmuniga qarab to'g'ri Groq modelini tanlaydi (Mixture of Experts)."""
     msg_lower = user_msg.lower()
     
     # Ijodiy/she'riyatga oid kalit so'zlar
     creative_keywords = ["she'r", "sher", "hikoya", "tavsif yoz", "tasavvur qil", "creative", "poem", "story", "write a story", "ssenariy"]
     if any(kw in msg_lower for kw in creative_keywords):
-        return OLLAMA_MODEL_CREATIVE
+        return GROQ_MODEL_CREATIVE
         
     # Dasturlashga oid kalit so'zlar
     code_keywords = ["kod", "code", "python", "javascript", "html", "css", "program", "dastur", "function", "class", "write a", "bug", "err", "exception"]
     if any(kw in msg_lower for kw in code_keywords):
-        return OLLAMA_MODEL_CODER
+        return GROQ_MODEL_CODER
         
-    return OLLAMA_MODEL_GENERAL
+    return GROQ_MODEL_GENERAL
 
 
 def parse_tool_call(content: str):
@@ -1672,36 +1672,42 @@ async def run_tool(name: str, argument: str) -> str:
     return f"Noma'lum asbob (tool): {name}"
 
 
-async def query_ollama(model: str, messages: list):
-    """Ollama API orqali so'rov yuborish."""
+async def query_groq(model: str, messages: list):
+    """Groq API orqali so'rov yuborish (OpenAI-compatible)."""
+    if not GROQ_API_KEY:
+        print("⚠️ GROQ_API_KEY sozlanmagan!")
+        return None
     payload = {
         "model": model,
         "messages": messages,
-        "stream": False,
-        "options": {
-            "temperature": 0.5
-        }
+        "temperature": 0.5,
+        "max_tokens": 1024
+    }
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
     }
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{OLLAMA_URL}/api/chat",
+                "https://api.groq.com/openai/v1/chat/completions",
                 json=payload,
-                timeout=aiohttp.ClientTimeout(total=45)
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=30)
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    return data.get("message", {}).get("content", "")
+                    return data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 else:
                     text = await resp.text()
-                    print(f"❌ Ollama response error (status {resp.status}): {text}")
+                    print(f"❌ Groq response error (status {resp.status}): {text}")
     except Exception as e:
-        print(f"⚠️ Ollama-ga ulanib bo'lmadi: {e}")
+        print(f"⚠️ Groq API-ga ulanib bo'lmadi: {e}")
     return None
 
 
 async def get_ai_reply(user_msg: str):
-    """AI mantiqi — UZGPT 4 (Expert model) Ollama orqali ishlaydi, OpenAI esa zaxira (fallback) sifatida qoladi."""
+    """AI mantiqi — UZGPT 4 (Expert model) Groq API orqali ishlaydi, OpenAI esa zaxira (fallback) sifatida qoladi."""
     
     # 1. System Prompt tayyorlash
     system_prompt = (
@@ -1719,8 +1725,8 @@ async def get_ai_reply(user_msg: str):
         "Siz ushbu chaqiruvni yozganingizdan so'ng, tizim asbob natijasini sizga taqdim etadi. Natijani olgandan keyingina foydalanuvchiga to'liq javob bering."
     )
 
-    # 2. Ollama Router va Tool Execution Loop (ReAct)
-    model = select_ollama_model(user_msg)
+    # 2. Groq API va Tool Execution Loop (ReAct)
+    model = select_groq_model(user_msg)
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_msg}
@@ -1728,16 +1734,16 @@ async def get_ai_reply(user_msg: str):
     
     loop_count = 0
     max_loops = 3
-    ollama_success = False
+    groq_success = False
     final_reply = ""
     
     while loop_count < max_loops:
         loop_count += 1
-        reply = await query_ollama(model, messages)
+        reply = await query_groq(model, messages)
         if reply is None:
-            break  # Ollama xatosi -> Fallback-ga o'tish
+            break  # Groq xatosi -> Fallback-ga o'tish
             
-        ollama_success = True
+        groq_success = True
         messages.append({"role": "assistant", "content": reply})
         
         tool_name, tool_arg = parse_tool_call(reply)
@@ -1749,13 +1755,13 @@ async def get_ai_reply(user_msg: str):
             final_reply = reply
             break
             
-    if ollama_success and final_reply:
+    if groq_success and final_reply:
         return final_reply
 
     # 3. Zaxira (OpenAI Fallback)
-    print("⚠️ Ollama orqali javob olib bo'lmadi. Zaxira OpenAI API-ga o'tilmoqda...")
+    print("⚠️ Groq orqali javob olib bo'lmadi. Zaxira OpenAI API-ga o'tilmoqda...")
     if not AI_API_KEY:
-        return "AI xizmati vaqtincha ishlamayapti (Ollama ham, OpenAI ham sozlanmagan)."
+        return "AI xizmati vaqtincha ishlamayapti (Groq ham, OpenAI ham sozlanmagan)."
 
     try:
         async with aiosqlite.connect(DB_PATH) as db:
