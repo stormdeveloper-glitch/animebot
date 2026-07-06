@@ -1,3 +1,10 @@
+import sys
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
+
 import re
 from collections import deque
 from datetime import datetime
@@ -25,6 +32,7 @@ from config import (
     WEB_RATE_LIMIT_PER_MIN, WEB_API_RATE_LIMIT_PER_MIN,
     WEB_MEDIA_RATE_LIMIT_PER_MIN, WEB_MAX_CONCURRENT_REQUESTS,
     WEB_REQUEST_TIMEOUT_SECONDS,
+    OLLAMA_URL, OLLAMA_MODEL_GENERAL, OLLAMA_MODEL_CREATIVE, OLLAMA_MODEL_CODER,
 )
 from utils.ai_assistant import generate_anime_tavsif
 
@@ -1588,24 +1596,177 @@ async def _search_anilist_internal(search_title: str) -> list[dict]:
         return []
 
 
+import re
+
+
+def select_ollama_model(user_msg: str) -> str:
+    """Prompt mazmuniga qarab to'g'ri Ollama modelini tanlaydi (Mixture of Experts)."""
+    msg_lower = user_msg.lower()
+    
+    # Ijodiy/she'riyatga oid kalit so'zlar
+    creative_keywords = ["she'r", "sher", "hikoya", "tavsif yoz", "tasavvur qil", "creative", "poem", "story", "write a story", "ssenariy"]
+    if any(kw in msg_lower for kw in creative_keywords):
+        return OLLAMA_MODEL_CREATIVE
+        
+    # Dasturlashga oid kalit so'zlar
+    code_keywords = ["kod", "code", "python", "javascript", "html", "css", "program", "dastur", "function", "class", "write a", "bug", "err", "exception"]
+    if any(kw in msg_lower for kw in code_keywords):
+        return OLLAMA_MODEL_CODER
+        
+    return OLLAMA_MODEL_GENERAL
+
+
+def parse_tool_call(content: str):
+    """Model javobidan tool chaqiruvlarini ajratib oladi.
+    Format: CALL: tool_name(argument)
+    """
+    match = re.search(r"CALL:\s*([a-zA-Z0-9_]+)\(([^)]*)\)", content)
+    if match:
+        return match.group(1), match.group(2).strip()
+    return None, None
+
+
+async def run_tool(name: str, argument: str) -> str:
+    """Belgilangan asbobni (tool) ishga tushiradi."""
+    print(f"🔧 Running tool {name} with argument: '{argument}'")
+    if name == "search_local_anime":
+        try:
+            async with aiosqlite.connect(DB_PATH) as db:
+                async with db.execute("SELECT id, nom, rams FROM animelar WHERE nom LIKE ? LIMIT 5", (f'%{argument}%',)) as c:
+                    rows = await c.fetchall()
+                    if not rows:
+                        return "Mahalliy ma'lumotlar bazasida mos keladigan anime topilmadi."
+                    results = []
+                    for r in rows:
+                        results.append(f"- ID: {r[0]}, Nom: {r[1]}, RasmURL: /poster/{r[0]}")
+                    return "Mahalliy bazadan topilgan animelar:\n" + "\n".join(results)
+        except Exception as e:
+            return f"Mahalliy qidiruvda xatolik yuz berdi: {e}"
+
+    elif name == "search_global_anilist":
+        try:
+            results = await _search_anilist_internal(argument)
+            if not results:
+                return "AniList global bazasida mos keladigan anime topilmadi."
+            lines = []
+            for r in results[:5]:
+                desc_snippet = r['description'][:150] + "..." if len(r['description']) > 150 else r['description']
+                lines.append(
+                    f"- {r['title']} (ID: {r['id']}, Yil: {r['year']}, Janrlar: {', '.join(r['genres'])}, Qismlar: {r['episodes']}, Reyting: {r['score']}%). Havola: {r['site_url']}\nTavsif: {desc_snippet}"
+                )
+            return "AniList global qidiruv natijalari:\n" + "\n".join(lines)
+        except Exception as e:
+            return f"AniList global qidiruvda xatolik yuz berdi: {e}"
+
+    elif name == "get_bot_stats":
+        try:
+            async with aiosqlite.connect(DB_PATH) as db:
+                async with db.execute("SELECT COUNT(*) FROM users") as c:
+                    users = (await c.fetchone())[0]
+            from config import ADMIN_IDS, SUPER_ADMIN_ID
+            admins_count = len(ADMIN_IDS) + 1
+            return f"Bot statistikasi:\n- Jami foydalanuvchilar: {users} ta\n- Adminlar soni: {admins_count} ta"
+        except Exception as e:
+            return f"Statistikani olishda xatolik: {e}"
+
+    return f"Noma'lum asbob (tool): {name}"
+
+
+async def query_ollama(model: str, messages: list):
+    """Ollama API orqali so'rov yuborish."""
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "temperature": 0.5
+        }
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{OLLAMA_URL}/api/chat",
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=45)
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return data.get("message", {}).get("content", "")
+                else:
+                    text = await resp.text()
+                    print(f"❌ Ollama response error (status {resp.status}): {text}")
+    except Exception as e:
+        print(f"⚠️ Ollama-ga ulanib bo'lmadi: {e}")
+    return None
+
+
 async def get_ai_reply(user_msg: str):
-    """AI mantiqi — ham web, ham bot uchun umumiy."""
+    """AI mantiqi — UZGPT 4 (Expert model) Ollama orqali ishlaydi, OpenAI esa zaxira (fallback) sifatida qoladi."""
+    
+    # 1. System Prompt tayyorlash
+    system_prompt = (
+        "Siz 'ANIME UZ' yordamchisi - 'UZGPT 4' modelisiz.\n"
+        "Javoblaringizni faqat o'zbek tilida, qisqa va aniq bering.\n"
+        "Sizda quyidagi asboblar (tools) bor:\n"
+        "1. `search_local_anime(query)`: Mahalliy bazadan anime qidirish. Agar foydalanuvchi anime so'rasa, birinchi navbatda shu asbobdan foydalaning.\n"
+        "   Mahalliy anime uchun javobingizda FAQAT [ANIME_CARD:ID|Nom|RasmURL] formatini ishlating.\n"
+        "2. `search_global_anilist(query)`: AniList global bazasidan anime qidirish. Mahalliy bazada yo'q yoki qo'shimcha ma'lumot kerak bo'lsa foydalaning.\n"
+        "   Bunda [ANIME_CARD] formatini ISHLATMANG, shunchaki tavsif va havola bering.\n"
+        "3. `get_bot_stats()`: Bot a'zolari va adminlari soni haqida ma'lumot olish.\n\n"
+        "Asbobni ishga tushirish uchun javobingiz ichida aniq quyidagi formatda chaqiruv qiling:\n"
+        "CALL: tool_name(argument)\n"
+        "Masalan: CALL: search_local_anime(Naruto)\n"
+        "Siz ushbu chaqiruvni yozganingizdan so'ng, tizim asbob natijasini sizga taqdim etadi. Natijani olgandan keyingina foydalanuvchiga to'liq javob bering."
+    )
+
+    # 2. Ollama Router va Tool Execution Loop (ReAct)
+    model = select_ollama_model(user_msg)
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_msg}
+    ]
+    
+    loop_count = 0
+    max_loops = 3
+    ollama_success = False
+    final_reply = ""
+    
+    while loop_count < max_loops:
+        loop_count += 1
+        reply = await query_ollama(model, messages)
+        if reply is None:
+            break  # Ollama xatosi -> Fallback-ga o'tish
+            
+        ollama_success = True
+        messages.append({"role": "assistant", "content": reply})
+        
+        tool_name, tool_arg = parse_tool_call(reply)
+        if tool_name:
+            tool_result = await run_tool(tool_name, tool_arg)
+            messages.append({"role": "user", "content": f"SYSTEM/TOOL RESULT ({tool_name}): {tool_result}"})
+            continue
+        else:
+            final_reply = reply
+            break
+            
+    if ollama_success and final_reply:
+        return final_reply
+
+    # 3. Zaxira (OpenAI Fallback)
+    print("⚠️ Ollama orqali javob olib bo'lmadi. Zaxira OpenAI API-ga o'tilmoqda...")
     if not AI_API_KEY:
-        return "Hozircha AI kaliti o'rnatilmagan."
+        return "AI xizmati vaqtincha ishlamayapti (Ollama ham, OpenAI ham sozlanmagan)."
 
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             async with db.execute("SELECT COUNT(*) FROM users") as c:
                 users = (await c.fetchone())[0]
-            
             from config import ADMIN_IDS, SUPER_ADMIN_ID
             admins_info = f"Asosiy admin: {SUPER_ADMIN_ID}. Jami {len(ADMIN_IDS)+1} ta."
-
             async with db.execute("SELECT key, value FROM bot_settings") as c:
                 settings = {r[0]: r[1] for r in await c.fetchall()}
             async with db.execute("SELECT key, value FROM bot_texts") as c:
                 texts = {r[0]: r[1] for r in await c.fetchall()}
-            
             bot_info = f"VIP narxi: {settings.get('vip_price')} {settings.get('vip_currency')}. Qo'llanma: {texts.get('guide', '')[:100]}..."
 
             keywords = [w for w in user_msg.split() if len(w) >= 3]
@@ -1617,17 +1778,12 @@ async def get_ai_reply(user_msg: str):
                         for r in rows:
                             if r not in matched_animes: matched_animes.append(r)
 
-            # Global AniList search for AI using query extraction
             anilist_matches = []
             search_q = _extract_anime_search_query(user_msg)
             if search_q:
                 anilist_matches = await _search_anilist_internal(search_q)
 
-            async with db.execute("SELECT nom FROM animelar ORDER BY qidiruv DESC LIMIT 5") as c:
-                top_animes = [r[0] for r in await c.fetchall()]
-
         matched_str = ", ".join([f"{r[1]} (ID:{r[0]}, Img:/poster/{r[0]})" for r in matched_animes[:8]])
-        
         anilist_str = ""
         if anilist_matches:
             lines = []
@@ -1637,8 +1793,8 @@ async def get_ai_reply(user_msg: str):
                     f"- {m['title']} (ID: {m['id']}, Yil: {m['year']}, Janrlar: {', '.join(m['genres'])}, Qismlar: {m['episodes']}, Reyting: {m['score']}%). Tavsif: {desc_snippet}. Havola: {m['site_url']}"
                 )
             anilist_str = "\nAniList global qidiruv natijalari:\n" + "\n".join(lines)
-            
-        system_prompt = (
+
+        openai_prompt = (
             f"Siz 'ANIME UZ' yordamchisisiz. Stats: {users}. "
             f"Bot: {bot_info}. Adminlar: {admins_info}. "
             f"Topilganlar: {matched_str or 'yoq'}. "
@@ -1652,7 +1808,7 @@ async def get_ai_reply(user_msg: str):
         payload = {
             "model": AI_MODEL or "gpt-4o-mini",
             "messages": [
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": openai_prompt},
                 {"role": "user", "content": user_msg}
             ],
             "max_tokens": 150, 
@@ -1670,7 +1826,7 @@ async def get_ai_reply(user_msg: str):
 
         if "choices" in res_data:
             return res_data["choices"][0]["message"]["content"]
-        return "AI xatosi (API)."
+        return "AI xatosi (OpenAI API)."
     except Exception:
         return "AI vaqtincha ishlamayapti."
 
@@ -2298,6 +2454,13 @@ async def serve_qollanma(request):
         return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
 
 
+async def ai(request):
+    """Ai/Ai.html ni qaytaradi."""
+    path = os.path.join(WEBAPP_DIR, "Ai", "Ai.html")
+    with open(path, "r", encoding="utf-8") as f:
+        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
+
+
 async def api_auth_google(request):
     """
     POST /api/auth/google  { code: "..." }
@@ -2796,6 +2959,8 @@ def create_app():
         middlewares=[security_headers_middleware, traffic_guard_middleware],
     )
     app.router.add_get("/", index)
+    app.router.add_get("/ai", ai)
+    app.router.add_static("/Ai", os.path.join(WEBAPP_DIR, "Ai"))
     app.router.add_get("/admin", serve_admin)
     app.router.add_get("/api/animes", api_animes)
     app.router.add_get("/api/animes/{anime_id}", api_anime_detail)
