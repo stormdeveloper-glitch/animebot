@@ -160,6 +160,26 @@ async def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS anime_edits (
+                    id SERIAL PRIMARY KEY,
+                    source_url TEXT NOT NULL UNIQUE,
+                    video_url TEXT NOT NULL,
+                    thumbnail_url TEXT DEFAULT '',
+                    title VARCHAR(512) DEFAULT '',
+                    description TEXT DEFAULT '',
+                    author VARCHAR(255) DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS anime_edit_tags (
+                    edit_id INTEGER NOT NULL REFERENCES anime_edits(id) ON DELETE CASCADE,
+                    tag VARCHAR(120) NOT NULL,
+                    PRIMARY KEY (edit_id, tag)
+                );
+            """)
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_anime_edit_tags_tag ON anime_edit_tags(tag)")
 
             # Default texts
             await conn.execute("INSERT INTO bot_texts (key, value) VALUES ('guide', '📚 Foydalanish qo''llanmasi...') ON CONFLICT DO NOTHING")
@@ -408,6 +428,27 @@ async def init_db():
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS anime_edits (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source_url TEXT NOT NULL UNIQUE,
+                    video_url TEXT NOT NULL,
+                    thumbnail_url TEXT DEFAULT '',
+                    title TEXT DEFAULT '',
+                    description TEXT DEFAULT '',
+                    author TEXT DEFAULT '',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS anime_edit_tags (
+                    edit_id INTEGER NOT NULL,
+                    tag TEXT NOT NULL,
+                    PRIMARY KEY (edit_id, tag),
+                    FOREIGN KEY (edit_id) REFERENCES anime_edits(id) ON DELETE CASCADE
+                );
+            """)
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_anime_edit_tags_tag ON anime_edit_tags(tag)")
             # Default sozlamalar
             await db.execute("INSERT OR IGNORE INTO bot_settings (key, value) VALUES ('vip_price', '5000')")
             await db.execute("INSERT OR IGNORE INTO bot_settings (key, value) VALUES ('vip_currency', 'so''m')")

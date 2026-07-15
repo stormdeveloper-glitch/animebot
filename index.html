@@ -4730,6 +4730,9 @@
       <button class="snav" onclick="showPage('gallery',this)">
         <span class="snav-ico">🖼️</span><span class="snav-txt">Gallery</span>
       </button>
+      <button class="snav" onclick="showPage('edits',this)">
+        <span class="snav-ico">🎞️</span><span class="snav-txt">Anime edits</span>
+      </button>
       <button class="snav" onclick="showPage('admins',this)">
         <span class="snav-ico">👑</span><span class="snav-txt">Adminlar</span>
       </button>
@@ -5039,6 +5042,15 @@
       </div>
 
       <!-- 🖼️ GALLERY -->
+      <div class="page" id="page-edits">
+        <style>
+          .edits-search{display:flex;gap:8px;align-items:center;margin:0 0 16px}.edits-search input{flex:1;min-width:0;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font:inherit}.edits-search button{padding:12px 16px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}.edits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}.edit-card{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--card-bg);box-shadow:0 8px 20px var(--shadow)}.edit-card video{display:block;width:100%;aspect-ratio:9/14;object-fit:cover;background:#111}.edit-card-body{padding:12px}.edit-card-title{font-weight:700;margin-bottom:8px}.edit-tags{display:flex;gap:6px;flex-wrap:wrap}.edit-tag{border:0;background:rgba(108,99,255,.13);color:var(--accent);border-radius:99px;padding:4px 8px;cursor:pointer;font-size:.75rem}.edits-empty{padding:40px 16px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:16px}
+        </style>
+        <div class="page-header"><div class="page-title-block"><div class="page-title">🎞️ Anime edits</div><div class="page-subtitle">Eng yaxshi anime editlar va hashtaglar</div></div></div>
+        <div class="edits-search"><input id="editsSearch" placeholder="#naruto yoki edit nomini qidiring" onkeydown="if(event.key==='Enter')loadAnimeEdits()"><button onclick="loadAnimeEdits()">Qidirish</button></div>
+        <div id="editsGrid" class="edits-grid"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+      </div>
+
       <div class="page" id="page-gallery">
         <div class="page-header" style="padding:14px 14px 0">
           <div class="page-title-block">
@@ -5424,6 +5436,26 @@
       if (name === 'global') _checkAnilistStatus();
       if (name === 'gallery') renderGallery();
       if (name === 'profile') renderProfile();
+      if (name === 'edits') loadAnimeEdits();
+    }
+
+    PT.edits = 'Anime edits';
+    PS.edits = 'Instagramdan tanlangan anime editlar';
+
+    function _editEsc(value) { const d = document.createElement('div'); d.textContent = value || ''; return d.innerHTML; }
+    async function loadAnimeEdits(tag) {
+      const input = document.getElementById('editsSearch');
+      const raw = tag || (input ? input.value : '');
+      if (input && tag) input.value = '#' + tag;
+      const q = String(raw || '').trim();
+      const param = q.startsWith('#') ? 'tag=' + encodeURIComponent(q.slice(1)) : 'q=' + encodeURIComponent(q);
+      const grid = document.getElementById('editsGrid'); if (!grid) return;
+      grid.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+      try {
+        const res = await fetch('/api/anime-edits?' + param); const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Xatolik');
+        grid.innerHTML = (data.edits || []).map(e => `<article class="edit-card"><video controls preload="metadata" playsinline src="${_editEsc(e.video_url)}"></video><div class="edit-card-body"><div class="edit-card-title">${_editEsc(e.title || 'Anime edit')}</div><div class="edit-tags">${(e.tags || []).map(t => `<button class="edit-tag" onclick="loadAnimeEdits('${_editEsc(t)}')">#${_editEsc(t)}</button>`).join('')}</div></div></article>`).join('') || '<div class="edits-empty">Bu qidiruv bo‘yicha edit topilmadi.</div>';
+      } catch (err) { grid.innerHTML = '<div class="edits-empty">' + _editEsc(err.message) + '</div>'; }
     }
 
     // ── ANIMES ──

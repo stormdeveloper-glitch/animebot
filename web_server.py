@@ -16,6 +16,10 @@ import json
 import secrets
 import random
 import time
+import tempfile
+import shutil
+import uuid
+from pathlib import Path
 import aiosqlite
 import aiohttp
 from aiohttp import web
@@ -328,6 +332,23 @@ WEB_ADMIN_TOKEN = os.getenv("WEB_ADMIN_TOKEN", "").strip()
 _admin_web_sessions: dict[str, dict] = {}
 _admin_2fa_sessions: dict[str, dict] = {}
 ADMIN_2FA_TTL_SECONDS = 300
+
+# Railway Bucket S3-compatible sozlamalari. Qiymatlar Railway Variables ga qo'yiladi.
+# Loyihada avvaldan mavjud bo'lgan BUCKET/ENDPOINT/... nomlari ham qo'llanadi.
+# RAILWAY_BUCKET_* nomlari esa yangi, aniqroq variant sifatida ustun turadi.
+RAILWAY_BUCKET_ENDPOINT = os.getenv("RAILWAY_BUCKET_ENDPOINT", os.getenv("ENDPOINT", "")).strip()
+RAILWAY_BUCKET_REGION = os.getenv("RAILWAY_BUCKET_REGION", os.getenv("REGION", "auto")).strip() or "auto"
+RAILWAY_BUCKET_NAME = os.getenv("RAILWAY_BUCKET_NAME", os.getenv("BUCKET", "")).strip()
+RAILWAY_BUCKET_ACCESS_KEY_ID = os.getenv("RAILWAY_BUCKET_ACCESS_KEY_ID", os.getenv("ACCESS_KEY_ID", "")).strip()
+RAILWAY_BUCKET_SECRET_ACCESS_KEY = os.getenv("RAILWAY_BUCKET_SECRET_ACCESS_KEY", os.getenv("SECRET_ACCESS_KEY", "")).strip()
+RAILWAY_BUCKET_PUBLIC_URL = os.getenv("RAILWAY_BUCKET_PUBLIC_URL", os.getenv("BUCKET_PUBLIC_URL", "")).strip().rstrip("/")
+if not RAILWAY_BUCKET_PUBLIC_URL and RAILWAY_BUCKET_ENDPOINT and RAILWAY_BUCKET_NAME:
+    # S3 path-style public bucketlar uchun odatiy manzil.
+    RAILWAY_BUCKET_PUBLIC_URL = f"{RAILWAY_BUCKET_ENDPOINT.rstrip('/')}/{RAILWAY_BUCKET_NAME}"
+INSTAGRAM_ACCESS_TOKEN = os.getenv("INSTAGRAM_ACCESS_TOKEN", "").strip()
+INSTAGRAM_USER_ID = os.getenv("INSTAGRAM_USER_ID", "").strip()
+INSTAGRAM_API_VERSION = os.getenv("INSTAGRAM_API_VERSION", "v24.0").strip() or "v24.0"
+INSTAGRAM_API_BASE = f"https://graph.instagram.com/{INSTAGRAM_API_VERSION}"
 
 
 async def resolve_file_id(file_id: str) -> dict:
@@ -1488,6 +1509,245 @@ async def api_admin_users(request):
         for r in rows
     ]
     return web.json_response({"ok": True, "users": users})
+
+
+# ── Anime edits ─────────────────────────────────────────────────────────────
+def _normalise_edit_tag(value: str) -> str:
+    """#siz yoki siz ko'rinishidagi tegni yagona, qidiriladigan shaklga o'tkazadi."""
+    value = (value or "").strip().lower().lstrip("#")
+    value = re.sub(r"[^\w-]", "", value, flags=re.UNICODE)
+    return value[:120]
+
+
+def _extract_edit_tags(*texts: str) -> list[str]:
+    found = []
+    for text in texts:
+        for tag in re.findall(r"(?<!\w)#([\w-]+)", text or "", flags=re.UNICODE):
+            clean = _normalise_edit_tag(tag)
+            if clean and clean not in found:
+                found.append(clean)
+    return found[:30]
+
+
+def _validate_instagram_url(url: str) -> str:
+    url = (url or "").strip()
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme not in {"http", "https"} or not (host == "instagram.com" or host.endswith(".instagram.com")):
+        raise ValueError("Faqat Instagram post/reel havolasi qabul qilinadi")
+    if not parsed.path or parsed.path == "/":
+        raise ValueError("Instagram post yoki reel havolasini kiriting")
+    return url
+
+
+def _bucket_is_configured() -> bool:
+    return bool(RAILWAY_BUCKET_ENDPOINT and RAILWAY_BUCKET_NAME and RAILWAY_BUCKET_ACCESS_KEY_ID and RAILWAY_BUCKET_SECRET_ACCESS_KEY and RAILWAY_BUCKET_PUBLIC_URL)
+
+
+def _normalise_instagram_permalink(url: str) -> str:
+    parsed = urlparse(url)
+    return f"https://www.instagram.com{parsed.path.rstrip('/')}".lower()
+
+
+async def _instagram_graph_media(source_url: str, supplied_media_id: str = "") -> dict:
+    """Ulangan professional akkauntdan post/reel metadata va vaqtinchalik media_url ni oladi."""
+    if not (INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_USER_ID):
+        raise ValueError("Instagram API sozlanmagan")
+    fields = "id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,username,timestamp"
+    params = {"fields": fields, "access_token": INSTAGRAM_ACCESS_TOKEN}
+    timeout = aiohttp.ClientTimeout(total=30)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        if supplied_media_id:
+            async with session.get(f"{INSTAGRAM_API_BASE}/{supplied_media_id}", params=params) as response:
+                data = await response.json(content_type=None)
+                if response.status >= 400:
+                    raise ValueError(data.get("error", {}).get("message", "Instagram media ID topilmadi"))
+                return data
+
+        wanted = _normalise_instagram_permalink(source_url)
+        next_url = f"{INSTAGRAM_API_BASE}/{INSTAGRAM_USER_ID}/media"
+        for _ in range(5):  # Oxirgi 500 ta post/reel ichidan havolani qidiradi.
+            async with session.get(next_url, params=params if next_url.endswith("/media") else None) as response:
+                data = await response.json(content_type=None)
+                if response.status >= 400:
+                    raise ValueError(data.get("error", {}).get("message", "Instagram media ro'yxatini olishda xatolik"))
+            for media in data.get("data", []):
+                if _normalise_instagram_permalink(media.get("permalink", "")) == wanted:
+                    return media
+            next_url = (data.get("paging") or {}).get("next")
+            if not next_url:
+                break
+    raise ValueError("Bu havola ulangan Instagram Business/Creator akkauntida topilmadi")
+
+
+async def _download_instagram_api_video(media: dict) -> tuple[dict, Path, Path]:
+    """Graph API qaytargan vaqtinchalik media_url ni Railway processiga yuklaydi."""
+    media_url = media.get("media_url", "")
+    if not media_url or media.get("media_type") not in {"VIDEO", "REELS"}:
+        raise ValueError("Tanlangan Instagram media video yoki reel emas")
+    temp_dir = Path(tempfile.mkdtemp(prefix="animeuz-ig-api-"))
+    file_path = temp_dir / "source.mp4"
+    try:
+        size = 0
+        timeout = aiohttp.ClientTimeout(total=300)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(media_url) as response:
+                if response.status >= 400:
+                    raise ValueError("Instagram video faylini olish imkonsiz")
+                with open(file_path, "wb") as output:
+                    async for chunk in response.content.iter_chunked(256 * 1024):
+                        size += len(chunk)
+                        if size > 250 * 1024 * 1024:
+                            raise ValueError("Video 250 MB limitdan katta")
+                        output.write(chunk)
+        if not size:
+            raise ValueError("Instagram video fayli bo'sh")
+        return media, file_path, temp_dir
+    except Exception:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise
+
+
+def _download_instagram_edit(source_url: str) -> tuple[dict, Path, Path]:
+    """yt-dlp bilan reels/postni va metadata sini vaqtinchalik papkaga yuklaydi."""
+    import yt_dlp
+    temp_dir = Path(tempfile.mkdtemp(prefix="animeuz-edit-"))
+    options = {
+        "outtmpl": str(temp_dir / "source.%(ext)s"),
+        "format": "best[ext=mp4]/best[ext=webm]",
+        "noplaylist": True,
+        "quiet": True,
+        "no_warnings": True,
+        "restrictfilenames": True,
+        "max_filesize": 250 * 1024 * 1024,
+    }
+    try:
+        with yt_dlp.YoutubeDL(options) as ydl:
+            info = ydl.extract_info(source_url, download=True)
+            if info.get("entries"):
+                info = next((item for item in info["entries"] if item), info)
+        files = [p for p in temp_dir.iterdir() if p.is_file() and p.suffix.lower() in {".mp4", ".webm", ".mkv", ".mov"}]
+        if not files:
+            raise ValueError("Instagram videosi yuklab olinmadi yoki yopiq")
+        return info, max(files, key=lambda item: item.stat().st_size), temp_dir
+    except Exception:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise
+
+
+def _upload_edit_to_bucket(file_path: Path, key: str) -> str:
+    import boto3
+    from botocore.config import Config
+    client = boto3.client(
+        "s3", endpoint_url=RAILWAY_BUCKET_ENDPOINT, region_name=RAILWAY_BUCKET_REGION,
+        aws_access_key_id=RAILWAY_BUCKET_ACCESS_KEY_ID,
+        aws_secret_access_key=RAILWAY_BUCKET_SECRET_ACCESS_KEY,
+        config=Config(signature_version="s3v4"),
+    )
+    content_type = "video/mp4" if file_path.suffix.lower() == ".mp4" else "video/webm"
+    client.upload_file(str(file_path), RAILWAY_BUCKET_NAME, key, ExtraArgs={"ContentType": content_type})
+    return f"{RAILWAY_BUCKET_PUBLIC_URL}/{key}"
+
+
+async def api_anime_edits(request):
+    query = _normalise_edit_tag(request.rel_url.query.get("tag", ""))
+    search = (request.rel_url.query.get("q", "") or "").strip().lower()[:120]
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            where, params = [], []
+            if query:
+                where.append("EXISTS (SELECT 1 FROM anime_edit_tags t WHERE t.edit_id=e.id AND t.tag=?)")
+                params.append(query)
+            if search:
+                where.append("(LOWER(e.title) LIKE ? OR LOWER(e.description) LIKE ? OR EXISTS (SELECT 1 FROM anime_edit_tags t WHERE t.edit_id=e.id AND t.tag LIKE ?))")
+                params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
+            clause = " WHERE " + " AND ".join(where) if where else ""
+            sql = f"SELECT e.* FROM anime_edits e{clause} ORDER BY e.id DESC LIMIT 80"
+            rows = await (await db.execute(sql, params)).fetchall()
+            items = []
+            for row in rows:
+                tags = await (await db.execute("SELECT tag FROM anime_edit_tags WHERE edit_id=? ORDER BY tag", (row["id"],))).fetchall()
+                item = dict(row)
+                item["tags"] = [tag[0] for tag in tags]
+                items.append(item)
+        return web.json_response({"ok": True, "edits": items, "total": len(items)})
+    except Exception:
+        return web.json_response({"ok": False, "error": "Edits ro'yxatini olishda xatolik"}, status=500)
+
+
+async def api_admin_anime_edits(request):
+    if not _admin_authorized(request):
+        return _admin_denied()
+    return await api_anime_edits(request)
+
+
+async def api_admin_import_anime_edit(request):
+    if not _admin_authorized(request):
+        return _admin_denied()
+    if not _bucket_is_configured():
+        return web.json_response({"ok": False, "error": "Railway Bucket sozlanmagan. BUCKET, ENDPOINT, REGION, ACCESS_KEY_ID va SECRET_ACCESS_KEY variables ni tekshiring."}, status=503)
+    temp_dir = None
+    try:
+        body = await request.json()
+        source_url = _validate_instagram_url(body.get("instagram_url", ""))
+        async with aiosqlite.connect(DB_PATH) as db:
+            duplicate = await (await db.execute("SELECT id FROM anime_edits WHERE source_url=?", (source_url,))).fetchone()
+        if duplicate:
+            return web.json_response({"ok": False, "error": "Bu Instagram havolasi avval qo'shilgan"}, status=409)
+
+        media_id = _clean_text(body.get("instagram_media_id", ""))[:64]
+        if INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_USER_ID:
+            # Rasmiy API rejimi: faqat ulangan Business/Creator akkauntining media fayllari.
+            info = await _instagram_graph_media(source_url, media_id)
+            info, file_path, temp_dir = await _download_instagram_api_video(info)
+        else:
+            # API token hali ulanmagan loyihalar uchun oldingi zaxira import oqimi.
+            info, file_path, temp_dir = await asyncio.to_thread(_download_instagram_edit, source_url)
+        ext = file_path.suffix.lower() if file_path.suffix.lower() in {".mp4", ".webm"} else ".mp4"
+        key = f"anime-edits/{datetime.utcnow():%Y/%m}/{uuid.uuid4().hex}{ext}"
+        video_url = await asyncio.to_thread(_upload_edit_to_bucket, file_path, key)
+        title = _clean_text(body.get("title") or info.get("title") or (info.get("caption") or "").split("\n", 1)[0] or "Anime edit")[:512]
+        description = _clean_text(body.get("description") or info.get("description") or "")[:5000]
+        if not description:
+            description = _clean_text(info.get("caption") or "")[:5000]
+        author = _clean_text(info.get("uploader") or info.get("channel") or info.get("username") or "")[:255]
+        manual_tags = body.get("tags") or ""
+        tags = _extract_edit_tags(title, description, manual_tags)
+        for tag in re.split(r"[,\s]+", manual_tags):
+            tag = _normalise_edit_tag(tag)
+            if tag and tag not in tags and len(tags) < 30:
+                tags.append(tag)
+        async with aiosqlite.connect(DB_PATH) as db:
+            cur = await db.execute("INSERT INTO anime_edits (source_url, video_url, title, description, author) VALUES (?, ?, ?, ?, ?)", (source_url, video_url, title, description, author))
+            edit_id = cur.lastrowid
+            await db.executemany("INSERT OR IGNORE INTO anime_edit_tags (edit_id, tag) VALUES (?, ?)", [(edit_id, tag) for tag in tags])
+            await db.commit()
+        return web.json_response({"ok": True, "id": edit_id, "video_url": video_url, "tags": tags, "title": title})
+    except ValueError as exc:
+        return web.json_response({"ok": False, "error": str(exc)}, status=400)
+    except Exception as exc:
+        print(f"Anime edit import xatosi: {exc}")
+        return web.json_response({"ok": False, "error": "Video yuklab olinmadi. Havola ochiq ekanini tekshiring."}, status=502)
+    finally:
+        if temp_dir:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+async def api_admin_delete_anime_edit(request):
+    if not _admin_authorized(request):
+        return _admin_denied()
+    try:
+        edit_id = int(request.match_info["edit_id"])
+        async with aiosqlite.connect(DB_PATH) as db:
+            await db.execute("DELETE FROM anime_edit_tags WHERE edit_id=?", (edit_id,))
+            cur = await db.execute("DELETE FROM anime_edits WHERE id=?", (edit_id,))
+            await db.commit()
+        if not cur.rowcount:
+            return web.json_response({"ok": False, "error": "Edit topilmadi"}, status=404)
+        return web.json_response({"ok": True})
+    except ValueError:
+        return web.json_response({"ok": False, "error": "Noto'g'ri edit ID"}, status=400)
 
 
 def _extract_anime_search_query(user_msg: str) -> str:
@@ -2985,6 +3245,10 @@ def create_app():
     app.router.add_put("/api/admin/animes/{anime_id}", api_admin_update_anime)
     app.router.add_delete("/api/admin/animes/{anime_id}", api_admin_delete_anime)
     app.router.add_get("/api/admin/users", api_admin_users)
+    app.router.add_get("/api/anime-edits", api_anime_edits)
+    app.router.add_get("/api/admin/anime-edits", api_admin_anime_edits)
+    app.router.add_post("/api/admin/anime-edits/import", api_admin_import_anime_edit)
+    app.router.add_delete("/api/admin/anime-edits/{edit_id}", api_admin_delete_anime_edit)
     app.router.add_get("/events", sse_stream)
     app.router.add_get("/api/payments", api_payments)
     app.router.add_get("/api/media/{anime_id}", anime_media_info)

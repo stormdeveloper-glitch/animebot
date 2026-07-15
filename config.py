@@ -67,5 +67,10 @@ ENDPOINT = os.getenv("ENDPOINT", "")
 ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID", "")
 SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY", "")
 
+# Instagram Graph API — professional akkauntdagi reel/postlarni import qilish uchun
+INSTAGRAM_ACCESS_TOKEN = os.getenv("INSTAGRAM_ACCESS_TOKEN", "")
+INSTAGRAM_USER_ID = os.getenv("INSTAGRAM_USER_ID", "")
+INSTAGRAM_API_VERSION = os.getenv("INSTAGRAM_API_VERSION", "v24.0")
+
 # Papkani yaratish (agar yo'q bo'lsa)
 os.makedirs(DATA_DIR, exist_ok=True)

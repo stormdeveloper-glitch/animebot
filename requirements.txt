@@ -3,3 +3,5 @@ aiosqlite
 python-dotenv
 aiohttp>=3.9.0
 asyncpg
+boto3
+yt-dlp
