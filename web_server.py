@@ -142,8 +142,6 @@ def _cleanup_sessions() -> None:
             expired.append(token)
     for token in expired:
         _sessions.pop(token, None)
-        _anilist_tokens.pop(token, None)
-        _spotify_tokens.pop(token, None)
 
 
 def _bearer_token(request: web.Request) -> str:
@@ -323,6 +321,7 @@ class GameState:
             "winner":       self.winner,
             "user":         self.user,
         }
+
 WEB_PORT = int(os.getenv("PORT", os.getenv("WEB_PORT", 8080)))
 
 # Cache: file_id -> {"url": ..., "type": "photo"|"video"}
@@ -333,9 +332,7 @@ _admin_web_sessions: dict[str, dict] = {}
 _admin_2fa_sessions: dict[str, dict] = {}
 ADMIN_2FA_TTL_SECONDS = 300
 
-# Railway Bucket S3-compatible sozlamalari. Qiymatlar Railway Variables ga qo'yiladi.
-# Loyihada avvaldan mavjud bo'lgan BUCKET/ENDPOINT/... nomlari ham qo'llanadi.
-# RAILWAY_BUCKET_* nomlari esa yangi, aniqroq variant sifatida ustun turadi.
+# Railway Bucket S3-compatible sozlamalari.
 RAILWAY_BUCKET_ENDPOINT = os.getenv("RAILWAY_BUCKET_ENDPOINT", os.getenv("ENDPOINT", "")).strip()
 RAILWAY_BUCKET_REGION = os.getenv("RAILWAY_BUCKET_REGION", os.getenv("REGION", "auto")).strip() or "auto"
 RAILWAY_BUCKET_NAME = os.getenv("RAILWAY_BUCKET_NAME", os.getenv("BUCKET", "")).strip()
@@ -343,8 +340,8 @@ RAILWAY_BUCKET_ACCESS_KEY_ID = os.getenv("RAILWAY_BUCKET_ACCESS_KEY_ID", os.gete
 RAILWAY_BUCKET_SECRET_ACCESS_KEY = os.getenv("RAILWAY_BUCKET_SECRET_ACCESS_KEY", os.getenv("SECRET_ACCESS_KEY", "")).strip()
 RAILWAY_BUCKET_PUBLIC_URL = os.getenv("RAILWAY_BUCKET_PUBLIC_URL", os.getenv("BUCKET_PUBLIC_URL", "")).strip().rstrip("/")
 if not RAILWAY_BUCKET_PUBLIC_URL and RAILWAY_BUCKET_ENDPOINT and RAILWAY_BUCKET_NAME:
-    # S3 path-style public bucketlar uchun odatiy manzil.
     RAILWAY_BUCKET_PUBLIC_URL = f"{RAILWAY_BUCKET_ENDPOINT.rstrip('/')}/{RAILWAY_BUCKET_NAME}"
+
 INSTAGRAM_ACCESS_TOKEN = os.getenv("INSTAGRAM_ACCESS_TOKEN", "").strip()
 INSTAGRAM_USER_ID = os.getenv("INSTAGRAM_USER_ID", "").strip()
 INSTAGRAM_API_VERSION = os.getenv("INSTAGRAM_API_VERSION", "v24.0").strip() or "v24.0"
@@ -397,7 +394,6 @@ async def media_proxy(request):
         raise web.HTTPNotFound()
 
     try:
-        # Range headerini Telegram CDN ga uzatamiz (video seek uchun muhim)
         req_headers = {}
         range_header = request.headers.get("Range")
         if range_header:
@@ -408,8 +404,6 @@ async def media_proxy(request):
                 content_type = tg_resp.headers.get("Content-Type", "application/octet-stream")
                 content_length = tg_resp.headers.get("Content-Length")
                 content_range = tg_resp.headers.get("Content-Range")
-
-                # 206 Partial Content yoki 200 OK — Telegram javobiga qarab
                 status = tg_resp.status
 
                 headers = {
@@ -433,10 +427,6 @@ async def media_proxy(request):
 
 
 async def anime_media_info(request):
-    """
-    /api/media/{anime_id} — animening rams turini qaytaradi:
-    { "type": "photo"|"video", "url": "/media/{file_id}" }
-    """
     anime_id = request.match_info["anime_id"]
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT rams FROM animelar WHERE id=?", (anime_id,)) as c:
@@ -446,15 +436,12 @@ async def anime_media_info(request):
         return web.json_response({"type": "none", "url": None})
 
     rams = row[0]
-
-    # URL bo'lsa — turini extension dan aniqlaymiz
     if rams.startswith("http"):
         low = rams.lower()
         if any(low.endswith(e) for e in [".mp4", ".mov", ".avi", ".mkv", ".webm"]):
             return web.json_response({"type": "video", "url": rams})
         return web.json_response({"type": "photo", "url": rams})
 
-    # file_id — Telegram dan aniqlaymiz
     info = await resolve_file_id(rams)
     return web.json_response({
         "type": info["type"],
@@ -585,7 +572,6 @@ async def api_episode_preview(request):
 
 
 async def api_episodes(request):
-    """Anime barcha qismlari ro'yxatini qaytaradi."""
     anime_id = request.match_info["anime_id"]
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute(
@@ -641,7 +627,6 @@ async def _poster_page(request: web.Request, anime_id: str) -> web.Response:
 
 
 async def anime_poster(request):
-    """Browser uchun poster sahifasi, image request uchun poster rasmi."""
     anime_id = request.match_info["anime_id"]
     if _is_html_request(request):
         return await _poster_page(request, anime_id)
@@ -663,12 +648,10 @@ async def anime_poster(request):
 
 
 async def api_bot_info(request):
-    """Bot nomi, username va Telegram profil rasmini qaytaradi."""
     return web.json_response(await get_bot_info())
 
 
 async def get_bot_info() -> dict:
-    """Bot nomi, username va Telegram profil rasmini cache bilan oladi."""
     now = time.time()
     cached = _bot_info_cache.get("data")
     if cached and now - float(_bot_info_cache.get("ts") or 0) < 1800:
@@ -721,7 +704,6 @@ async def get_bot_info() -> dict:
 
 
 async def bot_icon(request):
-    """Sayt favicon/preview rasmi uchun bot profil rasmini qaytaradi."""
     info = await get_bot_info()
     if info.get("photo_file_id"):
         raise web.HTTPFound(f"/media/{info['photo_file_id']}")
@@ -739,19 +721,19 @@ async def bot_icon(request):
 async def index(request, meta: dict | None = None):
     html_path = os.path.join(WEBAPP_DIR, "index.html")
     with open(html_path, "r", encoding="utf-8") as f:
-        html = f.read()
-    # Dinamik qiymatlarni inject qilamiz
-    html = html.replace("{{BOT_USERNAME}}", BOT_USERNAME or "")
-    html = html.replace("{{GOOGLE_CLIENT_ID}}", GOOGLE_CLIENT_ID or "")
+        html_content = f.read()
+
+    html_content = html_content.replace("{{BOT_USERNAME}}", BOT_USERNAME or "")
+    html_content = html_content.replace("{{GOOGLE_CLIENT_ID}}", GOOGLE_CLIENT_ID or "")
+
     if meta:
         import html as html_module
-
         title = html_module.escape(meta.get("title") or "AnimeUZ Official", quote=True)
         description = html_module.escape(meta.get("description") or "Anime poster va ma'lumotlari", quote=True)
         image = html_module.escape(meta.get("image") or "/bot-icon", quote=True)
         url = html_module.escape(meta.get("url") or request.url.human_repr(), quote=True)
-        html = html.replace("<title>AnimeUZ Official</title>", f"<title>{title}</title>")
-        html = html.replace(
+        html_content = html_content.replace("<title>AnimeUZ Official</title>", f"<title>{title}</title>")
+        html_content = html_content.replace(
             '<meta property="og:image" content="/bot-icon">',
             (
                 '<meta property="og:type" content="website">\n'
@@ -761,7 +743,7 @@ async def index(request, meta: dict | None = None):
                 f'<meta property="og:image" content="{image}">'
             ),
         )
-        html = html.replace(
+        html_content = html_content.replace(
             '<meta name="twitter:image" content="/bot-icon">',
             (
                 '<meta name="twitter:card" content="summary_large_image">\n'
@@ -770,23 +752,19 @@ async def index(request, meta: dict | None = None):
                 f'<meta name="twitter:image" content="{image}">'
             ),
         )
-    return web.Response(text=html, content_type="text/html", charset="utf-8")
+    return web.Response(text=html_content, content_type="text/html", charset="utf-8")
 
 
 async def api_admins(request):
-    """Adminlar ro'yxatini Telegram API dan oladi — config + DB admins jadvali."""
     from config import ADMIN_IDS, SUPER_ADMIN_ID
 
-    # Config dan
     config_ids = set([SUPER_ADMIN_ID] + ADMIN_IDS)
 
-    # DB dagi qo'shilgan adminlar
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT user_id FROM admins") as c:
             rows = await c.fetchall()
     db_ids = {r[0] for r in rows}
 
-    # Hammasini birlashtirish
     all_ids = list(config_ids | db_ids)
     all_ids = [uid for uid in all_ids if uid]
 
@@ -830,15 +808,8 @@ async def api_admins(request):
     return web.json_response({"admins": admins})
 
 
-import asyncio
-import json
-from collections import deque
-from datetime import datetime
-
 # ─── SSE Event Bus ────────────────────────────────────────────────────────────
-# Oxirgi 50 ta hodisani saqlaymiz
 _event_history = deque(maxlen=50)
-# Barcha ulanib turgan SSE clientlar
 _sse_clients: list = []
 
 
@@ -847,10 +818,6 @@ def _ts():
 
 
 async def push_event(event_type: str, text: str, color: str = "c"):
-    """
-    Barcha SSE clientlarga hodisa yuboradi.
-    color: c=cyan, p=pink, g=gold, gr=green
-    """
     data = {"type": event_type, "text": text, "color": color, "time": _ts()}
     _event_history.append(data)
     dead = []
@@ -867,7 +834,6 @@ async def push_event(event_type: str, text: str, color: str = "c"):
 
 
 async def sse_stream(request):
-    """SSE endpoint — browser shu yerga ulanadi."""
     resp = web.StreamResponse(headers={
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -879,7 +845,6 @@ async def sse_stream(request):
     q: asyncio.Queue = asyncio.Queue()
     _sse_clients.append(q)
 
-    # Oxirgi 10 ta tarixiy hodisani darhol yuboramiz
     for ev in list(_event_history)[-10:]:
         msg = f"data: {json.dumps(ev)}\n\n"
         try:
@@ -894,7 +859,6 @@ async def sse_stream(request):
                 msg = f"data: {json.dumps(ev)}\n\n"
                 await resp.write(msg.encode())
             except asyncio.TimeoutError:
-                # Keep-alive ping
                 await resp.write(b": ping\n\n")
     except (ConnectionResetError, Exception):
         pass
@@ -907,7 +871,6 @@ async def sse_stream(request):
 
 
 async def api_stats(request):
-    """Dashboard uchun umumiy statistika."""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT COUNT(*) FROM users") as c:
             users = (await c.fetchone())[0]
@@ -1513,7 +1476,6 @@ async def api_admin_users(request):
 
 # ── Anime edits ─────────────────────────────────────────────────────────────
 def _normalise_edit_tag(value: str) -> str:
-    """#siz yoki siz ko'rinishidagi tegni yagona, qidiriladigan shaklga o'tkazadi."""
     value = (value or "").strip().lower().lstrip("#")
     value = re.sub(r"[^\w-]", "", value, flags=re.UNICODE)
     return value[:120]
@@ -1550,7 +1512,6 @@ def _normalise_instagram_permalink(url: str) -> str:
 
 
 async def _instagram_graph_media(source_url: str, supplied_media_id: str = "") -> dict:
-    """Ulangan professional akkauntdan post/reel metadata va vaqtinchalik media_url ni oladi."""
     if not (INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_USER_ID):
         raise ValueError("Instagram API sozlanmagan")
     fields = "id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,username,timestamp"
@@ -1566,7 +1527,7 @@ async def _instagram_graph_media(source_url: str, supplied_media_id: str = "") -
 
         wanted = _normalise_instagram_permalink(source_url)
         next_url = f"{INSTAGRAM_API_BASE}/{INSTAGRAM_USER_ID}/media"
-        for _ in range(5):  # Oxirgi 500 ta post/reel ichidan havolani qidiradi.
+        for _ in range(5):
             async with session.get(next_url, params=params if next_url.endswith("/media") else None) as response:
                 data = await response.json(content_type=None)
                 if response.status >= 400:
@@ -1581,7 +1542,6 @@ async def _instagram_graph_media(source_url: str, supplied_media_id: str = "") -
 
 
 async def _download_instagram_api_video(media: dict) -> tuple[dict, Path, Path]:
-    """Graph API qaytargan vaqtinchalik media_url ni Railway processiga yuklaydi."""
     media_url = media.get("media_url", "")
     if not media_url or media.get("media_type") not in {"VIDEO", "REELS"}:
         raise ValueError("Tanlangan Instagram media video yoki reel emas")
@@ -1609,7 +1569,6 @@ async def _download_instagram_api_video(media: dict) -> tuple[dict, Path, Path]:
 
 
 def _download_instagram_edit(source_url: str) -> tuple[dict, Path, Path]:
-    """yt-dlp bilan reels/postni va metadata sini vaqtinchalik papkaga yuklaydi."""
     import yt_dlp
     temp_dir = Path(tempfile.mkdtemp(prefix="animeuz-edit-"))
     options = {
@@ -1698,11 +1657,9 @@ async def api_admin_import_anime_edit(request):
 
         media_id = _clean_text(body.get("instagram_media_id", ""))[:64]
         if INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_USER_ID:
-            # Rasmiy API rejimi: faqat ulangan Business/Creator akkauntining media fayllari.
             info = await _instagram_graph_media(source_url, media_id)
             info, file_path, temp_dir = await _download_instagram_api_video(info)
         else:
-            # API token hali ulanmagan loyihalar uchun oldingi zaxira import oqimi.
             info, file_path, temp_dir = await asyncio.to_thread(_download_instagram_edit, source_url)
         ext = file_path.suffix.lower() if file_path.suffix.lower() in {".mp4", ".webm"} else ".mp4"
         key = f"anime-edits/{datetime.utcnow():%Y/%m}/{uuid.uuid4().hex}{ext}"
@@ -1764,7 +1721,6 @@ def _extract_anime_search_query(user_msg: str) -> str:
         "nima", "haqida", "haqida.", "haqida!"
     }
     
-    # Suffix matching to filter verbs cleanly without side effects on proper nouns (like Kore, Yozakura, Top)
     verb_bases = {"ber", "ayt", "yoz", "qidir", "ko'rsat", "tavsiya"}
     all_bases = {"ber", "ayt", "yoz", "qidir", "ko'rsat", "tavsiya", "top"}
     valid_suffixes = (
@@ -1779,7 +1735,6 @@ def _extract_anime_search_query(user_msg: str) -> str:
         if w in stopwords:
             continue
             
-        # Check if the word is a helper/action verb
         is_verb = False
         if w in verb_bases:
             is_verb = True
@@ -1811,10 +1766,10 @@ async def _search_anilist_internal(search_title: str) -> list[dict]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                ANILIST_GRAPHQL,
+                ANILIST_GRAPHQL_URL,
                 json={
-                    "query": SEARCH_QUERY,
-                    "variables": {"search": search_title, "page": 1, "perPage": 3},
+                    "query": ANILIST_POSTER_SEARCH_QUERY,
+                    "variables": {"search": search_title},
                 },
                 headers={"Content-Type": "application/json", "Accept": "application/json"},
                 timeout=aiohttp.ClientTimeout(total=8),
@@ -1833,42 +1788,25 @@ async def _search_anilist_internal(search_title: str) -> list[dict]:
                 or m["title"].get("native")
                 or "Nomsiz"
             )
-            raw_desc = m.get("description") or ""
             results.append({
                 "id":           m["id"],
                 "title":        title,
-                "title_romaji": m["title"].get("romaji") or "",
-                "title_native": m["title"].get("native") or "",
                 "cover":        m["coverImage"].get("large") or m["coverImage"].get("medium") or "",
-                "banner":       m.get("bannerImage") or "",
-                "description":  _clean_description(raw_desc),
-                "status":       m.get("status") or "UNKNOWN",
-                "score":        m.get("averageScore"),
-                "episodes":     m.get("episodes"),
-                "season":       m.get("season") or "",
-                "year":         m.get("seasonYear"),
-                "genres":       m.get("genres") or [],
-                "format":       m.get("format") or "",
-                "site_url":     m.get("siteUrl") or "",
+                "year":         m.get("startDate", {}).get("year"),
             })
         return results
     except Exception:
         return []
 
 
-import re
-
-
 def select_groq_model(user_msg: str) -> str:
     """Prompt mazmuniga qarab to'g'ri Groq modelini tanlaydi (Mixture of Experts)."""
     msg_lower = user_msg.lower()
     
-    # Ijodiy/she'riyatga oid kalit so'zlar
     creative_keywords = ["she'r", "sher", "hikoya", "tavsif yoz", "tasavvur qil", "creative", "poem", "story", "write a story", "ssenariy"]
-    if any(kw in msg_lower for kw in creative_keywords):
+    if any(kw in msg_lower for kwin creative_keywords):
         return GROQ_MODEL_CREATIVE
         
-    # Dasturlashga oid kalit so'zlar
     code_keywords = ["kod", "code", "python", "javascript", "html", "css", "program", "dastur", "function", "class", "write a", "bug", "err", "exception"]
     if any(kw in msg_lower for kw in code_keywords):
         return GROQ_MODEL_CODER
@@ -1877,9 +1815,6 @@ def select_groq_model(user_msg: str) -> str:
 
 
 def parse_tool_call(content: str):
-    """Model javobidan tool chaqiruvlarini ajratib oladi.
-    Format: CALL: tool_name(argument)
-    """
     match = re.search(r"CALL:\s*([a-zA-Z0-9_]+)\(([^)]*)\)", content)
     if match:
         return match.group(1), match.group(2).strip()
@@ -1887,7 +1822,6 @@ def parse_tool_call(content: str):
 
 
 async def run_tool(name: str, argument: str) -> str:
-    """Belgilangan asbobni (tool) ishga tushiradi."""
     print(f"🔧 Running tool {name} with argument: '{argument}'")
     if name == "search_local_anime":
         try:
@@ -1910,10 +1844,7 @@ async def run_tool(name: str, argument: str) -> str:
                 return "AniList global bazasida mos keladigan anime topilmadi."
             lines = []
             for r in results[:5]:
-                desc_snippet = r['description'][:150] + "..." if len(r['description']) > 150 else r['description']
-                lines.append(
-                    f"- {r['title']} (ID: {r['id']}, Yil: {r['year']}, Janrlar: {', '.join(r['genres'])}, Qismlar: {r['episodes']}, Reyting: {r['score']}%). Havola: {r['site_url']}\nTavsif: {desc_snippet}"
-                )
+                lines.append(f"- {r['title']} (ID: {r['id']}, Yil: {r['year']})")
             return "AniList global qidiruv natijalari:\n" + "\n".join(lines)
         except Exception as e:
             return f"AniList global qidiruvda xatolik yuz berdi: {e}"
@@ -1923,7 +1854,6 @@ async def run_tool(name: str, argument: str) -> str:
             async with aiosqlite.connect(DB_PATH) as db:
                 async with db.execute("SELECT COUNT(*) FROM users") as c:
                     users = (await c.fetchone())[0]
-            from config import ADMIN_IDS, SUPER_ADMIN_ID
             admins_count = len(ADMIN_IDS) + 1
             return f"Bot statistikasi:\n- Jami foydalanuvchilar: {users} ta\n- Adminlar soni: {admins_count} ta"
         except Exception as e:
@@ -1933,7 +1863,6 @@ async def run_tool(name: str, argument: str) -> str:
 
 
 async def query_groq(model: str, messages: list):
-    """Groq API orqali so'rov yuborish (OpenAI-compatible)."""
     if not GROQ_API_KEY:
         print("⚠️ GROQ_API_KEY sozlanmagan!")
         return None
@@ -1967,9 +1896,6 @@ async def query_groq(model: str, messages: list):
 
 
 async def get_ai_reply(user_msg: str):
-    """AI mantiqi — UZGPT 4 (Expert model) Groq API orqali ishlaydi, OpenAI esa zaxira (fallback) sifatida qoladi."""
-    
-    # 1. System Prompt tayyorlash
     system_prompt = (
         "Siz 'ANIME UZ' yordamchisi - 'UZGPT 4' modelisiz.\n"
         "Javoblaringizni faqat o'zbek tilida, qisqa va aniq bering.\n"
@@ -1985,7 +1911,6 @@ async def get_ai_reply(user_msg: str):
         "Siz ushbu chaqiruvni yozganingizdan so'ng, tizim asbob natijasini sizga taqdim etadi. Natijani olgandan keyingina foydalanuvchiga to'liq javob bering."
     )
 
-    # 2. Groq API va Tool Execution Loop (ReAct)
     model = select_groq_model(user_msg)
     messages = [
         {"role": "system", "content": system_prompt},
@@ -2001,7 +1926,7 @@ async def get_ai_reply(user_msg: str):
         loop_count += 1
         reply = await query_groq(model, messages)
         if reply is None:
-            break  # Groq xatosi -> Fallback-ga o'tish
+            break
             
         groq_success = True
         messages.append({"role": "assistant", "content": reply})
@@ -2018,7 +1943,6 @@ async def get_ai_reply(user_msg: str):
     if groq_success and final_reply:
         return final_reply
 
-    # 3. Zaxira (OpenAI Fallback)
     print("⚠️ Groq orqali javob olib bo'lmadi. Zaxira OpenAI API-ga o'tilmoqda...")
     if not AI_API_KEY:
         return "AI xizmati vaqtincha ishlamayapti (Groq ham, OpenAI ham sozlanmagan)."
@@ -2027,7 +1951,6 @@ async def get_ai_reply(user_msg: str):
         async with aiosqlite.connect(DB_PATH) as db:
             async with db.execute("SELECT COUNT(*) FROM users") as c:
                 users = (await c.fetchone())[0]
-            from config import ADMIN_IDS, SUPER_ADMIN_ID
             admins_info = f"Asosiy admin: {SUPER_ADMIN_ID}. Jami {len(ADMIN_IDS)+1} ta."
             async with db.execute("SELECT key, value FROM bot_settings") as c:
                 settings = {r[0]: r[1] for r in await c.fetchall()}
@@ -2050,1249 +1973,50 @@ async def get_ai_reply(user_msg: str):
                 anilist_matches = await _search_anilist_internal(search_q)
 
         matched_str = ", ".join([f"{r[1]} (ID:{r[0]}, Img:/poster/{r[0]})" for r in matched_animes[:8]])
-        anilist_str = ""
-        if anilist_matches:
-            lines = []
-            for m in anilist_matches:
-                desc_snippet = m['description'][:150] + "..." if len(m['description']) > 150 else m['description']
-                lines.append(
-                    f"- {m['title']} (ID: {m['id']}, Yil: {m['year']}, Janrlar: {', '.join(m['genres'])}, Qismlar: {m['episodes']}, Reyting: {m['score']}%). Tavsif: {desc_snippet}. Havola: {m['site_url']}"
-                )
-            anilist_str = "\nAniList global qidiruv natijalari:\n" + "\n".join(lines)
+        anilist_str = ", ".join([f"{m['title']} ({m['year']})" for m in anilist_matches[:5]])
 
-        openai_prompt = (
-            f"Siz 'ANIME UZ' yordamchisisiz. Stats: {users}. "
-            f"Bot: {bot_info}. Adminlar: {admins_info}. "
-            f"Topilganlar: {matched_str or 'yoq'}. "
-            f"{anilist_str}\n"
-            f"QOIDALAR:\n"
-            f"1. Mahalliy anime uchun FAQAT [ANIME_CARD:ID|Nom|RasmURL] formatini ishlating (agar u topilganlar orasida bo'lsa).\n"
-            f"2. Agar anime faqat AniList qidiruvida topilgan bo'lsa, foydalanuvchiga u haqida ma'lumot bering (tavsifi, yili, janrlari) va u mahalliy bazada yo'qligini, lekin AniList-da borligini tushuntiring, hamda havolasini taqdim eting. Bunday anime uchun [ANIME_CARD] formatini ISHLATMANG.\n"
-            f"3. Faqat o'zbek tilida qisqa javob bering."
+        openai_system = (
+            f"Siz 'ANIME UZ' yordamchisisiz. Uzbek tilida javob bering.\n"
+            f"Bot statistikasi: Jami a'zolar: {users}.\n"
+            f"Adminlar: {admins_info}.\n"
+            f"Bot ma'lumotlari: {bot_info}\n"
+            f"Bazamizdagi mos kelgan animelar: {matched_str if matched_str else 'Yoq'}.\n"
+            f"AniList global topilganlar: {anilist_str if anilist_str else 'Yoq'}.\n"
         )
 
-        payload = {
-            "model": AI_MODEL or "gpt-4o-mini",
-            "messages": [
-                {"role": "system", "content": openai_prompt},
-                {"role": "user", "content": user_msg}
-            ],
-            "max_tokens": 150, 
-            "temperature": 0.4
+        headers = {
+            "Authorization": f"Bearer {AI_API_KEY}",
+            "Content-Type": "application/json",
         }
-
+        payload = {
+            "model": AI_MODEL or "gpt-3.5-turbo",
+            "messages": [
+                {"role": "system", "content": openai_system},
+                {"role": "user", "content": user_msg},
+            ],
+            "max_tokens": 500,
+        }
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{AI_BASE_URL}/chat/completions",
-                headers={"Authorization": f"Bearer {AI_API_KEY}"},
+                f"{AI_BASE_URL.rstrip('/')}/chat/completions",
                 json=payload,
-                timeout=20
-            ) as r:
-                res_data = await r.json()
-
-        if "choices" in res_data:
-            return res_data["choices"][0]["message"]["content"]
-        return "AI xatosi (OpenAI API)."
-    except Exception:
-        return "AI vaqtincha ishlamayapti."
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=20),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return data["choices"][0]["message"]["content"].strip()
+                else:
+                    return "Xatolik yuz berdi, iltimos keyinroq qayta urinib ko'ring."
+    except Exception as exc:
+        print(f"OpenAI fallback error: {exc}")
+        return "Tizimda vaqtincha texnik xatolik yuz berdi."
 
 
 async def api_ai_chat(request):
-    """Web UI uchun AI chat endpointi."""
-    try:
-        if not _check_rate_limit(request, "ai_chat", 10, 86400):
-            return web.json_response({"ok": False, "error": "Kunlik limit (10 ta) tugadi!"}, status=429)
-        body = await request.json()
-        user_msg = (body.get("message") or "").strip()
-        admin_password_mode = bool(body.get("admin_password_mode"))
-        if not user_msg:
-            return web.json_response({"ok": False, "error": "Xabar bo'sh"}, status=400)
-        if len(user_msg) > 800:
-            return web.json_response({"ok": False, "error": "Xabar juda uzun"}, status=400)
-
-        if admin_password_mode:
-            if not ADMIN_LOGIN or not ADMIN_PASSWORD:
-                return web.json_response({"ok": True, "reply": "Admin login/parol serverda sozlanmagan."})
-            if secrets.compare_digest(user_msg, ADMIN_PASSWORD):
-                return web.json_response({
-                    "ok": True,
-                    "reply": "Parol to'g'ri. Admin panelda Telegram ID bilan 2FA tasdiqlashdan o'ting.",
-                    "admin_ok": True,
-                    "admin_url": "/admin",
-                })
-            return web.json_response({"ok": True, "reply": "Parol noto'g'ri. Qayta urinib ko'ring.", "admin_password_required": True})
-
-        if ADMIN_LOGIN and secrets.compare_digest(user_msg, ADMIN_LOGIN):
-            return web.json_response({"ok": True, "reply": "Maxfiy kod qabul qilindi. Admin parolini kiriting.", "admin_password_required": True})
-
-        reply = await get_ai_reply(user_msg)
-        return web.json_response({"ok": True, "reply": reply})
-
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-async def api_payments(request):
-    """So'nggi 10 ta to'lov."""
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            "SELECT user_id, amount, status FROM payments ORDER BY id DESC LIMIT 10"
-        ) as c:
-            rows = await c.fetchall()
-    payments = [{"user_id": r[0], "amount": r[1], "status": r[2]} for r in rows]
-    return web.json_response({"payments": payments})
-
-
-async def api_report(request):
-    """Saytdan shikoyat / taklif — super adminga Telegram xabar yuboradi."""
-    try:
-        if not _check_rate_limit(request, "report", 5, 3600):
-            return web.json_response({"ok": False, "error": "Juda ko'p murojaat yuborildi"}, status=429)
-        body = await request.json()
-        msg_type  = body.get("type", "other")
-        name      = html.escape((body.get("name") or "").strip()[:80])
-        username  = html.escape((body.get("username") or "").strip()[:80])
-        message   = html.escape((body.get("message") or "").strip()[:1500])
-
-        if not message:
-            return web.json_response({"ok": False, "error": "Xabar bo'sh"}, status=400)
-
-        type_labels = {
-            "bug":        "🐛 Xatolik",
-            "suggestion": "💡 Taklif",
-            "complaint":  "😤 Shikoyat",
-            "other":      "📌 Boshqa",
-        }
-        type_label = type_labels.get(msg_type, "📌 Boshqa")
-
-        text = (
-            f"📩 <b>Yangi murojaat — Sayt</b>\n"
-            f"{'─' * 28}\n"
-            f"<b>Tur:</b> {type_label}\n"
-        )
-        if name:
-            text += f"<b>Ism:</b> {name}\n"
-        if username:
-            text += f"<b>Username:</b> {username}\n"
-        text += f"\n<b>Xabar:</b>\n{message}"
-
-        from config import SUPER_ADMIN_ID
-        tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        async with aiohttp.ClientSession() as session:
-            await session.post(tg_url, json={
-                "chat_id":    SUPER_ADMIN_ID,
-                "text":       text,
-                "parse_mode": "HTML",
-            })
-
-        return web.json_response({"ok": True})
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-# ═══════════════════════════════════════════════
-#  ANILIST INTEGRATION
-# ═══════════════════════════════════════════════
-
-# AniList OAuth state → session_token mapping
-_anilist_states: dict = {}   # state -> session_token
-# AniList access tokens per session
-_anilist_tokens: dict = {}   # session_token -> anilist_access_token
-
-ANILIST_GRAPHQL = "https://graphql.anilist.co"
-
-
-def _missing_anilist_settings() -> list[str]:
-    missing = []
-    if not ANILIST_CLIENT_ID:
-        missing.append("ANILIST_CLIENT_ID")
-    if not ANILIST_CLIENT_SECRET:
-        missing.append("ANILIST_CLIENT_SECRET")
-    if not ANILIST_REDIRECT_URI:
-        missing.append("ANILIST_REDIRECT_URI")
-    return missing
-
-
-# Spotify OAuth state/token mapping
-_spotify_states: dict = {}   # state -> session_token
-_spotify_tokens: dict = {}   # session_token -> spotify token payload
-
-SEARCH_QUERY = """
-query ($search: String, $page: Int, $perPage: Int) {
-  Page(page: $page, perPage: $perPage) {
-    media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
-      id
-      title { romaji english native }
-      coverImage { large medium }
-      bannerImage
-      description
-      status
-      averageScore
-      episodes
-      nextAiringEpisode {
-        airingAt
-        timeUntilAiring
-        episode
-      }
-      season
-      seasonYear
-      genres
-      format
-      siteUrl
-    }
-  }
-}
-"""
-
-
-async def api_anilist_search(request: web.Request) -> web.Response:
-    """
-    GET /api/anilist/search?q=naruto&page=1&per=20
-    AniList GraphQL API orqali global anime qidirish.
-    """
-    q = request.rel_url.query.get("q", "").strip()
-    if not q:
-        return web.json_response({"ok": False, "error": "q parametri kerak"}, status=400)
-
-    page = int(request.rel_url.query.get("page", 1))
-    per_page = min(int(request.rel_url.query.get("per", 20)), 50)
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                ANILIST_GRAPHQL,
-                json={
-                    "query": SEARCH_QUERY,
-                    "variables": {"search": q, "page": page, "perPage": per_page},
-                },
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
-                timeout=aiohttp.ClientTimeout(total=15),
-            ) as resp:
-                data = await resp.json()
-
-        if "errors" in data:
-            errs = "; ".join(e.get("message", "?") for e in data["errors"])
-            return web.json_response({"ok": False, "error": errs}, status=502)
-
-        media_list = data.get("data", {}).get("Page", {}).get("media", [])
-
-        results = []
-        for m in media_list:
-            title = (
-                m["title"].get("english")
-                or m["title"].get("romaji")
-                or m["title"].get("native")
-                or "Nomsiz"
-            )
-            raw_desc = m.get("description") or ""
-            results.append({
-                "id":           m["id"],
-                "title":        title,
-                "title_romaji": m["title"].get("romaji") or "",
-                "title_native": m["title"].get("native") or "",
-                "cover":        m["coverImage"].get("large") or m["coverImage"].get("medium") or "",
-                "banner":       m.get("bannerImage") or "",
-                "description":  _clean_description(raw_desc),
-                "status":       m.get("status") or "UNKNOWN",
-                "score":        m.get("averageScore"),   # 0-100 or null
-                "episodes":     m.get("episodes"),
-                "next_airing":  m.get("nextAiringEpisode") or None,
-                "season":       m.get("season") or "",
-                "year":         m.get("seasonYear"),
-                "genres":       m.get("genres") or [],
-                "format":       m.get("format") or "",
-                "site_url":     m.get("siteUrl") or "",
-            })
-
-        return web.json_response({"ok": True, "results": results, "total": len(results)})
-
-    except asyncio.TimeoutError:
-        return web.json_response({"ok": False, "error": "AniList timeout"}, status=504)
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-ANILIST_DETAIL_QUERY = """
-query ($id: Int) {
-  Media(id: $id, type: ANIME) {
-    id
-    title { romaji english native }
-    coverImage { extraLarge large medium }
-    bannerImage
-    description
-    status
-    averageScore
-    episodes
-    season
-    seasonYear
-    genres
-    format
-    siteUrl
-    synonyms
-    trailer { id site }
-    externalLinks { url site icon color type }
-    tags { name rank isMediaSpoiler }
-    studios(isMain: true) { nodes { name siteUrl } }
-    relations {
-      edges {
-        relationType
-        node {
-          id
-          title { romaji english native }
-          type
-          format
-          status
-          coverImage { large }
-        }
-      }
-    }
-    characters(perPage: 8, sort: [ROLE, RELEVANCE, ID]) {
-      edges {
-        role
-        node {
-          id
-          name { full }
-          image { large }
-        }
-        voiceActors(language: JAPANESE) {
-          id
-          name { full }
-          image { large }
-        }
-      }
-    }
-    staff(perPage: 6) {
-      edges {
-        role
-        node {
-          id
-          name { full }
-          image { large }
-        }
-      }
-    }
-  }
-}
-"""
-
-
-async def api_anilist_detail(request: web.Request) -> web.Response:
-    """
-    GET /api/anilist/detail?id=12345
-    AniList media ID orqali anime tafsilotlarini olish.
-    """
-    try:
-        anime_id_str = request.rel_url.query.get("id", "").strip()
-        if not anime_id_str:
-            return web.json_response({"ok": False, "error": "id parametri kerak"}, status=400)
-        try:
-            anime_id = int(anime_id_str)
-        except ValueError:
-            return web.json_response({"ok": False, "error": "id son bo'lishi kerak"}, status=400)
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                ANILIST_GRAPHQL,
-                json={
-                    "query": ANILIST_DETAIL_QUERY,
-                    "variables": {"id": anime_id},
-                },
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
-                timeout=aiohttp.ClientTimeout(total=15),
-            ) as resp:
-                data = await resp.json()
-
-        if "errors" in data:
-            errs = "; ".join(e.get("message", "?") for e in data["errors"])
-            return web.json_response({"ok": False, "error": errs}, status=502)
-
-        media = data.get("data", {}).get("Media")
-        if not media:
-            return web.json_response({"ok": False, "error": "Anime topilmadi"}, status=404)
-
-        # Title formatting
-        title_eng = media["title"].get("english")
-        title_rom = media["title"].get("romaji")
-        title_nat = media["title"].get("native")
-        title = title_eng or title_rom or title_nat or "Nomsiz"
-
-        # Description cleaning
-        raw_desc = media.get("description") or ""
-        clean_desc = _clean_description(raw_desc)
-
-        # Parse relations
-        relations = []
-        rel_edges = media.get("relations", {}).get("edges") or []
-        for edge in rel_edges:
-            node = edge.get("node") or {}
-            if node.get("type") == "ANIME":
-                r_title = node["title"].get("english") or node["title"].get("romaji") or node["title"].get("native") or "Nomsiz"
-                relations.append({
-                    "id": node.get("id"),
-                    "title": r_title,
-                    "relation_type": edge.get("relationType", ""),
-                    "format": node.get("format", ""),
-                    "status": node.get("status", ""),
-                    "cover": node.get("coverImage", {}).get("large") or node.get("coverImage", {}).get("medium") or "",
-                })
-
-        # Parse characters
-        characters = []
-        char_edges = media.get("characters", {}).get("edges") or []
-        for edge in char_edges:
-            node = edge.get("node") or {}
-            vas = edge.get("voiceActors") or []
-            va = vas[0] if vas else {}
-            characters.append({
-                "role": edge.get("role", "SUPPORTING"),
-                "name": node.get("name", {}).get("full") or "Nomsiz",
-                "image": node.get("image", {}).get("large") or "",
-                "va_name": va.get("name", {}).get("full") or "",
-                "va_image": va.get("image", {}).get("large") or "",
-            })
-
-        # Parse staff
-        staff = []
-        staff_edges = media.get("staff", {}).get("edges") or []
-        for edge in staff_edges:
-            node = edge.get("node") or {}
-            staff.append({
-                "role": edge.get("role", ""),
-                "name": node.get("name", {}).get("full") or "Nomsiz",
-                "image": node.get("image", {}).get("large") or "",
-            })
-
-        # Parse studios
-        studios = [s.get("name") for s in media.get("studios", {}).get("nodes") or [] if s.get("name")]
-
-        # Parse external links
-        links = []
-        ext_links = media.get("externalLinks") or []
-        for el in ext_links:
-            links.append({
-                "url": el.get("url"),
-                "site": el.get("site"),
-                "icon": el.get("icon"),
-                "color": el.get("color"),
-                "type": el.get("type"),
-            })
-
-        # Parse tags
-        tags = []
-        all_tags = media.get("tags") or []
-        for tag in all_tags:
-            if not tag.get("isMediaSpoiler"):
-                tags.append({
-                    "name": tag.get("name"),
-                    "rank": tag.get("rank"),
-                })
-        tags = sorted(tags, key=lambda t: t.get("rank") or 0, reverse=True)[:10]
-
-        result = {
-            "id": media.get("id"),
-            "title": title,
-            "title_romaji": title_rom or "",
-            "title_native": title_nat or "",
-            "cover": media.get("coverImage", {}).get("extraLarge") or media.get("coverImage", {}).get("large") or "",
-            "banner": media.get("bannerImage") or "",
-            "description": clean_desc,
-            "status": media.get("status") or "UNKNOWN",
-            "score": media.get("averageScore"),
-            "episodes": media.get("episodes"),
-            "season": media.get("season") or "",
-            "year": media.get("seasonYear"),
-            "genres": media.get("genres") or [],
-            "format": media.get("format") or "",
-            "site_url": media.get("siteUrl") or "",
-            "synonyms": media.get("synonyms") or [],
-            "trailer": media.get("trailer"),
-            "relations": relations,
-            "characters": characters,
-            "staff": staff,
-            "studios": studios,
-            "links": links,
-            "tags": tags,
-        }
-
-        return web.json_response({"ok": True, "result": result})
-
-    except asyncio.TimeoutError:
-        return web.json_response({"ok": False, "error": "AniList timeout"}, status=504)
-    except Exception as e:
-        return web.json_response({"ok": False, "error": f"Server xatosi: {str(e)}"}, status=500)
-
-
-async def api_auth_anilist(request: web.Request) -> web.Response:
-    """
-    GET /api/auth/anilist  (Authorization: Bearer <session_token>)
-    Foydalanuvchini AniList OAuth sahifasiga yo'naltiradi.
-    """
-    token = _bearer_token(request)
-    if not token or token not in _sessions:
-        return web.json_response({"ok": False, "error": "Avval Google bilan kiring"}, status=401)
-
-    missing = _missing_anilist_settings()
-    if missing:
-        return web.json_response(
-            {"ok": False, "error": "AniList sozlamalari to'liq emas: " + ", ".join(missing)},
-            status=500,
-        )
-
-    state = secrets.token_urlsafe(16)
-    _anilist_states[state] = token   # state → session_token
-
-    auth_url = (
-        "https://anilist.co/api/v2/oauth/authorize?"
-        + urlencode({
-            "client_id": ANILIST_CLIENT_ID,
-            "redirect_uri": ANILIST_REDIRECT_URI,
-            "response_type": "code",
-            "state": state,
-        })
-    )
-    return web.json_response({"ok": True, "url": auth_url})
-
-
-async def callback_anilist(request: web.Request) -> web.Response:
-    """
-    GET /callback/anilist?code=...&state=...
-    AniList OAuth callback — kodni token bilan almashtirib, sessiyaga yozadi.
-    """
-    code = request.rel_url.query.get("code", "").strip()
-    state = request.rel_url.query.get("state", "").strip()
-
-    if not code or not state:
-        return web.Response(
-            text="<h2>❌ Xatolik: code yoki state yo'q</h2>",
-            content_type="text/html",
-            status=400,
-        )
-
-    session_token = _anilist_states.pop(state, None)
-    if not session_token:
-        return web.Response(
-            text="<h2>❌ Xatolik: noto'g'ri state. Qayta urinib ko'ring.</h2>",
-            content_type="text/html",
-            status=400,
-        )
-
-    missing = _missing_anilist_settings()
-    if missing:
-        return web.Response(
-            text=f"<h2>❌ AniList sozlamalari to'liq emas</h2><p>Yetishmayapti: {html.escape(', '.join(missing))}</p>",
-            content_type="text/html",
-            status=500,
-        )
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://anilist.co/api/v2/oauth/token",
-                json={
-                    "grant_type":    "authorization_code",
-                    "client_id":     ANILIST_CLIENT_ID,
-                    "client_secret": ANILIST_CLIENT_SECRET,
-                    "redirect_uri":  ANILIST_REDIRECT_URI,
-                    "code":          code,
-                },
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
-                timeout=aiohttp.ClientTimeout(total=15),
-            ) as resp:
-                token_data = await resp.json()
-
-        if "error" in token_data:
-            err = token_data.get("error_description") or token_data.get("error", "Token xatosi")
-            return web.Response(
-                text=f"<h2>❌ AniList token xatosi: {err}</h2>",
-                content_type="text/html",
-                status=400,
-            )
-
-        access_token = token_data.get("access_token", "")
-        _anilist_tokens[session_token] = access_token
-
-        # Foydalanuvchi ma'lumotini AniList dan olamiz
-        viewer_query = "query { Viewer { id name avatar { large } siteUrl } }"
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                ANILIST_GRAPHQL,
-                json={"query": viewer_query},
-                headers={
-                    "Authorization":  f"Bearer {access_token}",
-                    "Content-Type":   "application/json",
-                    "Accept":         "application/json",
-                },
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as resp:
-                viewer_data = await resp.json()
-
-        viewer = viewer_data.get("data", {}).get("Viewer", {})
-        if viewer and session_token in _sessions:
-            _sessions[session_token]["anilist"] = {
-                "id":       viewer.get("id"),
-                "name":     viewer.get("name"),
-                "avatar":   (viewer.get("avatar") or {}).get("large") or "",
-                "site_url": viewer.get("siteUrl") or "",
-            }
-
-        # Muvaffaqiyatli — sahifani yopamiz
-        html = """<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>AniList ulandi</title>
-<style>
-  body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;
-       background:#0a0a18;font-family:sans-serif;color:#cce4ff}
-  .box{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:16px;
-       padding:40px 48px;text-align:center;max-width:380px}
-  .ico{font-size:3rem;margin-bottom:16px}
-  h2{color:#00d4ff;font-size:1.2rem;margin:0 0 10px}
-  p{font-size:.85rem;color:#7aadcc;margin:0 0 22px}
-  button{background:linear-gradient(90deg,#00d4ff,#8b5cf6);border:none;color:#fff;
-         padding:10px 28px;border-radius:20px;cursor:pointer;font-weight:700;font-size:.85rem}
-</style></head>
-<body>
-  <div class="box">
-    <div class="ico">✅</div>
-    <h2>AniList ulandi!</h2>
-    <p>Hisobingiz muvaffaqiyatli bog'landi. Bu oynani yopishingiz mumkin.</p>
-    <button onclick="window.close()">Oynani yopish</button>
-  </div>
-  <script>setTimeout(()=>window.close(),3000)</script>
-</body></html>"""
-        return web.Response(text=html, content_type="text/html")
-
-    except asyncio.TimeoutError:
-        return web.Response(
-            text="<h2>❌ AniList serveri javob bermadi (timeout)</h2>",
-            content_type="text/html",
-            status=504,
-        )
-    except Exception as e:
-        return web.Response(
-            text=f"<h2>❌ Xatolik: {e}</h2>",
-            content_type="text/html",
-            status=500,
-        )
-
-
-async def api_anilist_status(request: web.Request) -> web.Response:
-    """
-    GET /api/auth/anilist/status  (Authorization: Bearer <session_token>)
-    AniList ulanish holatini qaytaradi.
-    """
-    token = _bearer_token(request)
-    user = _sessions.get(token)
-    if not user:
-        return web.json_response({"ok": False, "error": "Autentifikatsiya talab etiladi"}, status=401)
-
-    anilist_info = user.get("anilist")
-    connected = bool(_anilist_tokens.get(token)) and bool(anilist_info)
-    return web.json_response({
-        "ok":        True,
-        "connected": connected,
-        "anilist":   anilist_info if connected else None,
-    })
-
-
-# ═══════════════════════════════════════════════
-#  GOOGLE OAUTH
-# ═══════════════════════════════════════════════
-
-async def serve_callback(request):
-    """callback.html ni qaytaradi."""
-    if request.rel_url.query.get("code") and request.rel_url.query.get("state"):
-        return await callback_anilist(request)
-    path = os.path.join(WEBAPP_DIR, "callback.html")
-    with open(path, "r", encoding="utf-8") as f:
-        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
-
-
-async def serve_callback_spotify(request):
-    """callbackspotify.html ni qaytaradi."""
-    path = os.path.join(WEBAPP_DIR, "callbackspotify.html")
-    with open(path, "r", encoding="utf-8") as f:
-        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
-
-
-async def serve_qollanma(request):
-    """qollanma.html ni qaytaradi."""
-    path = os.path.join(WEBAPP_DIR, "qollanma.html")
-    with open(path, "r", encoding="utf-8") as f:
-        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
-
-
-async def ai(request):
-    """Ai/Ai.html ni qaytaradi."""
-    path = os.path.join(WEBAPP_DIR, "Ai", "Ai.html")
-    with open(path, "r", encoding="utf-8") as f:
-        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
-
-
-async def api_auth_google(request):
-    """
-    POST /api/auth/google  { code: "..." }
-    Google authorization code ni token bilan almashtirib,
-    user ma'lumotlarini qaytaradi va session yaratadi.
-    """
-    try:
-        if not _check_rate_limit(request, "google_auth", 20, 3600):
-            return web.json_response({"ok": False, "error": "Juda ko'p urinish"}, status=429)
-        body = await request.json()
-        code = body.get("code", "").strip()
-        if not code:
-            return web.json_response({"ok": False, "error": "code yo'q"}, status=400)
-
-        redirect_uri = GOOGLE_REDIRECT_URI or body.get("redirect_uri", "")
-        if not redirect_uri:
-            return web.json_response({"ok": False, "error": "GOOGLE_REDIRECT_URI sozlanmagan"}, status=500)
-        if not _is_allowed_redirect_uri(redirect_uri):
-            return web.json_response({"ok": False, "error": "redirect_uri ruxsat etilmagan"}, status=400)
-
-        async with aiohttp.ClientSession() as session:
-            # 1. Code → access token
-            async with session.post("https://oauth2.googleapis.com/token", data={
-                "code":          code,
-                "client_id":     GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "redirect_uri":  redirect_uri,
-                "grant_type":    "authorization_code",
-            }) as resp:
-                token_data = await resp.json()
-
-            if "error" in token_data:
-                return web.json_response({"ok": False, "error": token_data.get("error_description", token_data["error"])}, status=400)
-
-            access_token = token_data.get("access_token")
-
-            # 2. Access token → user info
-            async with session.get(
-                "https://www.googleapis.com/oauth2/v2/userinfo",
-                headers={"Authorization": f"Bearer {access_token}"}
-            ) as resp:
-                user_info = await resp.json()
-
-        # 3. Session yaratish
-        session_token = _new_token()
-        _sessions[session_token] = {
-            "id":      user_info.get("id", ""),
-            "name":    user_info.get("name", "Foydalanuvchi"),
-            "email":   user_info.get("email", ""),
-            "picture": user_info.get("picture", ""),
-            "created": datetime.now().isoformat(),
-            "created_ts": time.time(),
-        }
-
-        return web.json_response({
-            "ok":    True,
-            "token": session_token,
-            "user":  _sessions[session_token],
-        })
-
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-async def api_auth_me(request):
-    """GET /api/auth/me — token orqali user ma'lumotlarini olish."""
-    _cleanup_sessions()
-    token = _bearer_token(request)
-    user = _sessions.get(token)
-    if not user:
-        return web.json_response({"ok": False, "error": "Autentifikatsiya talab etiladi"}, status=401)
-    return web.json_response({"ok": True, "user": user})
-
-
-async def api_auth_logout(request):
-    """POST /api/auth/logout — session o'chirish."""
-    token = _bearer_token(request)
-    _sessions.pop(token, None)
-    _anilist_tokens.pop(token, None)
-    _spotify_tokens.pop(token, None)
-    return web.json_response({"ok": True})
-
-
-# ═══════════════════════════════════════════════
-def _spotify_redirect_uri() -> str:
-    return SPOTIFY_REDIRECT_URI or (f"{WEB_PUBLIC_ORIGIN}/callbackspotify" if WEB_PUBLIC_ORIGIN else "")
-
-
-async def api_auth_spotify(request: web.Request) -> web.Response:
-    token = _bearer_token(request)
-    if not token or token not in _sessions:
-        return web.json_response({"ok": False, "error": "Avval Google bilan kiring"}, status=401)
-
-    redirect_uri = _spotify_redirect_uri()
-    if not SPOTIFY_CLIENT_ID or not redirect_uri:
-        return web.json_response(
-            {"ok": False, "error": "SPOTIFY_CLIENT_ID yoki SPOTIFY_REDIRECT_URI sozlanmagan"},
-            status=500,
-        )
-
-    state = secrets.token_urlsafe(16)
-    _spotify_states[state] = token
-    params = {
-        "response_type": "code",
-        "client_id": SPOTIFY_CLIENT_ID,
-        "scope": "user-read-email user-read-private",
-        "redirect_uri": redirect_uri,
-        "state": state,
-        "show_dialog": "true",
-    }
-    return web.json_response({"ok": True, "url": f"https://accounts.spotify.com/authorize?{urlencode(params)}"})
-
-
-async def api_auth_spotify_callback(request: web.Request) -> web.Response:
-    try:
-        if not _check_rate_limit(request, "spotify_auth", 20, 3600):
-            return web.json_response({"ok": False, "error": "Juda ko'p urinish"}, status=429)
-        body = await request.json()
-        code = (body.get("code") or "").strip()
-        state = (body.get("state") or "").strip()
-        if not code or not state:
-            return web.json_response({"ok": False, "error": "code yoki state yo'q"}, status=400)
-
-        session_token = _spotify_states.pop(state, None)
-        if not session_token or session_token not in _sessions:
-            return web.json_response({"ok": False, "error": "Noto'g'ri state. Qayta urinib ko'ring."}, status=400)
-
-        redirect_uri = _spotify_redirect_uri()
-        if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET or not redirect_uri:
-            return web.json_response({"ok": False, "error": "Spotify sozlamalari to'liq emas"}, status=500)
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://accounts.spotify.com/api/token",
-                data={
-                    "grant_type": "authorization_code",
-                    "code": code,
-                    "redirect_uri": redirect_uri,
-                    "client_id": SPOTIFY_CLIENT_ID,
-                    "client_secret": SPOTIFY_CLIENT_SECRET,
-                },
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=aiohttp.ClientTimeout(total=15),
-            ) as resp:
-                token_data = await resp.json()
-
-            if token_data.get("error"):
-                return web.json_response(
-                    {"ok": False, "error": token_data.get("error_description") or token_data.get("error")},
-                    status=400,
-                )
-
-            access_token = token_data.get("access_token", "")
-            async with session.get(
-                "https://api.spotify.com/v1/me",
-                headers={"Authorization": f"Bearer {access_token}"},
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as resp:
-                user_info = await resp.json()
-
-        images = user_info.get("images") or []
-        spotify_info = {
-            "id": user_info.get("id", ""),
-            "name": user_info.get("display_name") or user_info.get("id") or "Spotify foydalanuvchi",
-            "email": user_info.get("email", ""),
-            "country": user_info.get("country", ""),
-            "profile_url": (user_info.get("external_urls") or {}).get("spotify", ""),
-            "image": images[0].get("url") if images else "",
-        }
-        _spotify_tokens[session_token] = token_data
-        _sessions[session_token]["spotify"] = spotify_info
-
-        return web.json_response({"ok": True, "spotify": spotify_info})
-
-    except asyncio.TimeoutError:
-        return web.json_response({"ok": False, "error": "Spotify serveri javob bermadi"}, status=504)
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-async def api_spotify_status(request: web.Request) -> web.Response:
-    token = _bearer_token(request)
-    user = _sessions.get(token)
-    if not user:
-        return web.json_response({"ok": False, "error": "Autentifikatsiya talab etiladi"}, status=401)
-
-    spotify_info = user.get("spotify")
-    connected = bool(_spotify_tokens.get(token)) and bool(spotify_info)
-    return web.json_response({
-        "ok": True,
-        "connected": connected,
-        "spotify": spotify_info if connected else None,
-    })
-
-
-def _get_session_user(request: web.Request) -> dict | None:
-    _cleanup_sessions()
-    token = _bearer_token(request)
-    return _sessions.get(token)
-
-
-async def _get_telegram_profile(user_id: int) -> dict:
-    profile = {"id": user_id, "name": f"Telegram {user_id}", "username": "", "photo_url": "", "photo_file_id": ""}
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getChat", params={"chat_id": user_id}) as resp:
-                data = await resp.json()
-            if data.get("ok"):
-                chat = data.get("result", {})
-                first = chat.get("first_name") or ""
-                last = chat.get("last_name") or ""
-                profile["name"] = (f"{first} {last}".strip() or chat.get("title") or profile["name"])
-                profile["username"] = chat.get("username") or ""
-        except Exception:
-            pass
-        try:
-            async with session.get(
-                f"https://api.telegram.org/bot{BOT_TOKEN}/getUserProfilePhotos",
-                params={"user_id": user_id, "limit": 1},
-            ) as resp:
-                data = await resp.json()
-            photos = data.get("result", {}).get("photos", []) if data.get("ok") else []
-            if photos and photos[0]:
-                file_id = photos[0][-1].get("file_id", "")
-                profile["photo_file_id"] = file_id
-                profile["photo_url"] = f"/media/{file_id}"
-        except Exception:
-            pass
-    return profile
-
-
-async def api_telegram_link_start(request: web.Request) -> web.Response:
-    try:
-        if not _check_rate_limit(request, "telegram_link", 5, 3600):
-            return web.json_response({"ok": False, "error": "Juda ko'p urinish"}, status=429)
-        body = await request.json()
-        device_id = (body.get("device_id") or "").strip()
-        telegram_id = int(str(body.get("telegram_id") or "").strip())
-        saved_ids = body.get("saved_ids") or []
-        if not device_id:
-            return web.json_response({"ok": False, "error": "device_id kerak"}, status=400)
-        if len(device_id) > 128:
-            return web.json_response({"ok": False, "error": "device_id juda uzun"}, status=400)
-        if not isinstance(saved_ids, list):
-            saved_ids = []
-        saved_ids = saved_ids[:100]
-
-        request_id = secrets.token_urlsafe(12)
-        user = _get_session_user(request) or {}
-        who = user.get("name") or "Web foydalanuvchi"
-        async with aiosqlite.connect(DB_PATH) as db:
-            await db.execute(
-                "INSERT OR REPLACE INTO web_link_requests (request_id, device_id, telegram_id, status) VALUES (?, ?, ?, 'pending')",
-                (request_id, device_id, telegram_id),
-            )
-            for anime_id in saved_ids:
-                try:
-                    await db.execute(
-                        "INSERT OR IGNORE INTO web_saved_animes (device_id, anime_id) VALUES (?, ?)",
-                        (device_id, int(anime_id)),
-                    )
-                except Exception:
-                    pass
-            await db.commit()
-
-        text = (
-            "🔐 <b>Web profil ulash so'rovi</b>\n\n"
-            f"<b>Web profil:</b> {who}\n"
-            f"<b>Telegram ID:</b> <code>{telegram_id}</code>\n\n"
-            "Tasdiqlasangiz webdagi saqlangan animelar bot profilingiz/watchlistingiz bilan ulanadi."
-        )
-        keyboard = {"inline_keyboard": [[
-            {"text": "✅ Tasdiqlash", "callback_data": f"web_link_ok={request_id}", "style": "success"},
-            {"text": "❌ Rad etish", "callback_data": f"web_link_no={request_id}", "style": "danger"},
-        ]]}
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-                json={"chat_id": telegram_id, "text": text, "parse_mode": "HTML", "reply_markup": keyboard},
-            ) as resp:
-                sent = await resp.json()
-        if not sent.get("ok"):
-            return web.json_response({"ok": False, "error": sent.get("description") or "Bot xabar yubora olmadi. Avval /start qiling."}, status=400)
-        return web.json_response({"ok": True, "request_id": request_id})
-    except ValueError:
-        return web.json_response({"ok": False, "error": "Telegram ID raqam bo'lishi kerak"}, status=400)
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-async def api_telegram_link_status(request: web.Request) -> web.Response:
-    request_id = request.rel_url.query.get("request_id", "").strip()
-    device_id = request.rel_url.query.get("device_id", "").strip()
-    if not request_id or not device_id:
-        return web.json_response({"ok": False, "error": "request_id va device_id kerak"}, status=400)
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT status FROM web_link_requests WHERE request_id=? AND device_id=?", (request_id, device_id)) as c:
-            row = await c.fetchone()
-    return web.json_response({"ok": True, "status": row[0] if row else "missing"})
-
-
-async def api_telegram_profile(request: web.Request) -> web.Response:
-    device_id = request.rel_url.query.get("device_id", "").strip()
-    if not device_id:
-        return web.json_response({"ok": False, "error": "device_id kerak"}, status=400)
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT telegram_id FROM web_profile_links WHERE device_id=?", (device_id,)) as c:
-            link = await c.fetchone()
-        if not link:
-            return web.json_response({"ok": True, "linked": False})
-        telegram_id = int(link[0])
-        async with db.execute("SELECT status, pul, pul2, odam, ban FROM users WHERE user_id=?", (telegram_id,)) as c:
-            user_row = await c.fetchone()
-        async with db.execute("SELECT anime_id FROM watchlist WHERE user_id=? ORDER BY created_at DESC", (telegram_id,)) as c:
-            watch_rows = await c.fetchall()
-        async with db.execute("""
-            SELECT p.anime_id, p.last_episode, a.nom
-            FROM watch_progress p
-            LEFT JOIN animelar a ON a.id=p.anime_id
-            WHERE p.user_id=?
-            ORDER BY p.updated_at DESC
-            LIMIT 10
-        """, (telegram_id,)) as c:
-            progress_rows = await c.fetchall()
-
-    profile = await _get_telegram_profile(telegram_id)
-    bot_profile = {
-        "status": user_row[0] if user_row else "Oddiy",
-        "balance": user_row[1] if user_row else 0,
-        "cashback": user_row[2] if user_row else 0,
-        "referrals": user_row[3] if user_row else 0,
-        "ban": user_row[4] if user_row else "unban",
-    }
-    return web.json_response({
-        "ok": True,
-        "linked": True,
-        "telegram": profile,
-        "bot_profile": bot_profile,
-        "watchlist": [r[0] for r in watch_rows],
-        "progress": [{"anime_id": r[0], "last_episode": r[1], "name": r[2] or ""} for r in progress_rows],
-    })
-
-
-async def api_profile_saved(request: web.Request) -> web.Response:
-    try:
-        if not _check_rate_limit(request, "profile_saved", 60, 3600):
-            return web.json_response({"ok": False, "error": "Juda ko'p so'rov"}, status=429)
-        body = await request.json()
-        device_id = (body.get("device_id") or "").strip()
-        anime_id = int(body.get("anime_id"))
-        saved = bool(body.get("saved"))
-        if not device_id:
-            return web.json_response({"ok": False, "error": "device_id kerak"}, status=400)
-        if len(device_id) > 128:
-            return web.json_response({"ok": False, "error": "device_id juda uzun"}, status=400)
-        if anime_id <= 0:
-            return web.json_response({"ok": False, "error": "anime_id noto'g'ri"}, status=400)
-        async with aiosqlite.connect(DB_PATH) as db:
-            if saved:
-                await db.execute("INSERT OR IGNORE INTO web_saved_animes (device_id, anime_id) VALUES (?, ?)", (device_id, anime_id))
-            else:
-                await db.execute("DELETE FROM web_saved_animes WHERE device_id=? AND anime_id=?", (device_id, anime_id))
-            async with db.execute("SELECT telegram_id FROM web_profile_links WHERE device_id=?", (device_id,)) as c:
-                link = await c.fetchone()
-            if link:
-                if saved:
-                    await db.execute("INSERT OR IGNORE INTO watchlist (user_id, anime_id) VALUES (?, ?)", (int(link[0]), anime_id))
-                else:
-                    await db.execute("DELETE FROM watchlist WHERE user_id=? AND anime_id=?", (int(link[0]), anime_id))
-            await db.commit()
-        return web.json_response({"ok": True})
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-#  ANIME KARTA JANGI
-# ═══════════════════════════════════════════════
-
-async def _random_anime_cards(n: int = 5) -> list:
-    """DB dan tasodifiy n ta anime kartani oladi."""
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("""
-            SELECT a.id, a.nom, a.rams, a.janri, a.yili, a.aniType, a.fandub,
-                   COALESCE(a.qidiruv,0) as qidiruv,
-                   COUNT(d.data_id) as ep_count
-            FROM animelar a
-            LEFT JOIN anime_datas d ON d.id = a.id
-            GROUP BY a.id
-            ORDER BY RANDOM() LIMIT ?
-        """, (n,)) as c:
-            rows = await c.fetchall()
-
-    cards = []
-    for r in rows:
-        rams = r[2] or ""
-        poster = _poster_url(r[0], rams) if rams else ""
-        cards.append({
-            "id":       r[0],
-            "nom":      r[1] or "Nomsiz",
-            "poster":   poster,
-            "janri":    r[3] or "—",
-            "yili":     int(r[4]) if r[4] and str(r[4]).isdigit() else 0,
-            "aniType":  r[5] or "—",
-            "fandub":   r[6] or "—",
-            "qidiruv":  int(r[7]) if r[7] else 0,
-            "ep_count": int(r[8]) if r[8] else 0,
-        })
-    return cards
-
-
-async def api_game_start(request):
-    """POST /api/game/start — yangi o'yin boshlash."""
-    _cleanup_sessions()
-    token = _bearer_token(request)
-    user = _sessions.get(token)
-    if not user:
-        return web.json_response({"ok": False, "error": "Login talab etiladi"}, status=401)
-
-    try:
-        cards = await _random_anime_cards(10)
-        if len(cards) < 6:
-            return web.json_response({"ok": False, "error": "DB da yetarli anime yo'q"}, status=400)
-
-        random.shuffle(cards)
-        n = len(cards) // 2
-        player_cards = cards[:n]
-        cpu_cards    = cards[n:n*2]
-
-        game_id = _new_token()[:16]
-        _games[game_id] = GameState(player_cards, cpu_cards, user)
-
-        return web.json_response({
-            "ok":      True,
-            "game_id": game_id,
-            "state":   _games[game_id].to_dict(),
-        })
-    except Exception:
-        return web.json_response({"ok": False, "error": "Server xatosi"}, status=500)
-
-
-async def api_game_state(request):
-    """GET /api/game/{game_id} — o'yin holatini olish."""
-    user = _get_session_user(request)
-    if not user:
-        return web.json_response({"ok": False, "error": "Login talab etiladi"}, status=401)
-    game_id = request.match_info["game_id"]
-    game = _games.get(game_id)
-    if not game:
-        return web.json_response({"ok": False, "error": "O'yin topilmadi"}, status=404)
-    if game.user.get("id") != user.get("id"):
-        return web.json_response({"ok": False, "error": "Ruxsat yo'q"}, status=403)
-    return web.json_response({"ok": True, "state": game.to_dict()})
-
-
-async def api_game_move(request):
-    """POST /api/game/{game_id}/move  { stat: "ep_count"|"qidiruv"|"yili" }"""
-    user = _get_session_user(request)
-    if not user:
-        return web.json_response({"ok": False, "error": "Login talab etiladi"}, status=401)
-    game_id = request.match_info["game_id"]
-    game = _games.get(game_id)
-    if not game:
-        return web.json_response({"ok": False, "error": "O'yin topilmadi"}, status=404)
-    if game.user.get("id") != user.get("id"):
-        return web.json_response({"ok": False, "error": "Ruxsat yo'q"}, status=403)
-    if game.finished:
-        return web.json_response({"ok": False, "error": "O'yin tugagan"}, status=400)
-
     body = await request.json()
-    stat = body.get("stat", "")
-    valid = [s["key"] for s in GameState.STATS]
-    if stat not in valid:
-        return web.json_response({"ok": False, "error": f"Noto'g'ri stat. Mumkin: {valid}"}, status=400)
-
-    result = game.play_round(stat)
-    return web.json_response({"ok": True, "round_result": result, "state": game.to_dict()})
-
-
-async def serve_privacy(request):
-    """privacy.html ni qaytaradi."""
-    path = os.path.join(WEBAPP_DIR, "privacy.html")
-    with open(path, "r", encoding="utf-8") as f:
-        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
-
-
-async def serve_terms(request):
-    """terms.html ni qaytaradi."""
-    path = os.path.join(WEBAPP_DIR, "terms.html")
-    with open(path, "r", encoding="utf-8") as f:
-        return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
-
-
-def create_app():
-    app = web.Application(
-        client_max_size=2 * 1024 * 1024,
-        middlewares=[security_headers_middleware, traffic_guard_middleware],
-    )
-    app.router.add_get("/", index)
-    app.router.add_get("/ai", ai)
-    app.router.add_static("/Ai", os.path.join(WEBAPP_DIR, "Ai"))
-    app.router.add_get("/admin", serve_admin)
-    app.router.add_get("/api/animes", api_animes)
-    app.router.add_get("/api/animes/{anime_id}", api_anime_detail)
-    app.router.add_get("/api/bot-info", api_bot_info)
-    app.router.add_get("/bot-icon", bot_icon)
-    app.router.add_get("/poster/{anime_id}", anime_poster)
-    app.router.add_get("/api/admins", api_admins)
-    app.router.add_get("/api/stats", api_stats)
-    app.router.add_post("/api/admin/login", api_admin_login)
-    app.router.add_get("/api/admin/login/status", api_admin_login_status)
-    app.router.add_post("/api/admin/logout", api_admin_logout)
-    app.router.add_get("/api/admin/stats", api_admin_stats)
-    app.router.add_get("/api/admin/animes", api_admin_animes)
-    app.router.add_get("/api/admin/anilist/posters", api_admin_anilist_posters)
-    app.router.add_post("/api/admin/animes", api_admin_create_anime)
-    app.router.add_put("/api/admin/animes/{anime_id}", api_admin_update_anime)
-    app.router.add_delete("/api/admin/animes/{anime_id}", api_admin_delete_anime)
-    app.router.add_get("/api/admin/users", api_admin_users)
-    app.router.add_get("/api/anime-edits", api_anime_edits)
-    app.router.add_get("/api/admin/anime-edits", api_admin_anime_edits)
-    app.router.add_post("/api/admin/anime-edits/import", api_admin_import_anime_edit)
-    app.router.add_delete("/api/admin/anime-edits/{edit_id}", api_admin_delete_anime_edit)
-    app.router.add_get("/events", sse_stream)
-    app.router.add_get("/api/payments", api_payments)
-    app.router.add_get("/api/media/{anime_id}", anime_media_info)
-    app.router.add_get("/api/preview/{anime_id}", api_episode_preview)
-    app.router.add_get("/api/episodes/{anime_id}", api_episodes)
-    app.router.add_get("/media/{file_id}", media_proxy)
-    app.router.add_post("/api/ai/chat", api_ai_chat)
-    app.router.add_post("/api/report",  api_report)
-    # OAuth — Google
-    app.router.add_get( "/callback",         serve_callback)
-    app.router.add_get( "/callbackspotify",  serve_callback_spotify)
-    app.router.add_get( "/qollanma",         serve_qollanma)
-    app.router.add_get( "/privacy",          serve_privacy)
-    app.router.add_get( "/terms",            serve_terms)
-    app.router.add_post("/api/auth/google",  api_auth_google)
-    app.router.add_get( "/api/auth/me",      api_auth_me)
-    app.router.add_post("/api/auth/logout",  api_auth_logout)
-    app.router.add_get( "/api/auth/spotify", api_auth_spotify)
-    app.router.add_post("/api/auth/spotify/callback", api_auth_spotify_callback)
-    app.router.add_get( "/api/auth/spotify/status", api_spotify_status)
-    app.router.add_post("/api/telegram/link/start", api_telegram_link_start)
-    app.router.add_get( "/api/telegram/link/status", api_telegram_link_status)
-    app.router.add_get( "/api/telegram/profile", api_telegram_profile)
-    app.router.add_post("/api/profile/saved", api_profile_saved)
-    # OAuth — AniList
-    app.router.add_get( "/api/auth/anilist",         api_auth_anilist)
-    app.router.add_get( "/api/auth/anilist/status",  api_anilist_status)
-    app.router.add_get( "/callback/anilist",         callback_anilist)
-    # AniList search
-    app.router.add_get( "/api/anilist/search",       api_anilist_search)
-    app.router.add_get( "/api/search",               api_anilist_search)
-    app.router.add_get( "/api/anilist/detail",       api_anilist_detail)
-    # Game
-    app.router.add_post("/api/game/start",          api_game_start)
-    app.router.add_get( "/api/game/{game_id}",       api_game_state)
-    app.router.add_post("/api/game/{game_id}/move",  api_game_move)
-    return app
-
-
-async def start_web_server():
-    app = create_app()
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", WEB_PORT)
-    await site.start()
-    print(f"🌐 Web server: http://0.0.0.0:{WEB_PORT}")
-    return runner
+    user_msg = _clean_text(body.get("message"))
+    if not user_msg:
+        return web.json_response({"ok": False, "error": "Bo'sh xabar"}, status=400)
+    reply = await get_ai_reply(user_msg)
+    return web.json_response({"ok": True, "reply": reply})
