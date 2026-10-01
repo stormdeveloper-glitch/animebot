@@ -1,0 +1,33 @@
+{
+  "name": "AnimeUZ Official Rasmiy — O‘zbek tilida Anime",
+  "short_name": "AnimeUZ Official Rasmiy",
+  "description": "O‘zbek tilida anime qidirish, ko‘rish va anime ma’lumotlarini topish platformasi.",
+  "lang": "uz",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#02020a",
+  "theme_color": "#6c63ff",
+
+  "categories": [
+    "entertainment",
+    "video"
+  ],
+
+  "icons": [
+    {
+      "src": "/bot-icon",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/bot-icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
