@@ -98,6 +98,17 @@ def normalize_web_app_url(url: str | None) -> str:
     return value
 
 
+# ── "Asosiy menyuga qaytish" matnlari ─────────────────────────────────────────
+# Eski (yopishib qolgan) klaviatura tugmalari shu matnlardan birini yuborishi
+# mumkin — hammasi asosiy menyuni qayta ochishi kerak.
+BACK_TO_MENU_TEXTS = {
+    "◀️ Orqaga", "◀️ Ortga", "⬅️ Orqaga", "⬅️ Ortga", "🔙 Orqaga", "🔙 Ortga",
+    "Orqaga", "Ortga",
+    "🏠 Bosh menyu", "🏠 Asosiy menyu", "Bosh menyu", "Asosiy menyu",
+    "🏠 Menyu", "Menyu",
+}
+
+
 # ── Asosiy menyu ──────────────────────────────────────────────────────────────
 def menu_kb(is_admin: bool = False, web_app_url: str = ""):
     keyboard = [

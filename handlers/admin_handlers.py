@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from config import ADMIN_IDS, SUPER_ADMIN_ID, DB_PATH
 from keyboards import (
     panel_kb, boshqarish_kb, menu_kb, InlineKeyboardButton,
-    normalize_button_style, set_button_style
+    normalize_button_style, set_button_style, BACK_TO_MENU_TEXTS
 )
 from states import AdminStates, EditAnimeStates, SettingsStates, ButtonStates, PostStates
 from utils import is_admin, is_super_admin, get_bot_username, invalidate_channel_cache, invalidate_admin_cache, is_content_restricted, invalidate_restriction_cache
@@ -522,15 +522,21 @@ async def text_panel(message: Message):
                          reply_markup=panel_kb(is_super), parse_mode="HTML")
 
 
-# ─── Orqaga ──────────────────────────────────────────────────────────────────
+# ─── Orqaga / Asosiy menyu ───────────────────────────────────────────────────
 
-@router.message(F.text == "◀️ Orqaga")
+@router.message(Command("menu"))
+@router.message(F.text.in_(BACK_TO_MENU_TEXTS))
 async def go_back(message: Message, state: FSMContext):
+    """"Orqaga"/"Asosiy menyu" matnlarida asosiy menyuga qaytaradi.
+
+    Filter qasddan keng: eski (yopishib qolgan) klaviatura tugmasi boshqacha
+    matn yuborsa ham, foydalanuvchi asosiy menyuni olishi kerak. Admin router
+    birinchi qo'shilgani uchun bu handler FSM holatlaridan ham o'tib ketadi.
+    """
     await state.clear()
-    await message.answer(
-        "🏠 Bosh menyu",
-        reply_markup=menu_kb(await is_admin(message.from_user.id))
-    )
+    # Circular import bo'lmasligi uchun funksiya ichida import qilamiz
+    from handlers.user_handlers import send_home_menu
+    await send_home_menu(message, message.from_user.id)
 
 
 # ─── Statistika ──────────────────────────────────────────────────────────────

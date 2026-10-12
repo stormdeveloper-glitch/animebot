@@ -1,5 +1,6 @@
 import aiosqlite
 import html
+import logging
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, Command
 from aiogram.types import (
@@ -32,6 +33,8 @@ async def _push(event_type, text, color="c"):
         pass
 
 router = Router()
+
+logger = logging.getLogger(__name__)
 
 # ─── Animated Emoji helpers ───────────────────────────────────────────────────
 def ae(emoji_id: str, fallback: str) -> str:
@@ -329,11 +332,21 @@ async def send_main_menu(message: Message, user_id: int, text: str | None = None
             "{name}", html.escape(message.from_user.first_name or "")
         )
 
-    await message.answer(
-        text,
-        reply_markup=menu_kb(await is_admin(user_id), web_app_url=await _get_web_app_url()),
-        parse_mode="HTML",
-    )
+    kb = menu_kb(await is_admin(user_id), web_app_url=await _get_web_app_url())
+    logger.info("[menu] welcome menu -> user=%s rows=%d", user_id, len(kb.keyboard))
+    await message.answer(text, reply_markup=kb, parse_mode="HTML")
+
+
+async def send_home_menu(message: Message, user_id: int) -> None:
+    """Asosiy (user) menyu klaviaturasini qisqa matn bilan qayta yuboradi.
+
+    Klaviatura /start bilan bir xil quriladi (Web App tugmasi bilan), shu sababli
+    admin panelidan yoki qidiruvdan qaytishda ham har bir klientda bir xil menyu
+    chiqadi.
+    """
+    kb = menu_kb(await is_admin(user_id), web_app_url=await _get_web_app_url())
+    logger.info("[menu] home menu -> user=%s rows=%d", user_id, len(kb.keyboard))
+    await message.answer("🏠 <b>Asosiy menyu</b>", reply_markup=kb, parse_mode="HTML")
 
 
 @router.message(CommandStart())
