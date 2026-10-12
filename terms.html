@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foydalanish Shartlari — Anime UZ</title>
+  <style>
+    :root {
+      --bg:       #0a0a18;
+      --surface:  #0f0f24;
+      --border:   rgba(139,92,246,0.18);
+      --accent:   #8b5cf6;
+      --accent2:  #00d4ff;
+      --text:     #cce4ff;
+      --muted:    #7a9bbf;
+      --heading:  #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .page-label {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: rgba(139,92,246,0.08);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── Main ── */
+    main {
+      max-width: 860px;
+      margin: 48px auto;
+      padding: 0 24px 80px;
+    }
+
+    .doc-hero {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+    .doc-hero .icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .doc-hero h1 {
+      font-size: 2rem;
+      color: var(--heading);
+      margin-bottom: 12px;
+    }
+    .doc-hero p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .doc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 24px;
+      transition: border-color 0.2s;
+    }
+    .doc-card:hover { border-color: rgba(139,92,246,0.35); }
+
+    .doc-card h2 {
+      color: var(--accent);
+      font-size: 1.05rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .doc-card h2 .num {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .doc-card p { color: var(--text); font-size: 0.92rem; margin-bottom: 10px; }
+    .doc-card p:last-child { margin-bottom: 0; }
+    .doc-card ul {
+      padding-left: 20px;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+    .doc-card ul li { margin-bottom: 8px; }
+
+    .warn-box {
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 14px;
+      font-size: 0.88rem;
+      color: #c4b5fd;
+    }
+
+    .danger-box {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 12px;
+      font-size: 0.87rem;
+      color: #fca5a5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .doc-card { padding: 24px 20px; }
+      .doc-hero h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo-link">
+      <div class="logo-icon">🎌</div>
+      <span class="logo-text">Anime UZ</span>
+    </a>
+    <span class="page-label">📋 Foydalanish Shartlari</span>
+  </div>
+</header>
+
+<main>
+  <div class="doc-hero">
+    <span class="icon">📋</span>
+    <h1>Foydalanish Shartlari</h1>
+    <p>So'nggi yangilanish: 2025-yil 1-yanvar &nbsp;|&nbsp; Anime UZ platforma</p>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">1</span> Qabul qilish</h2>
+    <p>Anime UZ platformasidan foydalanish orqali siz ushbu Foydalanish Shartlarini to'liq qabul qilasiz. Agar shartlarga rozi bo'lmasangiz, platformadan foydalanmang.</p>
+    <p>Biz shartlarni istalgan vaqt yangilash huquqini saqlab qolamiz. Muhim o'zgarishlar haqida foydalanuvchilar xabardor qilinadi.</p>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">2</span> Platforma haqida</h2>
+    <p>Anime UZ — o'zbek tilidagi anime ko'rish, qidirish va jamiyat platformasidir. Platforma Telegram bot va web-interfeys orqali xizmat ko'rsatadi.</p>
+    <p>Platforma foydalanuvchilarga quyidagi imkoniyatlarni taqdim etadi: anime ko'rish, qidirish, VIP obuna, o'yinlar va AI yordamchi.</p>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">3</span> Hisob va autentifikatsiya</h2>
+    <ul>
+      <li>Hisobga kirish uchun Google OAuth yoki Telegram tizimidan foydalaniladi.</li>
+      <li>Siz hisob ma'lumotlaringizni uchinchi shahslarga bermasligingiz shart.</li>
+      <li>Hisobingizda sodir bo'lgan har qanday faoliyat uchun javobgarlik sizda.</li>
+      <li>Shubhali faoliyat aniqlansa, hisob vaqtincha to'xtatilishi mumkin.</li>
+    </ul>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">4</span> VIP obuna</h2>
+    <p>VIP obuna orqali qo'shimcha imkoniyatlarga ega bo'lasiz (reklamasiz ko'rish, maxsus anime, yuqori sifat va boshqalar).</p>
+    <ul>
+      <li>To'lov amalga oshirilgach, obuna aktivlashtiriladi va qaytarib berilmaydi.</li>
+      <li>Obuna muddati tugagach, avtomatik yangilanmaydi — yangilash foydalanuvchi ixtiyorida.</li>
+      <li>To'lov muammolari yuzasidan bot orqali murojaat qilishingiz mumkin.</li>
+    </ul>
+    <div class="warn-box">💜 VIP foydalanuvchilar uchun maxsus qo'llab-quvvatlash xizmati mavjud.</div>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">5</span> Taqiqlangan harakatlar</h2>
+    <p>Quyidagi harakatlar qat'iyan taqiqlanadi:</p>
+    <ul>
+      <li>Platformani, botni yoki ma'lumotlar bazasini buzishga urinish.</li>
+      <li>Avtomatik skriptlar, botlar yoki vositalar orqali ma'lumot to'plash (scraping).</li>
+      <li>Boshqa foydalanuvchilarga nisbatan bezovta qiluvchi yoki shikoyat bilan bog'liq harakatlar.</li>
+      <li>Mualliflik huquqi bilan himoyalangan kontentni ruxsatsiz tarqatish.</li>
+      <li>Platformadan tijorat maqsadlarida ruxsatsiz foydalanish.</li>
+    </ul>
+    <div class="danger-box">⛔ Qoidabuzarlik aniqlansa, hisob darhol va muddatsiz bloklash bilan tugaydi.</div>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">6</span> Intellektual mulk</h2>
+    <p>Platformadagi anime kontenti (videolar, rasmlar, tavsiflar) tegishli mualliflik huquqlari egalariga tegishli. Anime UZ ushbu kontentni faqat ko'rish maqsadida taqdim etadi.</p>
+    <p>Anime UZ logotipi, dizayni va kodi platformaga xususiy mulk hisoblanadi va ruxsatsiz ko'chirib olish taqiqlanadi.</p>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">7</span> Xizmat uzilishlari va mas'uliyat chegarasi</h2>
+    <p>Biz platformaning uzluksiz ishlashiga harakat qilamiz, ammo texnik ishlar, server uzilishlari yoki force majeure holatlarida xizmat vaqtincha to'xtashi mumkin.</p>
+    <p>Platforma "mavjud holda" (as-is) taqdim etiladi. Biz xizmat uzilishidan kelib chiqqan yo'qotishlar uchun javobgarlik olmaydi.</p>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">8</span> Hisobni o'chirish</h2>
+    <p>Istalgan vaqt hisobingizni o'chirishni so'rashingiz mumkin. O'chirish so'rovi kelib tushgandan so'ng, 30 kun ichida barcha ma'lumotlaringiz to'liq o'chiriladi.</p>
+    <p>Qoidalarni qayta-qayta buzgan foydalanuvchilarning hisobi ma'muriyat tomonidan o'chirilishi mumkin.</p>
+  </div>
+
+  <div class="doc-card">
+    <h2><span class="num">9</span> O'zgarishlar va aloqa</h2>
+    <p>Ushbu shartlar zarurat bo'lganda yangilanadi. Yangilangan versiya platforma sahifasida e'lon qilinadi va bu sana bilan kuchga kiradi.</p>
+    <p>Savollar, shikoyatlar yoki takliflar uchun Telegram bot yoki saytdagi murojaat formasi orqali bog'laning.</p>
+    <div class="warn-box">📩 Barcha murojaaatlarga 48 soat ichida javob beriladi.</div>
+  </div>
+</main>
+
+<footer>
+  <p>© 2025 Anime UZ &nbsp;|&nbsp; <a href="/privacy">Maxfiylik Siyosati</a> &nbsp;|&nbsp; <a href="/">Bosh sahifa</a></p>
+</footer>
+
+</body>
+</html>

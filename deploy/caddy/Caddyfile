@@ -1,0 +1,42 @@
+# Optional edge proxy for VPS/Cloudflare Tunnel deployments.
+# Replace anime.example.com with your domain and proxy to the Python app.
+
+{
+	auto_https on
+}
+
+anime.example.com {
+	encode zstd gzip
+
+	@blocked {
+		path /.env* /.git* /wp-* /wordpress* /xmlrpc.php /phpmyadmin* /adminer* /vendor/phpunit* /cgi-bin*
+	}
+	respond @blocked 404
+
+	@api path /api/*
+	@media path /media/* /poster/*
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	header @api Cache-Control "no-store"
+	header @media Cache-Control "public, max-age=1800"
+	header / Cache-Control "public, max-age=120"
+
+	request_body {
+		max_size 2MB
+	}
+
+	reverse_proxy 127.0.0.1:8080 {
+		transport http {
+			read_timeout 30s
+			write_timeout 30s
+			dial_timeout 5s
+		}
+	}
+}

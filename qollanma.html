@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Bot — Qo'llanma</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c14;
+    --surface: #111520;
+    --card: #161b2e;
+    --border: #1e2740;
+    --accent: #e63f6e;
+    --accent2: #4facfe;
+    --accent3: #a78bfa;
+    --gold: #f5a623;
+    --green: #22d3a7;
+    --text: #e0e6f0;
+    --muted: #6b7a9a;
+    --glow: rgba(230, 63, 110, 0.18);
+    --glow2: rgba(79, 172, 254, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(230,63,110,0.07) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(79,172,254,0.06) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(255,255,255,0.012) 80px, rgba(255,255,255,0.012) 81px),
+      repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(255,255,255,0.012) 80px, rgba(255,255,255,0.012) 81px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 60px 0 40px;
+    position: relative;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(230,63,110,0.12);
+    border: 1px solid rgba(230,63,110,0.3);
+    border-radius: 100px;
+    padding: 6px 18px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2) 70%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 14px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .divider-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), var(--accent2), var(--border), transparent);
+    margin: 40px 0;
+    opacity: 0.6;
+  }
+
+  /* TAB NAV */
+  .tab-nav {
+    display: flex;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 40px;
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    backdrop-filter: blur(16px);
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 8px;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent), #b02050);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(230,63,110,0.35);
+  }
+
+  .tab-btn:not(.active):hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .card:hover {
+    border-color: rgba(79,172,254,0.3);
+    transform: translateY(-2px);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .card-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .card-icon.pink { background: rgba(230,63,110,0.15); }
+  .card-icon.blue { background: rgba(79,172,254,0.15); }
+  .card-icon.purple { background: rgba(167,139,250,0.15); }
+  .card-icon.gold { background: rgba(245,166,35,0.15); }
+  .card-icon.green { background: rgba(34,211,167,0.15); }
+
+  .card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+
+  .card-body {
+    color: #a0aec5;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    position: relative;
+  }
+
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 52px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent2), transparent);
+    opacity: 0.3;
+  }
+
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--accent2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--accent2);
+    flex-shrink: 0;
+    background: rgba(79,172,254,0.08);
+  }
+
+  .step-content { flex: 1; }
+  .step-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .step-desc { color: var(--muted); font-size: 13.5px; }
+
+  /* COMMAND BOX */
+  .cmd-box {
+    background: rgba(10,12,20,0.8);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+    letter-spacing: 0.5px;
+  }
+
+  .cmd-box .cmd-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  /* BADGE GRID */
+  .badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+
+  .badge:hover { border-color: var(--accent); }
+  .badge .b-icon { font-size: 18px; }
+
+  /* TABLE */
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 12px 0;
+  }
+
+  .info-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: rgba(79,172,254,0.08);
+    color: var(--accent2);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .info-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(30,39,64,0.5);
+    color: #a0aec5;
+    vertical-align: top;
+  }
+
+  .info-table tr:last-child td { border-bottom: none; }
+  .info-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ALERT */
+  .alert {
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 12px 0;
+    font-size: 13.5px;
+  }
+
+  .alert.info {
+    background: rgba(79,172,254,0.08);
+    border: 1px solid rgba(79,172,254,0.2);
+    color: #8ec8fd;
+  }
+
+  .alert.warning {
+    background: rgba(245,166,35,0.08);
+    border: 1px solid rgba(245,166,35,0.2);
+    color: #f5c842;
+  }
+
+  .alert.success {
+    background: rgba(34,211,167,0.08);
+    border: 1px solid rgba(34,211,167,0.2);
+    color: var(--green);
+  }
+
+  .alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+  /* VIP CARDS */
+  .vip-plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  @media (max-width: 600px) {
+    .vip-plans { grid-template-columns: 1fr; }
+    .tab-btn { font-size: 13px; padding: 10px 6px; }
+    header h1 { font-size: 2rem; }
+    .badge-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  }
+
+  .vip-plan {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .vip-plan:hover { transform: translateY(-4px); }
+
+  .vip-plan.popular {
+    border-color: var(--gold);
+    position: relative;
+  }
+
+  .popular-tag {
+    position: absolute;
+    top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--gold);
+    color: #000;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 12px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .plan-days {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .plan-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .plan-price { font-size: 13px; color: var(--gold); font-weight: 600; }
+
+  /* SEARCH TYPES */
+  .search-types { display: flex; flex-direction: column; gap: 8px; }
+  .search-type {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  .search-type strong { color: var(--text); }
+  .search-type span { color: var(--muted); font-size: 13px; }
+
+  /* ADMIN SECTION accent */
+  .admin-accent { --accent2: #a78bfa; }
+  .admin-card {
+    border-color: rgba(167,139,250,0.15);
+  }
+  .admin-card:hover { border-color: rgba(167,139,250,0.35); }
+  .admin-card::before { background: linear-gradient(90deg, transparent, var(--accent3), transparent); }
+
+  /* Highlight */
+  .hl { color: var(--accent2); font-weight: 600; }
+  .hl-r { color: var(--accent); font-weight: 600; }
+  .hl-g { color: var(--green); font-weight: 600; }
+  .hl-gold { color: var(--gold); font-weight: 600; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0 20px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  /* Animate in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab-panel.active { animation: fadeUp 0.35s ease; }
+
+  code {
+    background: rgba(79,172,254,0.1);
+    border: 1px solid rgba(79,172,254,0.2);
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-size: 13px;
+    color: var(--accent2);
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-badge">🎬 Anime Bot</div>
+    <h1>Foydalanish Qo'llanmasi</h1>
+    <p>Botdan to'liq foydalanish uchun ushbu qo'llanmani diqqat bilan o'qing</p>
+  </header>
+
+  <!-- TAB NAV -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('user', this)">👤 Foydalanuvchi</button>
+    <button class="tab-btn" onclick="switchTab('admin', this)">🗄 Admin</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--                  USER PANEL                        -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-user">
+
+    <!-- Boshlash -->
+    <div class="section">
+      <div class="section-title">🚀 Boshlash</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon blue">🤖</div>
+          <div class="card-title">Botga qanday kiriladi?</div>
+        </div>
+        <div class="card-body">
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Botni oching va <code>/start</code> yuboring</div>
+                <div class="step-desc">Birinchi marta kirganingizda siz avtomatik ro'yxatdan o'tasiz.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Majburiy kanallarga obuna bo'ling</div>
+                <div class="step-desc">Bot sizdan talab qilingan kanallarga obuna bo'lishingizni so'raydi. Obuna bo'lgandan so'ng <strong>✅ Tekshirish</strong> tugmasini bosing.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Asosiy menyuga kiring</div>
+                <div class="step-desc">Barcha tugmalar tayyor — botdan erkin foydalanishingiz mumkin!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Asosiy menyU -->
+    <div class="section">
+      <div class="section-title">📋 Asosiy menyu tugmalari</div>
+
+      <div class="badge-grid">
+        <div class="badge"><span class="b-icon">🔎</span> Anime izlash</div>
+        <div class="badge"><span class="b-icon">💎</span> VIP</div>
+        <div class="badge"><span class="b-icon">💰</span> Hisobim</div>
+        <div class="badge"><span class="b-icon">📌</span> Watchlist</div>
+        <div class="badge"><span class="b-icon">▶️</span> Davom etish</div>
+        <div class="badge"><span class="b-icon">🔥</span> Trendlar</div>
+        <div class="badge"><span class="b-icon">🎯</span> Tavsiyalar</div>
+        <div class="badge"><span class="b-icon">➕</span> Pul kiritish</div>
+        <div class="badge"><span class="b-icon">📚</span> Qo'llanma</div>
+        <div class="badge"><span class="b-icon">👥</span> Referal</div>
+        <div class="badge"><span class="b-icon">💸</span> Pul o'tkazmasi</div>
+        <div class="badge"><span class="b-icon">🎁</span> Cashback</div>
+        <div class="badge"><span class="b-icon">💵</span> Reklama & Homiylik</div>
+        <div class="badge"><span class="b-icon">🌐</span> Web App (agar sozlangan bo'lsa)</div>
+      </div>
+    </div>
+
+    <!-- Anime izlash -->
+    <div class="section">
+      <div class="section-title">🔎 Anime Izlash</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon pink">🔍</div>
+          <div class="card-title">Qidiruv usullari</div>
+        </div>
+        <div class="card-body">
+          <div class="search-types">
+            <div class="search-type">
+              <span class="b-icon">🏷</span>
+              <div><strong>Anime nomi orqali</strong><br><span>Anime nomining bir qismini yozsangiz ham topiladi (masalan: "narut")</span></div>
+            </div>
+            <div class="search-type">
+              <span class="b-icon">📌</span>
+              <div><strong>Kod (ID) orqali</strong><br><span>Aniq anime kodini bilsangiz, to'g'ridan-to'g'ri yozing — bot topib beradi</span></div>
+            </div>
+            <div class="search-type">
+              <span class="b-icon">💬</span>
+              <div><strong>Janr orqali</strong><br><span>Action, Romance, Fantasy va boshqa janrlar bo'yicha filterlash</span></div>
+            </div>
+            <div class="search-type">
+              <span class="b-icon">🔞</span>
+              <div><strong>Yosh toifasi bo'yicha</strong><br><span>Anime yosh toifasiga qarab tartiblash</span></div>
+            </div>
+            <div class="search-type">
+              <span class="b-icon">⏱</span>
+              <div><strong>So'ngi yuklanganlar</strong><br><span>Eng oxirgi qo'shilgan 10 ta animeni ko'rish</span></div>
+            </div>
+            <div class="search-type">
+              <span class="b-icon">👁️</span>
+              <div><strong>Eng ko'p ko'rilgan</strong><br><span>Top 10 ta eng mashhur animeni ko'rish</span></div>
+            </div>
+            <div class="search-type">
+              <span class="b-icon">📚</span>
+              <div><strong>Barcha animelar</strong><br><span>Alifbo tartibida 20 ta ko'rsatiladi, almashtirish tugmasi bilan boshqalari ham chiqadi</span></div>
+            </div>
+          </div>
+          <div class="alert info" style="margin-top:12px">
+            <div class="alert-icon">💡</div>
+            <div>Faqat anime kodini chatga yozsangiz ham (masalan: <code>42</code>), bot avtomatik o'sha animeni topib beradi!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anime ko'rish -->
+    <div class="section">
+      <div class="section-title">📺 Anime Ko'rish</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon blue">▶️</div>
+          <div class="card-title">Qismlarni ko'rish</div>
+        </div>
+        <div class="card-body">
+          <p>Anime topilgandan so'ng tugma orqali <span class="hl">qismlar ro'yxatini</span> oching. Har sahifada <span class="hl">24 ta qism</span> ko'rsatiladi (5×4 grid).</p>
+          <ul style="margin: 10px 0 10px 20px; color: #a0aec5;">
+            <li>◀️ / ▶️ tugmalari bilan sahifalar o'rtasida harakatlaning</li>
+            <li>Joriy ko'rilayotgan qism <strong>[ N ]</strong> ko'rinishida belgilanadi</li>
+            <li>Ko'rish progress saqlanadi — keyingi safar <strong>▶️ Davom etish</strong> dan davom ettiring</li>
+          </ul>
+          <div class="alert success">
+            <div class="alert-icon">📥</div>
+            <div><strong>Yuklash:</strong> Anime kartasidagi <strong>📥 Yuklash</strong> tugmasi orqali — bitta qism yoki sahifani yuklab olishingiz mumkin.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon purple">📌</div>
+          <div class="card-title">Watchlist — Saqlash</div>
+        </div>
+        <div class="card-body">
+          <p>Anime kartasidagi <span class="hl">📌 Watchlistga saqlash</span> tugmasi bilan anime ro'yxatingizga qo'shiladi.<br>
+          Keyinchalik asosiy menyudagi <span class="hl">📌 Watchlist</span> orqali tez kirishingiz mumkin.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon green">🔥</div>
+          <div class="card-title">Trendlar va Tavsiyalar</div>
+        </div>
+        <div class="card-body">
+          <p><span class="hl-g">🔥 Trendlar</span> — hozirda eng ko'p ko'rilayotgan animeni ko'rsatadi.<br>
+          <span class="hl-g">🎯 Tavsiyalar</span> — siz ko'rgan animelarga o'xshash yangi animeni tavsiya qiladi.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Baholash -->
+    <div class="section">
+      <div class="section-title">👍 Baholash</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon gold">⭐</div>
+          <div class="card-title">Like, Dislike va Reyting</div>
+        </div>
+        <div class="card-body">
+          <p>Anime kartasida quyidagi tugmalar mavjud:</p>
+          <table class="info-table" style="margin-top:10px">
+            <thead><tr><th>Tugma</th><th>Vazifasi</th></tr></thead>
+            <tbody>
+              <tr><td>👍 Like</td><td>Animeni yoqtirganingizni bildirish</td></tr>
+              <tr><td>👎 Dislike</td><td>Animeni yoqtirmaganingizni bildirish</td></tr>
+              <tr><td>⭐ Reyting</td><td>1–5 yulduz bilan baholash</td></tr>
+              <tr><td>🔁 Ulashish</td><td>Do'stlaringizga havola yuborish</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIP -->
+    <div class="section">
+      <div class="section-title">💎 VIP Obuna</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon gold">💎</div>
+          <div class="card-title">VIP imtiyozlari</div>
+        </div>
+        <div class="card-body">
+          <p style="margin-bottom:12px">VIP a'zo bo'lish orqali quyidagi imtiyozlardan foydalaning:</p>
+          <div class="badge-grid">
+            <div class="badge"><span class="b-icon">✅</span> Barcha animelarga kirish</div>
+            <div class="badge"><span class="b-icon">🚀</span> Ustuvor yuklab olish</div>
+            <div class="badge"><span class="b-icon">💎</span> Premium status belgisi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vip-plans">
+        <div class="vip-plan">
+          <div class="plan-days">30</div>
+          <div class="plan-label">KUN</div>
+          <div class="plan-price">Asosiy narx</div>
+        </div>
+        <div class="vip-plan popular">
+          <div class="popular-tag">⭐ MASHHUR</div>
+          <div class="plan-days">60</div>
+          <div class="plan-label">KUN</div>
+          <div class="plan-price">Narx × 2</div>
+        </div>
+        <div class="vip-plan">
+          <div class="plan-days">90</div>
+          <div class="plan-label">KUN</div>
+          <div class="plan-price">Narx × 3</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon pink">💳</div>
+          <div class="card-title">To'lov jarayoni</div>
+        </div>
+        <div class="card-body">
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title"><code>💎 VIP</code> tugmasini bosing</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Kerakli muddatni tanlang (30 / 60 / 90 kun)</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Ko'rsatilgan karta raqamiga pul o'tkazing</div>
+                <div class="step-desc">Karta raqami botda ko'rsatiladi</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <div class="step-title">To'lov chekining <strong>rasmini</strong> yuboring</div>
+                <div class="step-desc">Skrinshot yoki to'lov ilovasidan olingan chek</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-content">
+                <div class="step-title">Admin tasdiqlashini kuting</div>
+                <div class="step-desc">Tasdiqlangandan so'ng VIP avtomatik yoqiladi va sizga xabar keladi</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hisobim -->
+    <div class="section">
+      <div class="section-title">💰 Hisob va Moliya</div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon blue">💰</div>
+          <div class="card-title">💰 Hisobim</div>
+        </div>
+        <div class="card-body">
+          <p>Bu bo'limda siz quyidagilarni ko'rasiz:</p>
+          <table class="info-table" style="margin-top: 10px">
+            <tbody>
+              <tr><td>🆔 ID</td><td>Sizning Telegram raqamingiz</td></tr>
+              <tr><td>👤 Status</td><td>Oddiy yoki VIP</td></tr>
+              <tr><td>💎 VIP</td><td>Qachongacha ekanligingiz (agar VIP bo'lsangiz)</td></tr>
+              <tr><td>💵 Balans</td><td>Asosiy hisob balansi (so'mda)</td></tr>
+              <tr><td>🎁 Bonus</td><td>Referal orqali to'plangan bonus</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon green">➕</div>
+          <div class="card-title">Pul kiritish</div>
+        </div>
+        <div class="card-body">
+          <p>Hisobingizni to'ldirish uchun <span class="hl">➕ Pul kiritish</span> tugmasini bosing. Miqdorni kiriting → karta raqamiga o'tkazing → chekni yuboring → admin tasdiqlasin.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon purple">💸</div>
+          <div class="card-title">Pul o'tkazmasi</div>
+        </div>
+        <div class="card-body">
+          <p>Balansdan boshqa foydalanuvchiga pul yuborish uchun <span class="hl">💸 Pul o'tkazmasi</span> bo'limiga o'ting. Qabul qiluvchining <span class="hl">Telegram ID</span>sini va miqdorni kiriting — tasdiqlab yuboring.</p>
+          <div class="alert warning">
+            <div class="alert-icon">⚠️</div>
+            <div>O'tkazma bekor qilinmaydi. ID va miqdorni to'g'ri kiritganingizga ishonch hosil qiling.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon gold">🎁</div>
+          <div class="card-title">Cashback</div>
+        </div>
+        <div class="card-body">
+          <p>Har bir to'lovdan muayyan foiz cashback olasiz. Cashback summasi bonus hisobingizga tushadi. <span class="hl-g">🎁 Cashback</span> bo'limida joriy foiz va bonus balansingizni ko'rishingiz mumkin.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referal -->
+    <div class="section">
+      <div class="section-title">👥 Referal Tizimi</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon pink">🔗</div>
+          <div class="card-title">Do'st taklif qiling — bonus oling</div>
+        </div>
+        <div class="card-body">
+          <p>Har bir do'stingizni referal havola orqali taklif qilib bonus ishlang:</p>
+          <table class="info-table" style="margin-top:10px">
+            <thead><tr><th>Kim</th><th>Bonus</th></tr></thead>
+            <tbody>
+              <tr><td>Siz (taklif etuvchi)</td><td>Asosiy balansga bonus so'm + +1 odam</td></tr>
+              <tr><td>Do'stingiz (yangi foydalanuvchi)</td><td>Bonus balansingizga bonus so'm</td></tr>
+            </tbody>
+          </table>
+          <div class="alert info" style="margin-top:12px">
+            <div class="alert-icon">🔗</div>
+            <div><strong>Referal havolangizni</strong> <code>👥 Referal</code> bo'limida topasiz. Nusxalab do'stlarga yuboring.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boshqa -->
+    <div class="section">
+      <div class="section-title">ℹ️ Boshqa Funksiyalar</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon blue">🌐</div>
+          <div class="card-title">Web App</div>
+        </div>
+        <div class="card-body">
+          <p>Agar <span class="hl">🌐 Web App</span> tugmasi ko'rinsa — animeni Telegram ichida to'g'ridan-to'g'ri brauzer kabi tomosha qilishingiz mumkin (Mini App orqali).</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon purple">💵</div>
+          <div class="card-title">Reklama va Homiylik</div>
+        </div>
+        <div class="card-body">
+          <p>Botda reklama berish yoki homiylik qilish uchun <span class="hl">💵 Reklama va Homiylik</span> bo'limini oching. Narxlar va shartlar u yerda ko'rsatiladi.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon green">🤖</div>
+          <div class="card-title">/ai komandasi</div>
+        </div>
+        <div class="card-body">
+          <p>Botda AI yordamchi mavjud. <code>/ai</code> yozing va savolingizni yuboring — javob keladi.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- /tab-user -->
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--                  ADMIN PANEL                       -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-admin">
+
+    <!-- Kirish -->
+    <div class="section admin-accent">
+      <div class="section-title">🔐 Admin Paneliga Kirish</div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon purple">🗄</div>
+          <div class="card-title">Qanday kirish mumkin?</div>
+        </div>
+        <div class="card-body">
+          <p>Admin paneliga kirish uchun ikki yo'l bor:</p>
+          <div class="cmd-box"><span class="cmd-label">KOMANDA</span>/panel</div>
+          <p style="margin-top: 8px;">Yoki asosiy menyudagi <span class="hl" style="color:var(--accent3)">🗄 Boshqarish</span> tugmasini bosing.</p>
+          <div class="alert warning" style="margin-top:12px">
+            <div class="alert-icon">⚠️</div>
+            <div>Faqat <code>.env</code> da yoki bazada qo'shilgan adminlar ko'ra oladi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin darajalari -->
+    <div class="section admin-accent">
+      <div class="section-title">👑 Admin Darajalari</div>
+      <div class="card admin-card">
+        <div class="card-body">
+          <table class="info-table">
+            <thead><tr><th>Daraja</th><th>Qanday qo'shiladi</th><th>Huquqlar</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="hl-gold">Super Admin</span></td>
+                <td><code>.env</code> → <code>SUPER_ADMIN_ID</code></td>
+                <td>Hammasi + admin qo'shish, jurnallar</td>
+              </tr>
+              <tr>
+                <td><span class="hl" style="color:var(--accent3)">Admin (env)</span></td>
+                <td><code>.env</code> → <code>ADMIN_IDS</code></td>
+                <td>Panel barcha funksiyalari</td>
+              </tr>
+              <tr>
+                <td><span class="hl-g">JSON Admin (DB)</span></td>
+                <td>Panel → Adminlar → Qo'shish</td>
+                <td>Panel funksiyalari (jurnal yo'q)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin panel tugmalari -->
+    <div class="section admin-accent">
+      <div class="section-title">📋 Admin Panel Tugmalari</div>
+      <div class="badge-grid">
+        <div class="badge"><span class="b-icon">📊</span> Statistika</div>
+        <div class="badge"><span class="b-icon">✉</span> Xabar Yuborish</div>
+        <div class="badge"><span class="b-icon">📬</span> Post tayyorlash</div>
+        <div class="badge"><span class="b-icon">🎥</span> Animelar sozlash</div>
+        <div class="badge"><span class="b-icon">💳</span> Hamyonlar</div>
+        <div class="badge"><span class="b-icon">🔎</span> Foydalanuvchi boshqarish</div>
+        <div class="badge"><span class="b-icon">📢</span> Kanallar</div>
+        <div class="badge"><span class="b-icon">🎛</span> Tugmalar</div>
+        <div class="badge"><span class="b-icon">📃</span> Matnlar</div>
+        <div class="badge"><span class="b-icon">💸</span> To'lovlarni Tasdiqlash</div>
+        <div class="badge"><span class="b-icon">📋</span> Ro'yxat yuborish</div>
+        <div class="badge"><span class="b-icon">*️⃣</span> Birlamchi sozlamalar</div>
+        <div class="badge"><span class="b-icon">🤖</span> Bot holati</div>
+        <div class="badge"><span class="b-icon">📋</span> Adminlar (super)</div>
+        <div class="badge"><span class="b-icon">📋</span> Jurnallar (super)</div>
+      </div>
+    </div>
+
+    <!-- Anime qo'shish -->
+    <div class="section admin-accent">
+      <div class="section-title">🎥 Anime Qo'shish</div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon purple">➕</div>
+          <div class="card-title">Yangi anime qo'shish jarayoni</div>
+        </div>
+        <div class="card-body">
+          <p style="margin-bottom:14px">Panel → <strong>🎥 Animelar sozlash</strong> → <strong>➕ Anime qo'shish</strong></p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Anime nomini kiriting</div></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Jami qismlar sonini kiriting</div></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Davlat (ishlab chiqaruvchi mamlakat)</div></div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Tilni kiriting</div></div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Chiqarilgan yilini kiriting</div></div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-content"><div class="step-title">Janrlarini kiriting (vergul bilan)</div><div class="step-desc">Masalan: Action, Fantasy, Adventure</div></div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-content"><div class="step-title">Fandub studiyasi nomini kiriting</div></div></div>
+            <div class="step"><div class="step-num">8</div><div class="step-content"><div class="step-title">Holatini tanlang</div><div class="step-desc"><code>🔸 OnGoing</code> — davom etayotgan &nbsp; | &nbsp; <code>✅ Yakunlangan</code></div></div></div>
+            <div class="step"><div class="step-num">9</div><div class="step-content"><div class="step-title">Yosh toifasini tanlang</div></div></div>
+            <div class="step"><div class="step-num">10</div><div class="step-content"><div class="step-title">Muqova rasm yoki video yuboring</div></div></div>
+          </div>
+          <div class="alert success" style="margin-top:12px">
+            <div class="alert-icon">✅</div>
+            <div>Anime qo'shilgandan so'ng uning <strong>Kodi (ID)</strong> beriladi — qismlar qo'shishda kerak bo'ladi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Qism qo'shish -->
+    <div class="section admin-accent">
+      <div class="section-title">📹 Qism Qo'shish</div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon blue">🎬</div>
+          <div class="card-title">Anime qismini qo'shish</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>🎥 Animelar sozlash</strong> → <strong>➕ Qism qo'shish</strong></p>
+          <div class="steps" style="margin-top:12px">
+            <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Anime kodini (ID) kiriting</div></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Qism raqamini kiriting (ixtiyoriy — bot o'zi hisoblab beradi)</div></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Video yoki fayl yuboring</div><div class="step-desc">Bot video file_id ni saqlaydi va qism ro'yxatiga qo'shadi</div></div></div>
+          </div>
+          <div class="alert info" style="margin-top:12px">
+            <div class="alert-icon">📢</div>
+            <div>Yangi qism qo'shilganda shu animeni watchlistga saqlagan foydalanuvchilarga <strong>avtomatik bildirishnoma</strong> yuboriladi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIP tasdiqlash -->
+    <div class="section admin-accent">
+      <div class="section-title">💸 To'lovlarni Tasdiqlash</div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon gold">✅</div>
+          <div class="card-title">VIP to'lov komandalar</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>💸 To'lovlarni Tasdiqlash</strong> dan yoki to'g'ridan-to'g'ri komanda orqali:</p>
+          <div class="cmd-box">
+            <span class="cmd-label">QABUL</span>
+            /approve_USER_ID_DAYS &nbsp; <span style="color:var(--muted); font-size:12px">// misol: /approve_123456_30</span>
+          </div>
+          <div class="cmd-box" style="border-left-color: var(--accent)">
+            <span class="cmd-label">RAD ETISH</span>
+            /reject_USER_ID &nbsp; <span style="color:var(--muted); font-size:12px">// misol: /reject_123456</span>
+          </div>
+          <div class="alert success" style="margin-top:12px">
+            <div class="alert-icon">💡</div>
+            <div>To'lovlarni Tasdiqlash bo'limidan chek rasmini ko'rib, <strong>✅ Tasdiqlash</strong> yoki <strong>❌ Rad etish</strong> tugmalari orqali ham boshqarish mumkin. Tasdiqlash vaqtida kunlar sonini qo'lda kiritasiz.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Foydalanuvchi boshqarish -->
+    <div class="section admin-accent">
+      <div class="section-title">🔎 Foydalanuvchi Boshqarish</div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon pink">👤</div>
+          <div class="card-title">Ban / Unban va profil</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>🔎 Foydalanuvchini boshqarish</strong> → foydalanuvchi <strong>ID</strong>sini kiriting.</p>
+          <p style="margin-top:8px">Ko'rsatiladigan ma'lumotlar: balans, status, VIP holati, taklif qilganlar soni.</p>
+          <table class="info-table" style="margin-top:10px">
+            <thead><tr><th>Amal</th><th>Natija</th></tr></thead>
+            <tbody>
+              <tr><td>🚫 Ban</td><td>Foydalanuvchi botdan foydalana olmaydi</td></tr>
+              <tr><td>✅ Unban</td><td>Ban olinadi</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Broadcast -->
+    <div class="section admin-accent">
+      <div class="section-title">✉ Xabar va Post</div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon blue">📣</div>
+          <div class="card-title">Broadcast — Barcha foydalanuvchilarga xabar</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>✉ Xabar Yuborish</strong> → xabarni (matn / rasm / video) yuboring → bot barcha foydalanuvchilarga tarqatadi.</p>
+        </div>
+      </div>
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon purple">📬</div>
+          <div class="card-title">Post tayyorlash</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>📬 Post tayyorlash</strong>:</p>
+          <div class="steps" style="margin-top:10px">
+            <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Media yuboring (rasm/video) yoki o'tkazib yuboring</div></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Sarlavha (caption) yozing</div></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Inline tugmalar qo'shing yoki o'tkazib yuboring</div><div class="step-desc">Format: <code>Matn | https://url.com</code></div></div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Preview ko'ring va tasdiqlang</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanallar -->
+    <div class="section admin-accent">
+      <div class="section-title">📢 Kanallar Boshqarish</div>
+      <div class="card admin-card">
+        <div class="card-body">
+          <p style="margin-bottom:10px">Panel → <strong>📢 Kanallar</strong> bo'limida kanal qo'shish va o'chirish mumkin.</p>
+          <table class="info-table">
+            <thead><tr><th>Kanal Turi</th><th>Vazifasi</th></tr></thead>
+            <tbody>
+              <tr><td><span class="hl-r">public</span></td><td>Majburiy ochiq kanal — obunasiz botdan foydalanib bo'lmaydi</td></tr>
+              <tr><td><span class="hl" style="color:var(--accent3)">request</span></td><td>Yopiq kanal — qo'shilish so'rovi avtomatik tasdiqlanadi</td></tr>
+              <tr><td><span class="hl-g">social</span></td><td>Instagram, YouTube va b. (faqat havola ko'rinishida)</td></tr>
+              <tr><td><span class="hl-gold">anime</span></td><td>Anime tegishli kanal</td></tr>
+              <tr><td>ongoing</td><td>Yangi qismlar e'lon qilinadigan kanal</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sozlamalar -->
+    <div class="section admin-accent">
+      <div class="section-title">*️⃣ Birlamchi Sozlamalar</div>
+      <div class="card admin-card">
+        <div class="card-body">
+          <table class="info-table">
+            <thead><tr><th>Sozlama</th><th>Default</th><th>Tavsif</th></tr></thead>
+            <tbody>
+              <tr><td><code>vip_price</code></td><td>5000</td><td>30 kunlik VIP narxi (so'mda)</td></tr>
+              <tr><td><code>vip_currency</code></td><td>so'm</td><td>Valyuta</td></tr>
+              <tr><td><code>referral_bonus</code></td><td>500</td><td>Referal bonus miqdori</td></tr>
+              <tr><td><code>cashback_percent</code></td><td>5</td><td>Cashback foizi</td></tr>
+              <tr><td><code>bot_maintenance</code></td><td>0</td><td>Texnik ish rejimi (1 = yoqilgan)</td></tr>
+              <tr><td><code>web_app_url</code></td><td>bo'sh</td><td>Mini App URL (qo'shilsa menyu paydo bo'ladi)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boshqa -->
+    <div class="section admin-accent">
+      <div class="section-title">🛠 Boshqa Admin Amallar</div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon pink">💳</div>
+          <div class="card-title">💳 Hamyonlar — To'lov karta raqami</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>💳 Hamyonlar</strong> — Foydalanuvchilarga ko'rsatiladigan karta raqamini o'zgartirish mumkin.</p>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon blue">📃</div>
+          <div class="card-title">📃 Matnlar — Sozlanuvchi matnlar</div>
+        </div>
+        <div class="card-body">
+          <table class="info-table">
+            <thead><tr><th>Kalit</th><th>Nima uchun</th></tr></thead>
+            <tbody>
+              <tr><td><code>guide</code></td><td>Foydalanuvchiga ko'rsatiladigan qo'llanma matni</td></tr>
+              <tr><td><code>ads</code></td><td>Reklama/homiylik bo'limdagi matn</td></tr>
+              <tr><td><code>wallet</code></td><td>Karta raqami (hamyon)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon purple">🎛</div>
+          <div class="card-title">🎛 Tugmalar — Maxsus inline tugmalar</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>🎛 Tugmalar</strong> — Animelarda ko'rsatiladigan maxsus havola tugmalarini qo'shish va o'chirish mumkin.</p>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon gold">🤖</div>
+          <div class="card-title">🤖 Bot holati — Texnik ish rejimi</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>🤖 Bot holati</strong> — Texnik ish rejimini yoqish yoki o'chirish mumkin. Yoqilganda faqat adminlar botdan foydalana oladi.</p>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon green">📋</div>
+          <div class="card-title">📋 Jurnallar — Admin harakatlari tarixi <span style="font-size:11px; color:var(--gold); background:rgba(245,166,35,0.12); border-radius:6px; padding:2px 8px; margin-left:4px;">SUPER ADMIN</span></div>
+        </div>
+        <div class="card-body">
+          <p>Barcha admin amallarining to'liq tarixi. So'nggi 20 yoki 50 ta yozuvni ko'rish mumkin.</p>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon purple">👤</div>
+          <div class="card-title">📋 Adminlar — Qo'shish va o'chirish <span style="font-size:11px; color:var(--gold); background:rgba(245,166,35,0.12); border-radius:6px; padding:2px 8px; margin-left:4px;">SUPER ADMIN</span></div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>📋 Adminlar</strong> — Bazaga yangi admin qo'shish yoki o'chirish. Telegram ID si orqali qo'shiladi.</p>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon blue">🤖</div>
+          <div class="card-title">/ai_post — AI bilan post yaratish</div>
+        </div>
+        <div class="card-body">
+          <p>Komanda: <code>/ai_post [mavzu]</code> — AI avtomatik post matni yaratib beradi, tayyor bo'lgach tasdiqlashingiz mumkin.</p>
+        </div>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-head">
+          <div class="card-icon pink">📋</div>
+          <div class="card-title">📋 Ro'yxat yuborish</div>
+        </div>
+        <div class="card-body">
+          <p>Panel → <strong>📋 Ro'yxat yuborish</strong> — Barcha foydalanuvchilar ID ro'yxatini fayl ko'rinishida olish.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- /tab-admin -->
+
+  <footer>
+    🎬 Anime Bot &nbsp;·&nbsp; O'zbek Anime Community uchun yaratilgan
+  </footer>
+
+</div>
+
+<script>
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
