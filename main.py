@@ -16,6 +16,7 @@ from handlers import user_handlers, admin_handlers, inline_handlers
 from keyboards import load_button_styles
 from utils.text_sanitizer import patch_aiogram_text_sanitizer
 from utils.throttle import UserRateLimitMiddleware
+from utils.navigation import NavigationStateClearMiddleware
 from web_server import start_web_server
 
 logging.basicConfig(
@@ -31,6 +32,9 @@ async def run_main_bot():
     dp = Dispatcher(storage=MemoryStorage())
     throttle = UserRateLimitMiddleware(limit=BOT_USER_RATE_LIMIT_PER_MIN)
     dp.message.middleware(throttle)
+    # Tugma matnlari faol FSM holatini yutib qolmasligi uchun update darajasida
+    # (handler tanlanishidan OLDIN ishlaydigan) outer middleware qo'shamiz.
+    dp.update.outer_middleware(NavigationStateClearMiddleware())
     dp.callback_query.middleware(throttle)
 
     dp.include_router(admin_handlers.router)

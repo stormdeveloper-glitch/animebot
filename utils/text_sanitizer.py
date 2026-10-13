@@ -1,6 +1,15 @@
+import logging
 import re
 from functools import wraps
 from typing import Any
+
+try:  # aiogram mavjud bo'lmasa ham modul yuklanishi kerak
+    from aiogram.exceptions import TelegramBadRequest
+except Exception:  # pragma: no cover
+    TelegramBadRequest = None  # type: ignore[assignment]
+
+
+logger = logging.getLogger(__name__)
 
 
 MOJIBAKE_RE = re.compile(
@@ -58,6 +67,36 @@ def sanitize_send_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
+# Formatlash xatosi (masalan, rad etilgan <tg-emoji> yoki buzilgan HTML) uchun izlar
+PARSE_ERROR_MARKERS = (
+    "can't parse entities",
+    "can't parse",
+    "unsupported start tag",
+    "wrong message entity",
+)
+
+_TAG_RE = re.compile(r"</?[a-zA-Z][^>]*>")
+
+
+def _is_parse_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return any(marker in text for marker in PARSE_ERROR_MARKERS)
+
+
+def _strip_formatting(args: tuple, kwargs: dict[str, Any], text_index: int | None) -> tuple:
+    """parse_mode ni olib tashlaydi va HTML teglarini matndan tozalaydi."""
+    kwargs = dict(kwargs)
+    kwargs.pop("parse_mode", None)
+    for key in ("text", "caption"):
+        if isinstance(kwargs.get(key), str):
+            kwargs[key] = _TAG_RE.sub("", kwargs[key])
+    if text_index is not None and len(args) > text_index and isinstance(args[text_index], str):
+        args = list(args)
+        args[text_index] = _TAG_RE.sub("", args[text_index])
+        args = tuple(args)
+    return args, kwargs
+
+
 def _wrap_async_method(cls: type, method_name: str, text_index: int | None = None) -> None:
     original = getattr(cls, method_name, None)
     if not original or getattr(original, "_az_sanitized", False):
@@ -69,7 +108,26 @@ def _wrap_async_method(cls: type, method_name: str, text_index: int | None = Non
         if text_index is not None and len(args) > text_index:
             args[text_index] = fix_mojibake_text(args[text_index])
         sanitize_send_kwargs(kwargs)
-        return await original(self, *args, **kwargs)
+        try:
+            return await original(self, *args, **kwargs)
+        except Exception as exc:
+            # Telegram xabarni formatlash xatosi sababli rad etsa — foydalanuvchi
+            # umuman javob olmaydi. Shu sababli formatlashsiz (tegsiz) qayta
+            # yuboramiz va xatoni logga yozamiz.
+            if (
+                TelegramBadRequest is None
+                or not isinstance(exc, TelegramBadRequest)
+                or not kwargs.get("parse_mode")
+                or not _is_parse_error(exc)
+            ):
+                raise
+            logger.warning(
+                "[send-fallback] %s formatlash xatosi — parse_mode'siz qayta yuborildi: %s",
+                type(self).__name__,
+                exc,
+            )
+            args, kwargs = _strip_formatting(tuple(args), kwargs, text_index)
+            return await original(self, *args, **kwargs)
 
     wrapper._az_sanitized = True
     setattr(cls, method_name, wrapper)
