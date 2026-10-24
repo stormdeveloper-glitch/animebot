@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Database (local dev)
+data/*.db
+!data/.keep
+
+# AI poster / metadata cache
+data/cache/*
+!data/cache/.gitkeep
+
+# Railway / Deployment
+.railway/
+.git_push/
+
+# OS
+.DS_Store
+Thumbs.db

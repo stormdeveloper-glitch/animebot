@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6b3f24">
+  <link rel="icon" href="/bot-icon">
+  <title>AnimeUZ - Kirish...</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    :root {
+      --card-bg: rgba(255, 255, 255, .72);
+      --border: rgba(108, 99, 255, .22);
+      --border2: rgba(108, 99, 255, .08);
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --accent3: #ec4899;
+      --red: #ef4444;
+      --green: #10b981;
+      --text: #1a1a2e;
+      --text2: #4c4a6e;
+      --muted: rgba(80, 70, 140, .58);
+      --shadow: rgba(108, 99, 255, .16);
+      --glow-c: rgba(108, 99, 255, .22);
+      --glow-p: rgba(167, 139, 250, .22);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #c9d6ff 0%, #e8e8ff 40%, #f5e6ff 70%, #d4e8ff 100%) fixed;
+      color: var(--text);
+      font-family: 'Nunito', system-ui, sans-serif;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      width: 430px;
+      height: 430px;
+      border-radius: 50%;
+      right: -170px;
+      top: -130px;
+      background: radial-gradient(circle, rgba(167, 139, 250, .3), transparent 62%);
+      pointer-events: none;
+    }
+
+    .box {
+      position: relative;
+      z-index: 1;
+      width: min(410px, 100%);
+      padding: 34px 28px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      overflow: hidden;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 20px 60px var(--shadow), 0 0 34px var(--glow-c);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent), var(--accent3))
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: .12em;
+      color: var(--accent);
+      text-transform: uppercase
+    }
+
+    .logo img {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 16px var(--glow-c)
+    }
+
+    .spinner {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 16px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .status {
+      font-size: .94rem;
+      color: var(--muted);
+      line-height: 1.55
+    }
+
+    .error-box {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px
+    }
+
+    .error-ico {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(239, 68, 68, .1);
+      border: 1px solid rgba(239, 68, 68, .24);
+      color: var(--red);
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      font-weight: 900
+    }
+
+    .error-msg {
+      font-size: .9rem;
+      color: var(--red);
+      text-align: center;
+      line-height: 1.5
+    }
+
+    .back-btn {
+      padding: 10px 24px;
+      background: var(--border2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 800;
+      transition: all .2s;
+      cursor: pointer;
+      font-family: 'Exo 2', sans-serif
+    }
+
+    .back-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: translateY(-1px)
+    }
+
+    .avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 3px solid var(--card-bg);
+      box-shadow: 0 5px 16px var(--shadow);
+      display: none
+    }
+
+    .welcome {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px
+    }
+
+    .welcome-name {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--text)
+    }
+
+    .welcome-sub {
+      font-size: .84rem;
+      color: var(--green);
+      font-weight: 800
+    }
+
+    @media(max-width:460px) {
+      .box {
+        padding: 28px 20px
+      }
+
+      .logo {
+        font-size: .92rem
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="logo"><img src="/bot-icon" alt=""> ANIME<span style="color:var(--accent2)">UZ</span></div>
+
+    <div id="loadingState">
+      <div class="spinner"></div>
+      <div class="status" id="statusText">Google bilan bog'lanilmoqda...</div>
+    </div>
+
+    <div class="welcome" id="welcomeState">
+      <img class="avatar" id="userAvatar" alt="avatar">
+      <div class="welcome-name" id="userName"></div>
+      <div class="welcome-sub">Muvaffaqiyatli kirdingiz</div>
+      <div class="status">Bosh sahifaga o'tilmoqda...</div>
+    </div>
+
+    <div class="error-box" id="errorState">
+      <div class="error-ico">!</div>
+      <div class="error-msg" id="errorMsg">Xatolik yuz berdi</div>
+      <a class="back-btn" href="./index.html">Bosh sahifaga qaytish</a>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const error = params.get('error');
+
+      function showError(msg) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorMsg').textContent = msg;
+        document.getElementById('errorState').style.display = 'flex';
+      }
+
+      function showSuccess(user) {
+        document.getElementById('loadingState').style.display = 'none';
+        const ws = document.getElementById('welcomeState');
+        ws.style.display = 'flex';
+        document.getElementById('userName').textContent = user.name;
+        if (user.picture) {
+          const av = document.getElementById('userAvatar');
+          av.src = user.picture;
+          av.style.display = 'block';
+        }
+        setTimeout(() => { window.location.href = '/'; }, 1500);
+      }
+
+      if (error) {
+        showError('Google kirish rad etildi: ' + error);
+        return;
+      }
+
+      if (!code) {
+        showError('Autentifikatsiya kodi topilmadi.');
+        return;
+      }
+
+      document.getElementById('statusText').textContent = 'Ma\'lumotlar tekshirilmoqda...';
+
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            redirect_uri: window.location.origin + '/callback'
+          })
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+          showError(data.error || 'Server xatosi');
+          return;
+        }
+
+        localStorage.setItem('az_token', data.token);
+        localStorage.setItem('az_user', JSON.stringify(data.user));
+
+        showSuccess(data.user);
+      } catch (e) {
+        showError('Serverga ulanib bo\'lmadi: ' + e.message);
+      }
+    })();
+  </script>
+</body>
+
+</html>

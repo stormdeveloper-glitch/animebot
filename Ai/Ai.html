@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050704">
+    <title>AnimeUz Ai - ANIME UZ</title>
+    <link rel="icon" type="image/png" href="../Ai/Ai.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../Ai/Ai.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#chatMessages">Asosiy kontentga o'tish</a>
+
+    <div class="app-shell">
+        <!-- ══ Chap rail ══ -->
+        <aside class="rail" aria-label="Asosiy menyu">
+            <a class="rail-logo" href="/" aria-label="ANIME UZ bosh sahifa">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M8 4h9l-4 7h3l-9 9 2.5-7H6L8 4Z" fill="currentColor" />
+                </svg>
+            </a>
+
+            <nav class="rail-nav">
+                <a class="rail-btn" href="/" data-tip="Bosh sahifa" aria-label="Bosh sahifa">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 10.5 12 3l9 7.5" />
+                        <path d="M5 9.5V21h14V9.5" />
+                        <path d="M9.5 21v-6h5v6" />
+                    </svg>
+                </a>
+                <a class="rail-btn is-active" href="/ai" data-tip="AI Chat" aria-current="page"
+                    aria-label="AI Chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12a8.5 8.5 0 0 1-12.3 7.6L3 21l1.4-5.7A8.5 8.5 0 1 1 21 12Z" />
+                        <path d="M8.5 12h.01M12 12h.01M15.5 12h.01" />
+                    </svg>
+                </a>
+                <a class="rail-btn" href="/qollanma" data-tip="Qo'llanma" aria-label="Qo'llanma">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" />
+                        <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
+                        <path d="M8 7.5h8M8 11h5" />
+                    </svg>
+                </a>
+                <a class="rail-btn" href="/admin" data-tip="Akkaunt" aria-label="Akkaunt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.6" />
+                        <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+                    </svg>
+                </a>
+                <button class="rail-btn" type="button" id="railHistoryBtn" data-tip="Suhbatlar" aria-label="Suhbatlar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18M3 12h18M3 18h12" />
+                    </svg>
+                </button>
+                <button class="rail-btn" type="button" id="railNewChatBtn" data-tip="Yangi suhbat"
+                    aria-label="Yangi suhbat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                </button>
+            </nav>
+
+            <div class="rail-bottom">
+                <button class="rail-btn" type="button" id="railThemeBtn" data-tip="Mavzu" aria-label="Mavzuni almashtirish">
+                    <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                    </svg>
+                    <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
+                    </svg>
+                </button>
+                <button class="rail-btn" type="button" id="logoutBtn" data-tip="Chiqish" aria-label="Chiqish">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+                        <path d="M10 8l-4 4 4 4M6 12h9" />
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ══ Asosiy qism ══ -->
+        <div class="app-main">
+            <header class="topbar">
+                <nav class="pill-nav" aria-label="Sahifalar">
+                    <a href="/">Bosh sahifa</a>
+                    <a href="/ai" class="is-active" aria-current="page">AI Chat</a>
+                    <a href="/qollanma">Yordam</a>
+                    <a href="/admin">Akkaunt</a>
+                </nav>
+
+                <div class="top-actions">
+                    <div class="theme-switch" role="group" aria-label="Mavzu">
+                        <button type="button" id="themeSunBtn" aria-label="Yorug' mavzu" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="4" />
+                                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                            </svg>
+                        </button>
+                        <button type="button" id="themeMoonBtn" aria-label="Qorong'i mavzu" aria-pressed="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" aria-hidden="true">
+                                <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button class="icon-btn" type="button" id="historyToggleBtn" aria-label="Suhbatlar tarixi">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a8.5 8.5 0 0 1-12.3 7.6L3 21l1.4-5.7A8.5 8.5 0 1 1 21 12Z" />
+                        </svg>
+                    </button>
+
+                    <button class="icon-btn" type="button" id="notifyBtn" aria-label="Bildirishnomalar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z" />
+                            <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+                        </svg>
+                        <span class="icon-dot" aria-hidden="true"></span>
+                    </button>
+
+                    <button class="user-avatar" type="button" id="userAvatar" aria-label="Profil">
+                        <span class="avatar-fallback">AI</span>
+                        <img id="userAvatarImg" alt="" hidden>
+                    </button>
+                </div>
+            </header>
+
+            <div class="workspace">
+                <!-- Chat panel -->
+                <main class="chat-panel">
+                    <div class="chat-head">
+                        <div class="brand-chip">
+                            <span class="brand-orb" aria-hidden="true"></span>
+                            <span>AnimeUz Ai</span>
+                        </div>
+
+                        <div class="chat-menu-wrap">
+                            <button class="icon-btn" type="button" id="chatMenuBtn" aria-label="Chat menyusi"
+                                aria-expanded="false" aria-haspopup="true">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <circle cx="12" cy="5" r="1.6" />
+                                    <circle cx="12" cy="12" r="1.6" />
+                                    <circle cx="12" cy="19" r="1.6" />
+                                </svg>
+                            </button>
+                            <div class="chat-menu" id="chatMenu" hidden>
+                                <button type="button" data-action="clear">Suhbatni tozalash</button>
+                                <button type="button" data-action="delete-all" class="is-danger">Barcha tarixni
+                                    o'chirish</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-body" id="chatBody">
+                        <section class="welcome" id="welcome">
+                            <div class="orb" aria-hidden="true">
+                                <span class="orb-core"></span>
+                                <span class="orb-ring"></span>
+                                <span class="orb-ring orb-ring--2"></span>
+                            </div>
+                            <h1 class="welcome-title">
+                                <span id="greetingPrefix">Xayrli tong</span>, <span id="greetName">do'stim</span>!<br>
+                                Sizga qanday yordam beray?
+                            </h1>
+                            <div class="quick-prompts" id="quickPrompts">
+                                <button type="button" data-prompt="Eng mashhur animelar qaysi?">Top animelar</button>
+                                <button type="button" data-prompt="Naruto animeni mahalliy bazadan qidirib ber">Anime
+                                    qidirish</button>
+                                <button type="button"
+                                    data-prompt="Python dasturlash tilida fibonachchi sonlarini hisoblash kodini yozib ber">Kod
+                                    yordami</button>
+                                <button type="button" data-prompt="Bot a'zolari va adminlari soni haqida ma'lumot ber">Bot
+                                    statistikasi</button>
+                            </div>
+                        </section>
+
+                        <div class="chat-messages" id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
+                    </div>
+
+                    <div class="composer-wrap">
+                        <form class="composer" id="composer" autocomplete="off">
+                            <div class="composer-top">
+                                <svg class="composer-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.2 6.2l2.8 2.8M15 15l2.8 2.8M17.8 6.2 15 9M9 15l-2.8 2.8" />
+                                </svg>
+                                <label class="sr-only" for="messageInput">Xabar matni</label>
+                                <textarea id="messageInput" rows="1" maxlength="800"
+                                    placeholder="So'rovingizni yozing - AnimeUz Ai qolganini bajaradi..."></textarea>
+                                <label class="sr-only" for="adminPasswordInput">Admin paroli</label>
+                                <input type="password" id="adminPasswordInput" class="admin-password-input" hidden
+                                    autocomplete="off" maxlength="200" placeholder="Admin parolini kiriting...">
+                            </div>
+
+                            <div class="composer-actions">
+                                <div class="actions-left">
+                                    <button class="round-btn" type="button" id="attachBtn" aria-label="Fayl biriktirish"
+                                        title="Matnli fayl biriktirish">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" aria-hidden="true">
+                                            <path d="M12 5v14M5 12h14" />
+                                        </svg>
+                                    </button>
+                                    <input type="file" id="fileInput" accept=".txt,.md,.log,.json,.csv" hidden>
+
+                                    <button class="round-btn" type="button" id="linkBtn" aria-label="Havola qo'shish"
+                                        title="Havola qo'shish">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M9.5 14.5 14.5 9.5" />
+                                            <path d="M11 6.5 12.6 4.9a4 4 0 0 1 5.7 5.7L16.7 12" />
+                                            <path d="M13 17.5 11.4 19.1a4 4 0 0 1-5.7-5.7L7.3 12" />
+                                        </svg>
+                                    </button>
+
+                                    <button class="chip-toggle" type="button" id="reasoningBtn" aria-pressed="false"
+                                        aria-label="Fikrlash rejimi">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .9 1.6l.1.8h5.2l.1-.8c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z" />
+                                            <path d="M10 20h4M10.5 17.5h3" />
+                                        </svg>
+                                        <span>Fikrlash</span>
+                                    </button>
+
+                                    <button class="chip-toggle" type="button" id="researchBtn" aria-pressed="false"
+                                        aria-label="Chuqur qidiruv rejimi">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" />
+                                            <path d="M8 7.5h8M8 11h5" />
+                                            <circle cx="16.5" cy="16.5" r="3.5" />
+                                            <path d="m19 19 2 2" />
+                                        </svg>
+                                        <span>Chuqur qidiruv</span>
+                                    </button>
+                                </div>
+
+                                <div class="actions-right">
+                                    <span class="quota-badge" id="quotaBadge" title="Kunlik bepul urinishlar">
+                                        <span id="quotaText">5/5</span>
+                                    </span>
+
+                                    <button class="round-btn" type="button" id="micBtn" aria-label="Ovozli kiritish"
+                                        aria-pressed="false">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <rect x="9" y="3" width="6" height="11" rx="3" />
+                                            <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
+                                        </svg>
+                                    </button>
+
+                                    <button class="send-btn" type="submit" id="sendBtn" aria-label="Yuborish">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M21 3 10.5 13.5" />
+                                            <path d="M21 3 14.5 21l-4-7.5L3 9.5 21 3Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <p class="composer-note" id="quotaNote" hidden></p>
+                    </div>
+                </main>
+
+                <!-- Tarix paneli -->
+                <aside class="history" id="historyPanel" aria-label="Suhbatlar tarixi">
+                    <div class="history-head">
+                        <h2>Suhbatlar tarixi</h2>
+                        <button class="new-chat-btn" type="button" id="newChatBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                                stroke-linecap="round" aria-hidden="true">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            <span>Yangi suhbat</span>
+                        </button>
+                    </div>
+                    <div class="history-scroll" id="historyList"></div>
+                    <button class="history-close" type="button" id="historyClose" aria-label="Tarixni yopish">Yopish
+                        ✕</button>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-backdrop" id="historyBackdrop" hidden></div>
+
+    <!-- Anime to'liq ma'lumot oynasi -->
+    <div class="anime-modal" id="animeModal" hidden>
+        <div class="anime-modal-backdrop" data-modal-close></div>
+        <div class="anime-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="animeModalTitle">
+            <button class="anime-modal-close" type="button" id="animeModalClose" aria-label="Yopish">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+            </button>
+            <div class="anime-modal-scroll" id="animeModalContent"></div>
+        </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <script src="../Ai/Ai.js" defer></script>
+</body>
+
+</html>
