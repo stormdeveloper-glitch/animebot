@@ -97,11 +97,27 @@ def _is_html_request(request: web.Request) -> bool:
     return "text/html" in accept and "v" not in request.rel_url.query
 
 
+_TRUSTED_PROXY_IPS = {"127.0.0.1", "::1"}
+
+
 def _client_ip(request: web.Request) -> str:
+    """
+    To'g'ridan-to'g'ri so'rov yuboruvchining IP manzilini aniqlaydi.
+
+    MUHIM: X-Forwarded-For klient tomonidan erkin o'rnatiladigan header, shuning
+    uchun faqat so'rov ISHONCHLI proksidan (nginx/caddy, 127.0.0.1) kelgandagina
+    hisobga olinadi, va undan ham ENG O'NGDAGI (proksi qo'shgan) qiymat olinadi —
+    birinchi (chapdagi) qiymat klient tomonidan osongina soxtalashtirilib,
+    barcha IP-asosli rate-limit va bruteforce himoyasini chetlab o'tishga
+    imkon berardi.
+    """
+    peer = (request.remote or "").strip()
     forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        return forwarded.split(",", 1)[0].strip()[:64]
-    return (request.remote or "unknown")[:64]
+    if forwarded and peer in _TRUSTED_PROXY_IPS:
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if parts:
+            return parts[-1][:64]
+    return (peer or "unknown")[:64]
 
 
 def _check_rate_limit(request: web.Request, name: str, limit: int, window_seconds: int) -> bool:
@@ -386,10 +402,41 @@ async def resolve_file_id(file_id: str) -> dict:
     return {"url": None, "type": "photo"}
 
 
+_MEDIA_REDIRECT_HOST_ALLOWLIST = (
+    "anilist.co",
+    "media.kitsu.io",
+    "kitsu.io",
+)
+
+
+def _is_allowed_media_redirect(url: str) -> bool:
+    """
+    /media/{file_id} ba'zan to'g'ridan-to'g'ri saqlangan poster URL manzilini
+    301/302 orqali qayta yo'naltiradi. file_id so'rov manzilidan (request path)
+    to'g'ridan-to'g'ri olinadi va foydalanuvchi tomonidan to'liq nazorat
+    qilinadi, shuning uchun uni tekshirmasdan HTTPFound() ga uzatish "open
+    redirect" zaifligiga olib keladi (masalan /media/https://phishing.example
+    saytga yo'naltirib yuborishi mumkin). Faqat HTTPS va oldindan ma'lum,
+    ishonchli host'larga yo'naltirishga ruxsat beramiz.
+    """
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
+    if parsed.scheme != "https":
+        return False
+    host = (parsed.hostname or "").lower()
+    return host in _MEDIA_REDIRECT_HOST_ALLOWLIST or any(
+        host.endswith("." + allowed) for allowed in _MEDIA_REDIRECT_HOST_ALLOWLIST
+    )
+
+
 async def media_proxy(request):
     """Stream qilish — rasm yoki video. Range request qo'llab-quvvatlaydi."""
     file_id = request.match_info["file_id"]
     if file_id.startswith("http"):
+        if not _is_allowed_media_redirect(file_id):
+            raise web.HTTPNotFound()
         raise web.HTTPFound(file_id)
 
     info = await resolve_file_id(file_id)

@@ -1182,7 +1182,30 @@ function _refreshTopbarAuth() { const loginBtn = document.getElementById('topbar
 async function gameLogout() { await fetch('/api/auth/logout', { method: 'POST', headers: _authHeaders() }).catch(() => { }); localStorage.removeItem('az_token'); localStorage.removeItem('az_user'); _gToken = ''; _gUser = null; _gGameId = null; _gState = null; _refreshUserBadge(); _refreshTopbarAuth(); if (document.getElementById('page-game').classList.contains('active')) { _renderLoginScreen(); } }
 
 // ══ DEVICE ID — har qurilmaga unikal ══
-function _getDeviceId() { let id = localStorage.getItem('az_device_id'); if (!id) { id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('az_device_id', id); } return id; }
+function _getDeviceId() {
+    let id = localStorage.getItem('az_device_id');
+    if (!id) {
+        // device_id — saqlangan anime ro'yxati va Telegram profiliga ulanish
+        // uchun yagona identifikator (bearer-token kabi ishlatiladi), shuning
+        // uchun uni taxmin qilib bo'lmasligi kerak. Math.random() + Date.now()
+        // kriptografik jihatdan ishonchli emas va Date.now() qismi
+        // (tashrif vaqtiga yaqin) amalda taxmin qilinishi mumkin edi.
+        // crypto.randomUUID() (mavjud bo'lsa) yoki crypto.getRandomValues()
+        // orqali kriptografik tasodifiy qiymat ishlatamiz.
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            id = 'dev_' + window.crypto.randomUUID();
+        } else if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+            const bytes = new Uint8Array(20);
+            window.crypto.getRandomValues(bytes);
+            id = 'dev_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+        } else {
+            // Juda eski brauzer uchun oxirgi chora (amalda deyarli ishlatilmaydi)
+            id = 'dev_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        }
+        localStorage.setItem('az_device_id', id);
+    }
+    return id;
+}
 const _DEV = _getDeviceId();
 
 // ══ DEVICE CACHE — animelar keshlash ══
