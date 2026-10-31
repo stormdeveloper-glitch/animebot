@@ -19,7 +19,7 @@ from utils.text_sanitizer import patch_aiogram_text_sanitizer
 from utils.throttle import UserRateLimitMiddleware
 from utils.navigation import NavigationStateClearMiddleware
 from utils.error_reporter import report_error
-from utils.custom_emoji import resolve_custom_emojis
+from utils.custom_emoji import resolve_custom_emojis, MenuIconTextMiddleware
 from web_server import start_web_server
 
 logging.basicConfig(
@@ -61,6 +61,8 @@ async def run_main_bot():
     dp.message.middleware(throttle)
     # Tugma matnlari faol FSM holatini yutib qolmasligi uchun update darajasida
     # (handler tanlanishidan OLDIN ishlaydigan) outer middleware qo'shamiz.
+    # Ikonkali menyu tugmalari label yuboradi — avval to'liq matnga qaytaramiz
+    dp.update.outer_middleware(MenuIconTextMiddleware())
     dp.update.outer_middleware(NavigationStateClearMiddleware())
     dp.callback_query.middleware(throttle)
 

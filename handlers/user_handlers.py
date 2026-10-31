@@ -368,16 +368,16 @@ async def _send_menu_message(message: Message, user_id: int, text: str, log_labe
     except TelegramBadRequest as exc:
         logger.warning("[menu] %s menu rejected for user=%s: %s", log_label, user_id, exc)
 
-    # Custom emoji rad etilgan bo'lishi mumkin — oddiy emoji bilan qayta urinamiz
-    plain_text = strip_custom_emoji(text)
-    if plain_text != text:
-        try:
-            await message.answer(plain_text, reply_markup=kb, parse_mode="HTML")
-            return
-        except TelegramBadRequest as exc:
-            logger.warning("[menu] %s menu (oddiy emoji) rejected for user=%s: %s", log_label, user_id, exc)
+    # Custom emoji (matn yoki tugma ikonkasi) rad etilgan bo'lishi mumkin —
+    # oddiy emoji bilan qayta urinamiz
+    plain_kb = menu_kb(await is_admin(user_id), web_app_url=web_app_url, animated=False)
+    try:
+        await message.answer(strip_custom_emoji(text), reply_markup=plain_kb, parse_mode="HTML")
+        return
+    except TelegramBadRequest as exc:
+        logger.warning("[menu] %s menu (oddiy emoji) rejected for user=%s: %s", log_label, user_id, exc)
 
-    fallback_kb = menu_kb(await is_admin(user_id), web_app_url="")
+    fallback_kb = menu_kb(await is_admin(user_id), web_app_url="", animated=False)
     await message.answer("🏠 <b>Asosiy menyu</b>", reply_markup=fallback_kb, parse_mode="HTML")
 
 

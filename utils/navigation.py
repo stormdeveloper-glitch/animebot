@@ -35,7 +35,7 @@ NAV_COMMANDS: frozenset[str] = frozenset({"/start", "/menu", "/panel", "/ai"})
 
 # Barcha navigatsiya matnlari: menyu + admin panel + "orqaga" variantlari + buyruqlar
 NAV_TEXTS: frozenset[str] = frozenset(
-    _texts(menu_kb(is_admin=True))
+    _texts(menu_kb(is_admin=True, animated=False))
     | _texts(panel_kb(is_super_admin=True))
     | _texts(back_kb())
     | _texts(boshqarish_kb())

@@ -4,6 +4,8 @@ from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton as AiogramKeyboardButton,
     InlineKeyboardMarkup, InlineKeyboardButton as AiogramInlineKeyboardButton, WebAppInfo
 )
+from config import CUSTOM_EMOJI_ENABLED
+from utils.custom_emoji import MENU_ICON_IDS, menu_icon_label
 from utils.text_sanitizer import fix_mojibake_text
 
 PRIMARY = "primary"
@@ -110,21 +112,32 @@ BACK_TO_MENU_TEXTS = {
 
 
 # ── Asosiy menyu ──────────────────────────────────────────────────────────────
-def menu_kb(is_admin: bool = False, web_app_url: str = ""):
+def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True):
+    """Asosiy menyu. animated=True bo'lsa tugmalarda animatsiyali ikonka bo'ladi.
+
+    Ikonkali tugma matnidan oddiy emoji olib tashlanadi (ikki marta ko'rinmasin);
+    bosilganda kelgan label MenuIconTextMiddleware orqali to'liq matnga qaytadi.
+    """
+    def btn(text: str, **kwargs):
+        icon_id = MENU_ICON_IDS.get(text) if animated and CUSTOM_EMOJI_ENABLED else None
+        if icon_id:
+            return KeyboardButton(text=menu_icon_label(text), icon_custom_emoji_id=icon_id, **kwargs)
+        return KeyboardButton(text=text, **kwargs)
+
     keyboard = [
-        [KeyboardButton(text="🔎 Anime izlash")],
-        [KeyboardButton(text="💎 VIP"), KeyboardButton(text="💰 Hisobim")],
-        [KeyboardButton(text="📌 Watchlist"), KeyboardButton(text="▶️ Davom etish")],
-        [KeyboardButton(text="🔥 Trendlar"), KeyboardButton(text="🎯 Tavsiyalar")],
-        [KeyboardButton(text="➕ Pul kiritish"), KeyboardButton(text="📚 Qo'llanma")],
-        [KeyboardButton(text="👥 Referal"), KeyboardButton(text="💸 Pul o'tkazmasi")],
-        [KeyboardButton(text="🎁 Cashback"), KeyboardButton(text="💵 Reklama va Homiylik")]
+        [btn("🔎 Anime izlash")],
+        [btn("💎 VIP"), btn("💰 Hisobim")],
+        [btn("📌 Watchlist"), btn("▶️ Davom etish")],
+        [btn("🔥 Trendlar"), btn("🎯 Tavsiyalar")],
+        [btn("➕ Pul kiritish"), btn("📚 Qo'llanma")],
+        [btn("👥 Referal"), btn("💸 Pul o'tkazmasi")],
+        [btn("🎁 Cashback"), btn("💵 Reklama va Homiylik")]
     ]
     safe_web_app_url = normalize_web_app_url(web_app_url)
     if safe_web_app_url:
-        keyboard.insert(0, [KeyboardButton(text="🌐 Web App", web_app=WebAppInfo(url=safe_web_app_url))])
+        keyboard.insert(0, [btn("🌐 Web App", web_app=WebAppInfo(url=safe_web_app_url))])
     if is_admin:
-        keyboard.append([KeyboardButton(text="🗄 Boshqarish")])
+        keyboard.append([btn("🗄 Boshqarish")])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, is_persistent=True)
 
 
