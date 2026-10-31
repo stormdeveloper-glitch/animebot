@@ -38,34 +38,36 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 # ─── Animated Emoji helpers ───────────────────────────────────────────────────
-def ae(emoji_id: str, fallback: str) -> str:
+def ae(emoji_id: str | None, fallback: str) -> str:
     """Animatsiyali (custom) emoji.
 
     Telegram custom emoji ni faqat Fragment'da username olgan botlar yoki egasi
     Telegram Premium bo'lgan botlar yubora oladi. Aks holda Telegram butun xabarni
     xato bilan rad etadi va foydalanuvchi menyuni umuman ko'rmaydi. Shuning uchun
     standart holatda oddiy emoji qaytaramiz; CUSTOM_EMOJI_ENABLED=1 bo'lsa
-    animatsiyali variant ishlatiladi.
+    animatsiyali variant ishlatiladi. ID hali aniqlanmagan emoji (None) doim
+    oddiy ko'rinishda qoladi — noto'g'ri animatsiya chiqmasligi uchun.
     """
-    if not CUSTOM_EMOJI_ENABLED:
+    if not CUSTOM_EMOJI_ENABLED or not emoji_id:
         return fallback
     return f'<tg-emoji emoji-id="{emoji_id}">{fallback}</tg-emoji>'
 
-# Eng ko'p ishlatiladigan animated emojilar
-STAR      = ae("5368324170671202286", "✨")   # yulduzcha
-FIRE      = ae("5373123172420581514", "🔥")   # olov
-HEART     = ae("5346698606479917895", "❤️")  # yurak
-CLAP      = ae("5368324170671202286", "👏")   # qarsak
-PARTY     = ae("5373141891321699086", "🎉")   # bayram
-CHECK     = ae("5368324170671202286", "✅")   # tayyor
-SEARCH    = ae("5373141891321699086", "🔍")   # qidiruv
-ANIME     = ae("5373123172420581514", "🎬")   # kino
-DIAMOND   = ae("5346698606479917895", "💎")   # olmos
-MONEY     = ae("5373141891321699086", "💰")   # pul
-GIFT      = ae("5373123172420581514", "🎁")   # sovg'a
-ROCKET    = ae("5368324170671202286", "🚀")   # raketa
-WAVE      = ae("5346698606479917895", "👋")   # salom
-CROWN     = ae("5373141891321699086", "👑")   # toj
+# Eng ko'p ishlatiladigan animated emojilar.
+# ID larni bot egasi /emoji buyrug'i orqali oladi; None — hali tanlanmagan.
+STAR      = ae("4999015678238262018", "✨")   # yulduzcha
+FIRE      = ae(None, "🔥")   # olov
+HEART     = ae(None, "❤️")  # yurak
+CLAP      = ae(None, "👏")   # qarsak
+PARTY     = ae(None, "🎉")   # bayram
+CHECK     = ae(None, "✅")   # tayyor
+SEARCH    = ae(None, "🔍")   # qidiruv
+ANIME     = ae(None, "🎬")   # kino
+DIAMOND   = ae(None, "💎")   # olmos
+MONEY     = ae(None, "💰")   # pul
+GIFT      = ae(None, "🎁")   # sovg'a
+ROCKET    = ae(None, "🚀")   # raketa
+WAVE      = ae(None, "👋")   # salom
+CROWN     = ae(None, "👑")   # toj
 
 
 async def get_watch_state(user_id: int, anime_id: int) -> tuple[bool, int]:
@@ -374,12 +376,6 @@ async def send_home_menu(message: Message, user_id: int) -> None:
     await _send_menu_message(message, user_id, "🏠 <b>Asosiy menyu</b>", log_label="home")
 
 
-@router.message(Command("menu"))
-async def command_menu_handler(message: Message, state: FSMContext, bot: Bot):
-    """Telefonlardagi "Menu" tugmasi orqali: /start bilan bir xil tekshiruvlar va menyu."""
-    await command_start_handler(message, state, bot)
-
-
 @router.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext, bot: Bot):
     user_id = message.from_user.id
@@ -570,7 +566,7 @@ async def build_episode_caption(anime_id: int, ep_num: int, anime_name: str, bot
             kanal_row = await c.fetchone()
         kanal = kanal_row[0] if kanal_row and kanal_row[0] else None
 
-    AE = ae("5373123172420581514", "🔥")
+    AE = FIRE
 
     if ep_num == max_ep and kanal:
         kanal_line = f"\n{AE} <b>Kanal:</b> {kanal}"
@@ -751,7 +747,7 @@ async def show_anime(message: Message, anime_id: int):
     bot_username = await get_bot_username(message.bot)
 
     # Animated emoji — premium da animatsiyalanadi, boshqalarda oddiy ko'rinadi
-    AE = ae("5373123172420581514", "🔥")
+    AE = FIRE
 
     # Oxirgi qism raqami
     async with aiosqlite.connect(DB_PATH) as db:
