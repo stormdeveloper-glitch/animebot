@@ -1250,10 +1250,20 @@ async def api_stats(request):
     return web.json_response({"users": users, "vip": vip, "animes": animes, "eps": eps})
 
 
+def _safe_equals(a: str | None, b: str | None) -> bool:
+    """Vaqt bo'yicha xavfsiz solishtirish (timing-attack'ga qarshi).
+
+    secrets.compare_digest ikkita str ni faqat ASCII bo'lsa solishtira oladi;
+    kirill, emoji yoki o'zbekcha "oʻ" bo'lsa TypeError beradi va so'rov 500
+    bilan yiqiladi. Shuning uchun UTF-8 baytlar sifatida solishtiramiz.
+    """
+    return secrets.compare_digest((a or "").encode("utf-8"), (b or "").encode("utf-8"))
+
+
 def _admin_authorized(request: web.Request) -> bool:
     session_secret = WEB_ADMIN_TOKEN
     session_token = request.cookies.get(ADMIN_SESSION_COOKIE, "").strip()
-    if session_secret and secrets.compare_digest(session_token, session_secret):
+    if session_secret and _safe_equals(session_token, session_secret):
         return True
     session = _admin_web_sessions.get(session_token)
     if session and not session.get("revoked") and time.time() - float(session.get("created_ts") or 0) <= SESSION_TTL_SECONDS:
@@ -1263,7 +1273,7 @@ def _admin_authorized(request: web.Request) -> bool:
             request.headers.get("X-Admin-Token", "")
             or request.cookies.get("admin_token", "")
         ).strip()
-        return secrets.compare_digest(token, WEB_ADMIN_TOKEN)
+        return _safe_equals(token, WEB_ADMIN_TOKEN)
     return False
 
 
@@ -1634,7 +1644,7 @@ async def api_admin_login(request):
 
     if not ADMIN_LOGIN or not ADMIN_PASSWORD:
         return web.json_response({"ok": False, "error": "ADMIN_LOGIN va ADMIN_PASSWORD serverda sozlanmagan"}, status=503)
-    if not secrets.compare_digest(login, ADMIN_LOGIN) or not secrets.compare_digest(password, ADMIN_PASSWORD):
+    if not _safe_equals(login, ADMIN_LOGIN) or not _safe_equals(password, ADMIN_PASSWORD):
         return web.json_response({"ok": False, "error": "Login yoki parol noto'g'ri"}, status=401)
     try:
         admin_id = int(admin_id_raw)
@@ -2432,7 +2442,7 @@ async def api_ai_chat(request):
         return web.json_response({"ok": False, "error": "Xabar juda uzun"}, status=400)
 
     # Admin kirish oqimi AI kvotasini sarflamaydi, lekin brute-force'dan himoyalanadi.
-    if admin_password_mode or (ADMIN_LOGIN and secrets.compare_digest(user_msg, ADMIN_LOGIN)):
+    if admin_password_mode or (ADMIN_LOGIN and _safe_equals(user_msg, ADMIN_LOGIN)):
         if not _check_rate_limit(request, "ai_admin_try", 10, 3600):
             return web.json_response(
                 {"ok": False, "error": "Juda ko'p urinish. Bir soatdan keyin qayta urinib ko'ring."},
@@ -2442,7 +2452,7 @@ async def api_ai_chat(request):
     if admin_password_mode:
         if not ADMIN_LOGIN or not ADMIN_PASSWORD:
             return web.json_response({"ok": True, "reply": "Admin login/parol serverda sozlanmagan."})
-        if secrets.compare_digest(user_msg, ADMIN_PASSWORD):
+        if _safe_equals(user_msg, ADMIN_PASSWORD):
             return web.json_response({
                 "ok": True,
                 "reply": "Parol to'g'ri. Admin panelda Telegram ID bilan 2FA tasdiqlashdan o'ting.",
@@ -2455,7 +2465,7 @@ async def api_ai_chat(request):
             "admin_password_required": True,
         })
 
-    if ADMIN_LOGIN and secrets.compare_digest(user_msg, ADMIN_LOGIN):
+    if ADMIN_LOGIN and _safe_equals(user_msg, ADMIN_LOGIN):
         return web.json_response({
             "ok": True,
             "reply": "Maxfiy kod qabul qilindi. Admin parolini kiriting.",

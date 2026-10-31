@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+
 import aiosqlite
 from config import DB_PATH, DATABASE_URL
 
@@ -523,6 +525,35 @@ async def init_db():
         await db.commit()
 
 
+def _to_pg_value(value, pg_type: str):
+    """SQLite qiymatini PostgreSQL ustun turiga moslaydi (asyncpg qat'iy tur talab qiladi)."""
+    if value is None:
+        return None
+    if pg_type.startswith("timestamp") or pg_type == "date":
+        if isinstance(value, str):
+            try:
+                parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+            except ValueError:
+                return None
+            if pg_type == "date":
+                return parsed.date()
+            # "timestamp without time zone" ustuniga tz siz qiymat kerak
+            if parsed.tzinfo is not None and "without" in pg_type:
+                parsed = parsed.replace(tzinfo=None)
+            return parsed
+        return value
+    if pg_type in ("integer", "bigint", "smallint"):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+    if pg_type == "boolean":
+        return bool(int(value)) if isinstance(value, (int, str)) and str(value).isdigit() else bool(value)
+    if pg_type in ("text", "character varying", "character"):
+        return value if isinstance(value, str) else str(value)
+    return value
+
+
 async def migrate_sqlite_to_postgres(pg_conn):
     """SQLite data migration to PostgreSQL."""
     if not os.path.exists(DB_PATH):
@@ -565,17 +596,32 @@ async def migrate_sqlite_to_postgres(pg_conn):
                         continue
                         
                     cols = [d[0] for d in sqlite_cursor.description]
-                    # Quote column names for PostgreSQL to avoid keyword conflicts
-                    cols_quoted = [f'"{c}"' for c in cols]
-                    col_str = ", ".join(cols_quoted)
-                    val_str = ", ".join([f"${i+1}" for i in range(len(cols))])
-                    
+                    # PG jadvallari qo'shtirnoqsiz yaratilgan — ustun nomlari kichik
+                    # harfda ("aniType" → anitype). Turlarini ham olib, qiymatlarni moslaymiz.
+                    pg_types = {
+                        r["column_name"]: r["data_type"]
+                        for r in await pg_conn.fetch(
+                            "SELECT column_name, data_type FROM information_schema.columns "
+                            "WHERE table_schema = 'public' AND table_name = $1",
+                            table,
+                        )
+                    }
+                    keep = [(i, c.lower()) for i, c in enumerate(cols) if c.lower() in pg_types]
+                    skipped = [c for c in cols if c.lower() not in pg_types]
+                    if not keep:
+                        print(f"ℹ️ '{table}': PostgreSQL da mos ustun yo'q, nusxalanmadi.")
+                        continue
+                    if skipped:
+                        print(f"ℹ️ '{table}': PostgreSQL da yo'q ustunlar o'tkazib yuborildi: {', '.join(skipped)}")
+                    col_str = ", ".join(f'"{name}"' for _, name in keep)
+                    val_str = ", ".join(f"${n + 1}" for n in range(len(keep)))
+
                     insert_query = f"INSERT INTO {table} ({col_str}) VALUES ({val_str}) ON CONFLICT DO NOTHING"
-                    
+
                     # Insert rows
                     count = 0
                     for row in rows:
-                        vals = tuple(row)
+                        vals = tuple(_to_pg_value(row[i], pg_types[name]) for i, name in keep)
                         await pg_conn.execute(insert_query, *vals)
                         count += 1
                         
