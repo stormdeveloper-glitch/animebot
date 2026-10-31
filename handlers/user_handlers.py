@@ -22,6 +22,9 @@ from utils import check_subscription, get_subscription_keyboard, is_admin, is_ma
 from utils.logger import log_admin_action
 from utils.ai_assistant import generate_anime_tavsif
 from utils.custom_emoji import EMOJI_IDS, strip_custom_emoji
+from handlers.eco_handlers import check_access
+from utils.branding import brand_config
+from utils.tenant import current_tenant
 from states import UserStates, AdminStates, PaymentStates, VipStates, TransferStates
 
 async def _push(event_type, text, color="c"):
@@ -570,6 +573,10 @@ def _caption_link(label: str, url: str) -> str:
 def episode_caption_footer(anime_id: int, channel_value: str | None = None) -> str:
     from config import BOT_USERNAME, MAIN_CHANNEL_USERNAME
 
+    if current_tenant():
+        # Klon botda AnimeUZ havolalari emas — o'zining boti/kanali
+        from utils.clones import clone_username
+        BOT_USERNAME, MAIN_CHANNEL_USERNAME = clone_username(current_tenant()), ""
     bot_url = _tme_url(BOT_USERNAME, str(anime_id))
     channel_url = _tme_url(channel_value or MAIN_CHANNEL_USERNAME)
     return (
@@ -653,6 +660,8 @@ async def save_episode_msg_id(anime_id: int, ep_num: int, msg_id: int, chat_id: 
 async def show_episode_direct(message: Message, anime_id: int, ep_num: int, viewer_id: int | None = None):
     """Ongoing tugmadan kelganda to'g'ridan-to'g'ri qismni yuboradi."""
     current_user_id = viewer_id if viewer_id is not None else message.from_user.id
+    if not await check_access(message, current_user_id):
+        return
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute(
             "SELECT * FROM anime_datas WHERE id=? AND qism=?", (anime_id, ep_num)
@@ -1182,6 +1191,8 @@ async def load_anime_callback(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("yuklanolish="))
 async def episode_list_callback(callback: CallbackQuery):
+    if not await check_access(callback):
+        return
     if not await is_admin(callback.from_user.id) and await is_maintenance():
         await callback.answer("⚠️ Bot tamirlanyapti, kuting...", show_alert=True)
         return
@@ -2068,6 +2079,8 @@ async def dl_page_callback(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("dl_ep="))
 async def dl_episode_callback(callback: CallbackQuery):
     """Tanlangan qismni foydalanuvchiga yuboradi."""
+    if not await check_access(callback):
+        return
     if not await is_admin(callback.from_user.id) and await is_maintenance():
         await callback.answer("⚠️ Bot tamirlanyapti, kuting...", show_alert=True)
         return
@@ -2120,6 +2133,8 @@ async def dl_episode_callback(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("dl_all="))
 async def dl_all_callback(callback: CallbackQuery):
     """Barcha qismlarni ketma-ket avtomatik yuboradi."""
+    if not await check_access(callback):
+        return
     if not await is_admin(callback.from_user.id) and await is_maintenance():
         await callback.answer("⚠️ Bot tamirlanyapti, kuting...", show_alert=True)
         return
@@ -2548,6 +2563,8 @@ async def web_app_data_handler(message: Message, bot: Bot):
     import asyncio
 
     user_id = message.from_user.id
+    if not await check_access(message):
+        return
 
     try:
         data = json.loads(message.web_app_data.data)

@@ -18,6 +18,7 @@ from utils.admin_manager import add_json_admin, remove_json_admin
 from utils.logger import log_admin_action
 from utils.custom_emoji import message_to_html
 from utils.tenant import current_tenant
+from utils.branding import brand_config
 from utils.ai_assistant import chat_with_ai, generate_anime_tavsif
 
 async def _push(event_type, text, color="c"):
@@ -197,7 +198,7 @@ async def insert_anime_from_state(data: dict, rams: str) -> int:
 
 async def notify_watchlist_users(bot: Bot, anime_id: int, anime_name: str, ep_num: int) -> int:
     """Watchlistga saqlagan foydalanuvchilarga yangi qism haqida xabar yuboradi."""
-    from config import BOT_USERNAME
+    _, BOT_USERNAME, _ = await brand_config()
 
     bot_username = (BOT_USERNAME or "").lstrip("@")
     if not bot_username:
@@ -1458,7 +1459,7 @@ async def process_episode_file(message: Message, state: FSMContext, bot: Bot):
     )
 
     # Auto-post logikasi
-    from config import MAIN_CHANNEL_ID, BOT_USERNAME, MAIN_CHANNEL_USERNAME
+    MAIN_CHANNEL_ID, BOT_USERNAME, MAIN_CHANNEL_USERNAME = await brand_config()
     if anime_info:
         nom = anime_info[1]
         janri = anime_info[7]
@@ -2280,7 +2281,17 @@ SETTINGS_LABELS = {
     "cashback_percent": "🎁 Cashback (%)",
     "web_app_url": "🌐 Web App URL (bo'sh = o'chiq)",
     "start_text":     "👋 Start xabari",
+    "access_price":   "🔐 Ekotizim: kirish narxi (0 = bepul)",
 }
+
+# Faqat klon botlarda: asosiy botda kanal env dan olinadi
+CLONE_SETTINGS_LABELS = {
+    "main_channel":   "📢 Asosiy kanal (post uchun, @kanal yoki -100...)",
+}
+
+
+def _settings_labels() -> dict:
+    return SETTINGS_LABELS | (CLONE_SETTINGS_LABELS if current_tenant() else {})
 
 BUTTON_STYLE_LABELS = {
     "button_style_default": "🔵 Oddiy tugmalar rangi",
@@ -2304,7 +2315,7 @@ async def basic_settings_handler(message: Message, state: FSMContext):
     is_super = await is_super_admin(message.from_user.id)
     # Tugma ranglari barcha botlar uchun umumiy — klon egasi o'zgartira olmaydi
     is_super = is_super and not current_tenant()
-    labels = SETTINGS_LABELS | (BUTTON_STYLE_LABELS if is_super else {})
+    labels = _settings_labels() | (BUTTON_STYLE_LABELS if is_super else {})
 
     text = "<b>*️⃣ Birlamchi sozlamalar:</b>\n\n"
     for key, label in labels.items():
@@ -2332,7 +2343,7 @@ async def edit_setting_prompt(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Bu sozlama faqat superadmin uchun!", show_alert=True)
         return
 
-    label = (SETTINGS_LABELS | BUTTON_STYLE_LABELS).get(key, key)
+    label = (_settings_labels() | BUTTON_STYLE_LABELS).get(key, key)
     await state.update_data(setting_key=key)
     extra = "\n\n<i>Rang uchun faqat: primary, success, danger</i>" if key.startswith("button_style_") else ""
     await callback.message.answer(
@@ -2365,6 +2376,11 @@ async def process_setting_value(message: Message, state: FSMContext):
     if key == "start_text":
         # Custom (premium) emoji va formatlash entity sifatida keladi — HTML ga o'giramiz
         value = message_to_html(value, message.entities or message.caption_entities)
+    if key == "access_price":
+        value = value.strip().replace(" ", "")
+        if not value.isdigit():
+            await message.answer("❌ Narxni faqat raqam bilan yozing (0 — bepul).")
+            return
     if key.startswith("button_style_"):
         if not await is_super_admin(message.from_user.id):
             await message.answer("❌ Bu sozlama faqat superadmin uchun!")
@@ -2385,7 +2401,7 @@ async def process_setting_value(message: Message, state: FSMContext):
     if key.startswith("button_style_"):
         set_button_style(key, value)
 
-    label = (SETTINGS_LABELS | BUTTON_STYLE_LABELS).get(key, key)
+    label = (_settings_labels() | BUTTON_STYLE_LABELS).get(key, key)
     await state.clear()
     is_super = await is_super_admin(message.from_user.id)
     if key == "start_text":
@@ -2919,7 +2935,7 @@ async def show_post_preview(message: Message, state: FSMContext):
 
 @router.callback_query(PostStates.confirm, F.data == "postSendNow")
 async def post_send_now(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    from config import MAIN_CHANNEL_ID
+    MAIN_CHANNEL_ID, _, _ = await brand_config()
     data = await state.get_data()
     media_type = data.get("media_type")
     media_id = data.get("media_id")

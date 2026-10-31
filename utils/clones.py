@@ -25,6 +25,7 @@ MAX_CLONES_PER_USER = int(os.getenv("MAX_CLONES_PER_USER", "3"))
 _dp: Dispatcher | None = None
 _bots: dict[int, Bot] = {}
 _owners: dict[int, int] = {}
+_names: dict[int, tuple[str, str]] = {}   # bot_id → (username, name)
 
 
 def set_dispatcher(dp: Dispatcher) -> None:
@@ -38,6 +39,15 @@ def clone_owner(bot_id: int) -> int | None:
 
 def is_clone_running(bot_id: int) -> bool:
     return bot_id in _bots
+
+
+def clone_username(bot_id: int) -> str:
+    return _names.get(bot_id, ("", ""))[0]
+
+
+def running_clones() -> list[tuple[int, str, str]]:
+    """(bot_id, username, name) — hozir ishlayotgan klonlar."""
+    return [(bot_id, *_names.get(bot_id, ("", ""))) for bot_id in _bots]
 
 
 def _public_origin() -> str:
@@ -108,7 +118,7 @@ async def init_clone_db(bot_id: int, owner_id: int) -> None:
         reset_tenant(tokens)
 
 
-async def _start_bot(bot_id: int, token: str, owner_id: int) -> None:
+async def _start_bot(bot_id: int, token: str, owner_id: int, username: str = "", name: str = "") -> None:
     url = webhook_url(bot_id)
     if not url:
         raise RuntimeError("Public domen topilmadi (WEB_PUBLIC_ORIGIN / RAILWAY_PUBLIC_DOMAIN)")
@@ -128,6 +138,7 @@ async def _start_bot(bot_id: int, token: str, owner_id: int) -> None:
         await old.session.close()
     _bots[bot_id] = bot
     _owners[bot_id] = owner_id
+    _names[bot_id] = (username, name or username)
 
 
 async def register_clone(owner_id: int, bot_id: int, username: str, name: str, token: str) -> None:
@@ -146,7 +157,7 @@ async def register_clone(owner_id: int, bot_id: int, username: str, name: str, t
         )
         await db.commit()
     await init_clone_db(bot_id, owner_id)
-    await _start_bot(bot_id, token, owner_id)
+    await _start_bot(bot_id, token, owner_id, username, name)
     logger.info("[clones] klon ishga tushdi: @%s (%s) owner=%s", username, bot_id, owner_id)
 
 
@@ -157,15 +168,18 @@ async def set_clone_status(bot_id: int, active: bool) -> None:
             "UPDATE clones SET status=? WHERE bot_id=?", ("active" if active else "stopped", bot_id)
         )
         await db.commit()
-        async with db.execute("SELECT owner_id, token_enc FROM clones WHERE bot_id=?", (bot_id,)) as c:
+        async with db.execute(
+            "SELECT owner_id, token_enc, username, name FROM clones WHERE bot_id=?", (bot_id,)
+        ) as c:
             row = await c.fetchone()
     if not row:
         return
     if active:
-        await _start_bot(bot_id, decrypt_token(row[1]), row[0])
+        await _start_bot(bot_id, decrypt_token(row[1]), row[0], row[2] or "", row[3] or "")
         return
     bot = _bots.pop(bot_id, None)
     _owners.pop(bot_id, None)
+    _names.pop(bot_id, None)
     if bot is not None:
         try:
             await bot.delete_webhook()
@@ -182,14 +196,14 @@ async def load_clones() -> None:
         return
     async with main_db_connect() as db:
         async with db.execute(
-            "SELECT bot_id, owner_id, username, token_enc FROM clones WHERE status='active'"
+            "SELECT bot_id, owner_id, username, token_enc, name FROM clones WHERE status='active'"
         ) as c:
             rows = await c.fetchall()
     started = 0
-    for bot_id, owner_id, username, token_enc in rows:
+    for bot_id, owner_id, username, token_enc, name in rows:
         try:
             await init_clone_db(bot_id, owner_id)
-            await _start_bot(bot_id, decrypt_token(token_enc), owner_id)
+            await _start_bot(bot_id, decrypt_token(token_enc), owner_id, username or "", name or "")
             started += 1
         except Exception as e:
             logger.warning("[clones] @%s (%s) ishga tushmadi: %s", username, bot_id, e)

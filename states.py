@@ -84,3 +84,8 @@ class TransferStates(StatesGroup):
     enter_user_id = State()
     enter_amount = State()
     confirm = State()
+
+
+class EcoStates(StatesGroup):
+    search = State()
+    send_check = State()

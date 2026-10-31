@@ -53,6 +53,7 @@ MENU_ICON_IDS: dict[str, str | None] = {
     "🎁 Cashback":            "5330312778093704176",  # 🎁
     "💵 Reklama va Homiylik": "5424818078833715060",  # 📣
     "🗄 Boshqarish":          "5341715473882955310",  # ⚙️
+    "🌐 Ekotizim":            "5271604874419647061",  # 🔗
     # Admin panel
     "*️⃣ Birlamchi sozlamalar":      "5341715473882955310",  # ⚙️
     "📊 Statistika":                 "5231200819986047254",  # 📊

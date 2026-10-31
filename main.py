@@ -13,7 +13,7 @@ from aiogram.types import ErrorEvent
 
 from config import BOT_TOKEN, SUPPORT_BOT_TOKEN, DB_PATH, BOT_USER_RATE_LIMIT_PER_MIN, CUSTOM_EMOJI_ENABLED
 from database import init_db, init_support_db
-from handlers import user_handlers, admin_handlers, inline_handlers, clone_handlers
+from handlers import user_handlers, admin_handlers, inline_handlers, clone_handlers, eco_handlers
 from keyboards import load_button_styles
 from utils.text_sanitizer import patch_aiogram_text_sanitizer
 from utils.throttle import UserRateLimitMiddleware
@@ -82,6 +82,7 @@ async def run_main_bot():
     dp.callback_query.middleware(throttle)
 
     dp.include_router(clone_handlers.router)
+    dp.include_router(eco_handlers.router)
     dp.include_router(admin_handlers.router)
     dp.include_router(user_handlers.router)
     dp.include_router(inline_handlers.router)
@@ -103,6 +104,8 @@ async def run_main_bot():
         user_handlers.apply_animated_emojis()
     logger.info(f"[MainBot] @{me.username} ishga tushdi.")
 
+    from utils.eco import set_main_info
+    set_main_info(me.username, me.first_name)
     # Klon botlar webhook orqali shu Dispatcher'ga ulanadi
     clones.set_dispatcher(dp)
     try:

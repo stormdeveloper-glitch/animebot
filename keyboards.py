@@ -138,9 +138,11 @@ def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True
         [btn("👥 Referal"), btn("💸 Pul o'tkazmasi")],
         [btn("🎁 Cashback"), btn("💵 Reklama va Homiylik")]
     ]
-    if not current_tenant():
+    if current_tenant():
+        keyboard.append([btn("🌐 Ekotizim")])
+    else:
         # O'z botini yaratish faqat asosiy botda
-        keyboard.append([btn("🤖 Bot yaratish")])
+        keyboard.append([btn("🌐 Ekotizim"), btn("🤖 Bot yaratish")])
     safe_web_app_url = normalize_web_app_url(web_app_url)
     if safe_web_app_url:
         keyboard.insert(0, [btn("🌐 Web App", web_app=WebAppInfo(url=safe_web_app_url))])
