@@ -308,9 +308,13 @@ async def anime_exists(anime_id: int) -> bool:
 
 
 async def _get_web_app_url() -> str:
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT value FROM bot_settings WHERE key='web_app_url'") as c:
-            row = await c.fetchone()
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT value FROM bot_settings WHERE key='web_app_url'") as c:
+                row = await c.fetchone()
+    except Exception as exc:
+        logger.warning("[menu] web_app_url o'qilmadi: %s", exc)
+        return ""
     return (row[0] if row else "") or ""
 
 
@@ -321,11 +325,15 @@ async def send_main_menu(message: Message, user_id: int, text: str | None = None
     /start ning barcha shoxobchalaridan shu funksiya chaqiriladi.
     """
     if text is None:
-        async with aiosqlite.connect(DB_PATH) as db:
-            async with db.execute(
-                "SELECT value FROM bot_settings WHERE key='start_text'"
-            ) as c:
-                st_row = await c.fetchone()
+        try:
+            async with aiosqlite.connect(DB_PATH) as db:
+                async with db.execute(
+                    "SELECT value FROM bot_settings WHERE key='start_text'"
+                ) as c:
+                    st_row = await c.fetchone()
+        except Exception as exc:
+            logger.warning("[menu] start_text o'qilmadi: %s", exc)
+            st_row = None
 
         start_template = st_row[0] if st_row else DEFAULT_START_TEXT
         # Ism HTML sifatida yuboriladi — "<" yoki "&" bo'lsa xabar rad etilardi
@@ -383,11 +391,16 @@ async def command_start_handler(message: Message, state: FSMContext, bot: Bot):
         )
         return
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT 1 FROM users WHERE user_id=?", (user_id,)) as c:
-            exists = await c.fetchone()
-        await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
-        await db.commit()
+    # Ro'yxatga olishdagi baza xatosi menyuni to'sib qo'ymasligi kerak
+    exists = True
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT 1 FROM users WHERE user_id=?", (user_id,)) as c:
+                exists = await c.fetchone()
+            await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
+            await db.commit()
+    except Exception as exc:
+        logger.warning("[start] user=%s ro'yxatga olinmadi: %s", user_id, exc)
 
     if not exists:
         name = message.from_user.first_name or f"ID:{user_id}"
@@ -497,6 +510,7 @@ async def check_subscription_callback(callback: CallbackQuery, bot: Bot):
             f"{STAR} Botdan to'liq foydalanishingiz mumkin!",
             reply_markup=menu_kb(await is_admin(user_id), web_app_url=web_url), parse_mode="HTML"
         )
+        await callback.answer()
     else:
         await callback.answer("❌ Siz hali barcha kanallarga obuna bo'lmagansiz!", show_alert=True)
 
@@ -2750,3 +2764,31 @@ async def ai_handler(message: Message):
         await message.answer(reply)
     except Exception as e:
         await wait_msg.edit_text(f"❌ AI bilan bog'lanishda xatolik: {e}")
+
+
+# ─── AI kartasidagi "🎬 KO'RISH" tugmasi ──────────────────────────────────────
+
+@router.callback_query(F.data.startswith("info_"))
+async def ai_card_info_callback(callback: CallbackQuery):
+    if not await is_admin(callback.from_user.id) and await is_maintenance():
+        await callback.answer("⚠️ Bot tamirlanyapti, kuting...", show_alert=True)
+        return
+    anime_id = callback.data[len("info_"):]
+    if not anime_id.isdigit() or not await anime_exists(int(anime_id)):
+        await callback.answer("Anime topilmadi.", show_alert=True)
+        return
+    await show_anime(callback.message, int(anime_id))
+    await callback.answer()
+
+
+# ─── Tanilmagan matn ─────────────────────────────────────────────────────────
+# Oxirgi handler: hech biri mos kelmasa ham foydalanuvchi jim qolmasin.
+
+@router.message(F.chat.type == "private", F.text)
+async def unknown_text_handler(message: Message):
+    await message.answer(
+        "🤔 Tushunmadim. Quyidagi menyudan foydalaning yoki anime kodini yuboring.\n"
+        "AI yordamchi uchun: <code>/ai savolingiz</code>",
+        parse_mode="HTML",
+    )
+    await send_home_menu(message, message.from_user.id)

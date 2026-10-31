@@ -28,11 +28,17 @@ async def is_admin(user_id: int) -> bool:
     if cached and now < cached[1]:
         return cached[0]
 
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            "SELECT 1 FROM admins WHERE user_id=?", (user_id,)
-        ) as cursor:
-            result = await cursor.fetchone()
+    # Baza xatosi oddiy foydalanuvchining har bir xabarini yiqitmasligi kerak —
+    # aks holda userlar menyuni umuman ko'rmaydi (env adminlar esa ko'radi).
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute(
+                "SELECT 1 FROM admins WHERE user_id=?", (user_id,)
+            ) as cursor:
+                result = await cursor.fetchone()
+    except Exception as e:
+        print(f"[is_admin] DB xatosi: {e}")
+        return False
 
     value = result is not None
     _admin_cache[user_id] = (value, now + ADMIN_CACHE_TTL)
@@ -146,7 +152,11 @@ async def check_subscription(user_id: int, bot: Bot) -> bool:
     Social kanallar tekshirilmaydi.
     Bot kanalda admin bo'lmasa — o'tkazib yuboradi.
     """
-    rows = await _get_channels_cached("'public', 'request', 'social', 'ongoing'")
+    try:
+        rows = await _get_channels_cached("'public', 'request', 'social', 'ongoing'")
+    except Exception as e:
+        print(f"[Sub check] kanallarni o'qib bo'lmadi: {e}")
+        return True
     tg_channels = [
         _parse_chat_id(r[0]) for r in rows
         if r[1] in ('public', 'request')
