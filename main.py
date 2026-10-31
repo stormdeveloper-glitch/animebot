@@ -68,6 +68,17 @@ async def run_main_bot():
     dp.include_router(inline_handlers.router)
     dp.errors.register(handle_update_error)
 
+    # Telefonlarda chap pastdagi "Menu" tugmasi ishlashi uchun buyruqlar ro'yxati
+    try:
+        from aiogram.types import BotCommand, MenuButtonCommands
+        await bot.set_my_commands([
+            BotCommand(command="start", description="Botni ishga tushirish"),
+            BotCommand(command="menu", description="Asosiy menyuni ochish"),
+        ])
+        await bot.set_chat_menu_button(menu_button=MenuButtonCommands())
+    except Exception as e:
+        logger.warning("Bot buyruqlari menyusi o'rnatilmadi: %s", e)
+
     me = await bot.get_me()
     logger.info(f"[MainBot] @{me.username} ishga tushdi.")
     print(f"✅ Asosiy bot @{me.username} ishga tushdi.")

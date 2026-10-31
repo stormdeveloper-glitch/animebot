@@ -374,6 +374,12 @@ async def send_home_menu(message: Message, user_id: int) -> None:
     await _send_menu_message(message, user_id, "🏠 <b>Asosiy menyu</b>", log_label="home")
 
 
+@router.message(Command("menu"))
+async def command_menu_handler(message: Message, state: FSMContext, bot: Bot):
+    """Telefonlardagi "Menu" tugmasi orqali: /start bilan bir xil tekshiruvlar va menyu."""
+    await command_start_handler(message, state, bot)
+
+
 @router.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext, bot: Bot):
     user_id = message.from_user.id
