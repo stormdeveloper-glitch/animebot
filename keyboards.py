@@ -112,17 +112,21 @@ BACK_TO_MENU_TEXTS = {
 
 
 # ── Asosiy menyu ──────────────────────────────────────────────────────────────
-def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True):
-    """Asosiy menyu. animated=True bo'lsa tugmalarda animatsiyali ikonka bo'ladi.
+def _icon_button(text: str, animated: bool, **kwargs):
+    """animated=True bo'lsa tugmada animatsiyali ikonka bo'ladi.
 
     Ikonkali tugma matnidan oddiy emoji olib tashlanadi (ikki marta ko'rinmasin);
     bosilganda kelgan label MenuIconTextMiddleware orqali to'liq matnga qaytadi.
     """
+    icon_id = MENU_ICON_IDS.get(text) if animated and CUSTOM_EMOJI_ENABLED else None
+    if icon_id:
+        return KeyboardButton(text=menu_icon_label(text), icon_custom_emoji_id=icon_id, **kwargs)
+    return KeyboardButton(text=text, **kwargs)
+
+
+def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True):
     def btn(text: str, **kwargs):
-        icon_id = MENU_ICON_IDS.get(text) if animated and CUSTOM_EMOJI_ENABLED else None
-        if icon_id:
-            return KeyboardButton(text=menu_icon_label(text), icon_custom_emoji_id=icon_id, **kwargs)
-        return KeyboardButton(text=text, **kwargs)
+        return _icon_button(text, animated, **kwargs)
 
     keyboard = [
         [btn("🔎 Anime izlash")],
@@ -141,21 +145,24 @@ def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, is_persistent=True)
 
 
-def panel_kb(is_super_admin: bool = False):
+def panel_kb(is_super_admin: bool = False, animated: bool = True):
+    def btn(text: str):
+        return _icon_button(text, animated)
+
     keyboard = [
-        [KeyboardButton(text="*️⃣ Birlamchi sozlamalar")],
-        [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="✉ Xabar Yuborish")],
-        [KeyboardButton(text="📬 Post tayyorlash")],
-        [KeyboardButton(text="🎥 Animelar sozlash"), KeyboardButton(text="💳 Hamyonlar")],
-        [KeyboardButton(text="🔎 Foydalanuvchini boshqarish")],
-        [KeyboardButton(text="📢 Kanallar"), KeyboardButton(text="🎛 Tugmalar"), KeyboardButton(text="📃 Matnlar")],
-        [KeyboardButton(text="💸 To'lovlarni Tasdiqlash")],
-        [KeyboardButton(text="📋 Ro'yxat yuborish")]
+        [btn("*️⃣ Birlamchi sozlamalar")],
+        [btn("📊 Statistika"), btn("✉ Xabar Yuborish")],
+        [btn("📬 Post tayyorlash")],
+        [btn("🎥 Animelar sozlash"), btn("💳 Hamyonlar")],
+        [btn("🔎 Foydalanuvchini boshqarish")],
+        [btn("📢 Kanallar"), btn("🎛 Tugmalar"), btn("📃 Matnlar")],
+        [btn("💸 To'lovlarni Tasdiqlash")],
+        [btn("📋 Ro'yxat yuborish")]
     ]
     if is_super_admin:
-        keyboard.append([KeyboardButton(text="📋 Adminlar")])
-        keyboard.append([KeyboardButton(text="📋 Jurnallar")])
-    keyboard.append([KeyboardButton(text="🤖 Bot holati"), KeyboardButton(text="◀️ Orqaga")])
+        keyboard.append([btn("📋 Adminlar")])
+        keyboard.append([btn("📋 Jurnallar")])
+    keyboard.append([btn("🤖 Bot holati"), btn("◀️ Orqaga")])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, is_persistent=True)
 
 

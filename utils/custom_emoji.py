@@ -35,7 +35,7 @@ EMOJI_IDS: dict[str, str | None] = {
 
 CUSTOM_EMOJI_PACK = os.getenv("CUSTOM_EMOJI_PACK", "").strip()
 
-# Asosiy menyu tugmalari uchun animatsiyali ikonkalar (KeyboardButton.icon_custom_emoji_id).
+# Asosiy menyu va admin panel tugmalari uchun animatsiyali ikonkalar (KeyboardButton.icon_custom_emoji_id).
 # To'plamlar: t.me/addemoji/NewsEmoji va t.me/addemoji/statuspack_uz
 MENU_ICON_IDS: dict[str, str | None] = {
     "🌐 Web App":             "5447410659077661506",  # 🌐
@@ -53,6 +53,23 @@ MENU_ICON_IDS: dict[str, str | None] = {
     "🎁 Cashback":            "5330312778093704176",  # 🎁
     "💵 Reklama va Homiylik": "5424818078833715060",  # 📣
     "🗄 Boshqarish":          "5341715473882955310",  # ⚙️
+    # Admin panel
+    "*️⃣ Birlamchi sozlamalar":      "5341715473882955310",  # ⚙️
+    "📊 Statistika":                 "5231200819986047254",  # 📊
+    "✉ Xabar Yuborish":              "5253742260054409879",  # ✉️
+    "📬 Post tayyorlash":            "5395444784611480792",  # ✏️
+    "🎥 Animelar sozlash":           "5282843764451195532",  # 🖥
+    "💳 Hamyonlar":                  "5402186569006210455",  # 💱
+    "🔎 Foydalanuvchini boshqarish": "5231012545799666522",  # 🔍
+    "📢 Kanallar":                   "5424818078833715060",  # 📣
+    "🎛 Tugmalar":                   "5271604874419647061",  # 🔗
+    "📃 Matnlar":                    "5443038326535759644",  # 💬
+    "💸 To'lovlarni Tasdiqlash":     "5206607081334906820",  # ✔️
+    "📋 Ro'yxat yuborish":           "5222444124698853913",  # 🔖
+    "📋 Adminlar":                   "5217822164362739968",  # 👑
+    "📋 Jurnallar":                  "5413879192267805083",  # 🗓
+    "🤖 Bot holati":                 "5456140674028019486",  # ⚡️
+    "◀️ Orqaga":                     "5463255970253645952",  # ⬅️
 }
 
 
