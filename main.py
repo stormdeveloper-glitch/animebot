@@ -71,16 +71,15 @@ async def run_main_bot():
     dp.include_router(inline_handlers.router)
     dp.errors.register(handle_update_error)
 
-    # Telefonlarda chap pastdagi "Menu" tugmasi ishlashi uchun buyruqlar ro'yxati
+    # Chap pastdagi "Menu" (buyruqlar) tugmasi olib tashlanadi — u telefonlarda
+    # reply klaviaturani ochib-yopuvchi tugmaga xalaqit beradi. /start va /menu
+    # qo'lda yozilganda avvalgidek ishlaydi.
     try:
-        from aiogram.types import BotCommand, MenuButtonCommands
-        await bot.set_my_commands([
-            BotCommand(command="start", description="Botni ishga tushirish"),
-            BotCommand(command="menu", description="Asosiy menyuni ochish"),
-        ])
-        await bot.set_chat_menu_button(menu_button=MenuButtonCommands())
+        from aiogram.types import MenuButtonDefault
+        await bot.delete_my_commands()
+        await bot.set_chat_menu_button(menu_button=MenuButtonDefault())
     except Exception as e:
-        logger.warning("Bot buyruqlari menyusi o'rnatilmadi: %s", e)
+        logger.warning("Bot buyruqlari menyusi o'chirilmadi: %s", e)
 
     me = await bot.get_me()
     if CUSTOM_EMOJI_ENABLED:
