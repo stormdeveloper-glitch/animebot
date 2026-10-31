@@ -2781,6 +2781,27 @@ async def ai_card_info_callback(callback: CallbackQuery):
     await callback.answer()
 
 
+# ─── /emoji — Premium (custom) emoji ID larini olish ──────────────────────────
+# Bot egasi animatsiyali emoji ID larini topishi uchun yordamchi buyruq:
+# "/emoji 🔥✨" yuborilsa, har bir custom emoji ning ID si qaytariladi.
+
+@router.message(Command("emoji"))
+async def custom_emoji_ids_handler(message: Message):
+    entities = [e for e in (message.entities or []) if e.type == "custom_emoji"]
+    if not entities:
+        await message.answer(
+            "Premium (animatsiyali) emoji ID sini olish uchun buyruqdan keyin "
+            "emoji larni yuboring.\n\nMasalan: <code>/emoji</code> ✨🔥✅",
+            parse_mode="HTML",
+        )
+        return
+    lines = ["🆔 <b>Custom emoji ID lari:</b>", ""]
+    for entity in entities:
+        emoji = entity.extract_from(message.text)
+        lines.append(f"{html.escape(emoji)} — <code>{entity.custom_emoji_id}</code>")
+    await message.answer("\n".join(lines), parse_mode="HTML")
+
+
 # ─── Tanilmagan matn ─────────────────────────────────────────────────────────
 # Oxirgi handler: hech biri mos kelmasa ham foydalanuvchi jim qolmasin.
 
