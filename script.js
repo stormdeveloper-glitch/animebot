@@ -1,130 +1,130 @@
-// ── THREE.JS BG ──
-(function () {
-    if (typeof THREE === 'undefined') { console.warn('THREE.js not loaded – skipping 3D background.'); return; }
-    const c = document.getElementById('bg3d');
-    const r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
-    r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); r.setSize(innerWidth, innerHeight);
-    const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .1, 1000);
-    cam.position.z = 26;
-    const mk = (g, col, o) => new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: o }));
-    const i1 = mk(new THREE.IcosahedronGeometry(9, 1), 0x00d4ff, .08), i2 = mk(new THREE.IcosahedronGeometry(5.5, 0), 0x8b5cf6, .09);
-    s.add(i1, i2);
-    const geos = [new THREE.TetrahedronGeometry(.8), new THREE.OctahedronGeometry(.7), new THREE.BoxGeometry(1, 1, 1), new THREE.IcosahedronGeometry(.6, 0)];
-    const cols = [0x00d4ff, 0x8b5cf6, 0xf0abfc, 0x10ffa0];
-    Array.from({ length: 22 }, (_, i) => {
+    // ── THREE.JS BG ──
+    (function () {
+      if (typeof THREE === 'undefined') { console.warn('THREE.js not loaded – skipping 3D background.'); return; }
+      const c = document.getElementById('bg3d');
+      const r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
+      r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); r.setSize(innerWidth, innerHeight);
+      const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .1, 1000);
+      cam.position.z = 26;
+      const mk = (g, col, o) => new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: o }));
+      const i1 = mk(new THREE.IcosahedronGeometry(9, 1), 0xff6b4a, .07), i2 = mk(new THREE.IcosahedronGeometry(5.5, 0), 0x8b7bff, .08);
+      s.add(i1, i2);
+      const geos = [new THREE.TetrahedronGeometry(.8), new THREE.OctahedronGeometry(.7), new THREE.BoxGeometry(1, 1, 1), new THREE.IcosahedronGeometry(.6, 0)];
+      const cols = [0xff6b4a, 0x8b7bff, 0xffc46b, 0x3ee6a8];
+      Array.from({ length: 22 }, (_, i) => {
         const m = mk(geos[i % 4], cols[i % 4], .06 + Math.random() * .09);
         const rr = 14 + Math.random() * 20, t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1);
         m.position.set(rr * Math.sin(p) * Math.cos(t), rr * Math.sin(p) * Math.sin(t), rr * Math.cos(p) - 10);
         m.userData = { sx: (Math.random() - .5) * .009, sy: (Math.random() - .5) * .009 }; s.add(m); return m;
-    });
-    let mx = 0, my = 0;
-    document.addEventListener('mousemove', e => { mx = (e.clientX / innerWidth - .5) * .016; my = (e.clientY / innerHeight - .5) * .016; });
-    const smalls = [...s.children].slice(2);
-    (function a() {
+      });
+      let mx = 0, my = 0;
+      document.addEventListener('mousemove', e => { mx = (e.clientX / innerWidth - .5) * .016; my = (e.clientY / innerHeight - .5) * .016; });
+      const smalls = [...s.children].slice(2);
+      (function a() {
         requestAnimationFrame(a);
         i1.rotation.x += .0017 + mx * .35; i1.rotation.y += .0026 + my * .35;
         i2.rotation.x -= .0022; i2.rotation.y -= .0016;
         smalls.forEach(m => { m.rotation.x += m.userData.sx; m.rotation.y += m.userData.sy; });
         r.render(s, cam);
+      })();
+      window.addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); });
     })();
-    window.addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); });
-})();
 
-// ── SETTINGS ──
-const LS = k => localStorage.getItem('az_' + k);
-const LSS = (k, v) => localStorage.setItem('az_' + k, v);
-let S = { theme: LS('theme') || 'glass', bg: LS('bg') !== 'off', spin: +LS('spin') || 9, card: +LS('card') || 196, def: LS('def') || 'all', lang: LS('lang') || 'uz' };
-document.documentElement.setAttribute('data-theme', S.theme);
-updateBrowserThemeColor(S.theme);
-document.documentElement.style.setProperty('--sd', S.spin === 0 ? '99999s' : S.spin + 's');
-document.documentElement.style.setProperty('--cw', S.card + 'px');
-window.addEventListener('DOMContentLoaded', syncUI);
-let _mirrorStream = null;
+    // ── SETTINGS ──
+    const LS = k => localStorage.getItem('az_' + k);
+    const LSS = (k, v) => localStorage.setItem('az_' + k, v);
+    let S = { theme: 'depth', bg: LS('bg') !== 'off', spin: +LS('spin') || 9, card: +LS('card') || 196, def: LS('def') || 'all', lang: LS('lang') || 'uz' };
+    document.documentElement.setAttribute('data-theme', S.theme);
+    updateBrowserThemeColor(S.theme);
+    document.documentElement.style.setProperty('--sd', S.spin === 0 ? '99999s' : S.spin + 's');
+    document.documentElement.style.setProperty('--cw', S.card + 'px');
+    window.addEventListener('DOMContentLoaded', syncUI);
+    let _mirrorStream = null;
 
-function updateBrowserThemeColor(theme) {
-    const color = '#6b3f24';
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
-    document.querySelector('meta[name="msapplication-TileColor"]')?.setAttribute('content', color);
-}
-function syncUI() {
-    ['glass', 'futuristic', 'cyber3d', 'mirror'].forEach(t => document.getElementById('th-' + t)?.classList.toggle('on', S.theme === t));
-    const bg = document.getElementById('togBg'); if (bg) bg.checked = S.bg;
-    [5, 9, 16, 0].forEach(v => document.getElementById('sp-' + v)?.classList.toggle('on', S.spin === v));
-    [150, 196, 260].forEach(v => document.getElementById('cw-' + v)?.classList.toggle('on', S.card === v));
-    ['all', 'ongoing', 'top', 'new'].forEach(v => document.getElementById('df-' + v)?.classList.toggle('on', S.def === v));
-    ['uz', 'ru', 'en'].forEach(v => document.getElementById('lg-' + v)?.classList.toggle('on', S.lang === v));
-    updateMirrorHint();
-}
-function syncSettingsUI() { syncUI(); }
-function setTheme(t, b) {
-    S.theme = t; LSS('theme', t); document.documentElement.setAttribute('data-theme', t); hiPill('th-', ['glass', 'futuristic', 'cyber3d', 'mirror'], t);
-    updateBrowserThemeColor(t);
-    if (t !== 'mirror') stopMirrorCamera(true);
-    updateMirrorHint();
-}
-function setBg(on) { S.bg = on; LSS('bg', on ? 'on' : 'off'); document.getElementById('bg3d').style.opacity = on ? '' : '0'; }
-function setSpin(v, b) { S.spin = v; LSS('spin', v); document.documentElement.style.setProperty('--sd', v === 0 ? '99999s' : v + 's'); hiPill('sp-', [5, 9, 16, 0], v); }
-function setCard(v, b) { S.card = v; LSS('card', v); document.documentElement.style.setProperty('--cw', v + 'px'); hiPill('cw-', [150, 196, 260], v); }
-function setDef(v, b) { S.def = v; LSS('def', v); hiPill('df-', ['all', 'ongoing', 'top', 'new'], v); }
-function setLang(v, b) { S.lang = v; LSS('lang', v); hiPill('lg-', ['uz', 'ru', 'en'], v); }
-function hiPill(prefix, vals, active) { vals.forEach(v => { const el = document.getElementById(prefix + v); if (el) el.classList.toggle('on', v === active); }); }
+    function updateBrowserThemeColor(theme) {
+      const color = '#0f0d18';
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
+      document.querySelector('meta[name="msapplication-TileColor"]')?.setAttribute('content', color);
+    }
+    function syncUI() {
+      ['glass', 'futuristic', 'cyber3d', 'mirror'].forEach(t => document.getElementById('th-' + t)?.classList.toggle('on', S.theme === t));
+      const bg = document.getElementById('togBg'); if (bg) bg.checked = S.bg;
+      [5, 9, 16, 0].forEach(v => document.getElementById('sp-' + v)?.classList.toggle('on', S.spin === v));
+      [150, 196, 260].forEach(v => document.getElementById('cw-' + v)?.classList.toggle('on', S.card === v));
+      ['all', 'ongoing', 'top', 'new'].forEach(v => document.getElementById('df-' + v)?.classList.toggle('on', S.def === v));
+      ['uz', 'ru', 'en'].forEach(v => document.getElementById('lg-' + v)?.classList.toggle('on', S.lang === v));
+      updateMirrorHint();
+    }
+    function syncSettingsUI() { syncUI(); }
+    function setTheme(t, b) {
+      t = 'depth'; S.theme = t; document.documentElement.setAttribute('data-theme', t); hiPill('th-', ['glass', 'futuristic', 'cyber3d', 'mirror'], t);
+      updateBrowserThemeColor(t);
+      if (t !== 'mirror') stopMirrorCamera(true);
+      updateMirrorHint();
+    }
+    function setBg(on) { S.bg = on; LSS('bg', on ? 'on' : 'off'); document.getElementById('bg3d').style.opacity = on ? '' : '0'; }
+    function setSpin(v, b) { S.spin = v; LSS('spin', v); document.documentElement.style.setProperty('--sd', v === 0 ? '99999s' : v + 's'); hiPill('sp-', [5, 9, 16, 0], v); }
+    function setCard(v, b) { S.card = v; LSS('card', v); document.documentElement.style.setProperty('--cw', v + 'px'); hiPill('cw-', [150, 196, 260], v); }
+    function setDef(v, b) { S.def = v; LSS('def', v); hiPill('df-', ['all', 'ongoing', 'top', 'new'], v); }
+    function setLang(v, b) { S.lang = v; LSS('lang', v); hiPill('lg-', ['uz', 'ru', 'en'], v); }
+    function hiPill(prefix, vals, active) { vals.forEach(v => { const el = document.getElementById(prefix + v); if (el) el.classList.toggle('on', v === active); }); }
 
-function updateMirrorHint() {
-    const note = document.getElementById('mirrorNote');
-    const ph = document.getElementById('mirrorPlaceholder');
-    if (!note || !ph) return;
-    if (S.theme === 'mirror') {
+    function updateMirrorHint() {
+      const note = document.getElementById('mirrorNote');
+      const ph = document.getElementById('mirrorPlaceholder');
+      if (!note || !ph) return;
+      if (S.theme === 'mirror') {
         if (_mirrorStream) {
-            note.innerHTML = "<b>Mirror faol:</b> xohlagan payt kamerani to'xtatishingiz mumkin.";
-            ph.style.display = 'none';
+          note.innerHTML = "<b>Mirror faol:</b> xohlagan payt kamerani to'xtatishingiz mumkin.";
+          ph.style.display = 'none';
         } else {
-            note.innerHTML = "<b>Xotirjam bo'ling:</b> ruxsat bersangiz ham video faqat shu oynada ko'rinadi, saqlanmaydi va serverga yuborilmaydi.";
-            ph.style.display = 'flex';
-            ph.textContent = "Mirror tema yoqildi. Tayyor bo'lsangiz, pastdagi tugma orqali old kamerani yoqing.";
+          note.innerHTML = "<b>Xotirjam bo'ling:</b> ruxsat bersangiz ham video faqat shu oynada ko'rinadi, saqlanmaydi va serverga yuborilmaydi.";
+          ph.style.display = 'flex';
+          ph.textContent = "Mirror tema yoqildi. Tayyor bo'lsangiz, pastdagi tugma orqali old kamerani yoqing.";
         }
-    } else {
+      } else {
         note.innerHTML = "<b>Mirror rejimi:</b> avval temani Mirror ga o'tkazing, keyin kamerani yoqsangiz bo'ladi.";
         ph.style.display = 'flex';
         ph.textContent = "Old kamerani ishga tushirishdan oldin Mirror temani tanlang.";
+      }
     }
-}
 
-async function startMirrorCamera() {
-    if (S.theme !== 'mirror') {
+    async function startMirrorCamera() {
+      if (S.theme !== 'mirror') {
         alert("Avval temani Mirror ga o'tkazing.");
         return;
-    }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         alert("Bu qurilmada kamera API qo'llab-quvvatlanmaydi.");
         return;
-    }
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      }
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
         alert("Kamera uchun HTTPS kerak (yoki localhost).");
         return;
-    }
-    const cam = document.getElementById('mirrorCam');
-    const ph = document.getElementById('mirrorPlaceholder');
-    const st = document.getElementById('mirrorStartBtn');
-    const sp = document.getElementById('mirrorStopBtn');
-    if (!cam || !ph || !st || !sp) return;
+      }
+      const cam = document.getElementById('mirrorCam');
+      const ph = document.getElementById('mirrorPlaceholder');
+      const st = document.getElementById('mirrorStartBtn');
+      const sp = document.getElementById('mirrorStopBtn');
+      if (!cam || !ph || !st || !sp) return;
 
-    st.disabled = true;
-    st.textContent = "⏳ Kamera ulanmoqda...";
-    try {
+      st.disabled = true;
+      st.textContent = "⏳ Kamera ulanmoqda...";
+      try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
         _mirrorStream = stream;
         // Ruxsat qaytarib olinganda (yoki kamera uzilganda) stream tugaydi
         const track = stream.getVideoTracks && stream.getVideoTracks()[0];
         if (track) {
-            track.onended = () => {
-                const ph = document.getElementById('mirrorPlaceholder');
-                if (ph) {
-                    ph.style.display = 'flex';
-                    ph.textContent = "Kamera ruxsati bekor qilindi yoki qurilma uzildi.";
-                }
-                stopMirrorCamera(true);
-                updateMirrorHint();
-            };
+          track.onended = () => {
+            const ph = document.getElementById('mirrorPlaceholder');
+            if (ph) {
+              ph.style.display = 'flex';
+              ph.textContent = "Kamera ruxsati bekor qilindi yoki qurilma uzildi.";
+            }
+            stopMirrorCamera(true);
+            updateMirrorHint();
+          };
         }
         cam.srcObject = stream;
         cam.style.display = 'block';
@@ -132,110 +132,130 @@ async function startMirrorCamera() {
         st.style.display = 'none';
         sp.style.display = 'inline-block';
         updateMirrorHint();
-    } catch (e) {
+      } catch (e) {
         ph.style.display = 'flex';
         ph.textContent = "Ruxsat berilmadi yoki kamera topilmadi. Xohlasangiz yana urinib ko'ring.";
         st.disabled = false;
         st.textContent = "🔓 Kameraga ruxsat berish";
+      }
     }
-}
 
-function stopMirrorCamera(silent = false) {
-    const cam = document.getElementById('mirrorCam');
-    const ph = document.getElementById('mirrorPlaceholder');
-    const st = document.getElementById('mirrorStartBtn');
-    const sp = document.getElementById('mirrorStopBtn');
-    if (_mirrorStream) {
+    function stopMirrorCamera(silent = false) {
+      const cam = document.getElementById('mirrorCam');
+      const ph = document.getElementById('mirrorPlaceholder');
+      const st = document.getElementById('mirrorStartBtn');
+      const sp = document.getElementById('mirrorStopBtn');
+      if (_mirrorStream) {
         _mirrorStream.getTracks().forEach(t => t.stop());
         _mirrorStream = null;
-    }
-    if (cam) {
+      }
+      if (cam) {
         cam.pause();
         cam.srcObject = null;
         cam.style.display = 'none';
-    }
-    if (sp) sp.style.display = 'none';
-    if (st) {
+      }
+      if (sp) sp.style.display = 'none';
+      if (st) {
         st.style.display = 'inline-block';
         st.disabled = false;
         st.textContent = "🔓 Kameraga ruxsat berish";
-    }
-    if (ph) {
+      }
+      if (ph) {
         ph.style.display = 'flex';
         if (S.theme === 'mirror') {
-            ph.textContent = "Kamera to'xtatildi. Qayta yoqish uchun tugmani bosing.";
+          ph.textContent = "Kamera to'xtatildi. Qayta yoqish uchun tugmani bosing.";
         } else {
-            ph.textContent = "Old kamerani ishga tushirishdan oldin Mirror temani tanlang.";
+          ph.textContent = "Old kamerani ishga tushirishdan oldin Mirror temani tanlang.";
         }
+      }
+      if (!silent) updateMirrorHint();
     }
-    if (!silent) updateMirrorHint();
-}
-window.addEventListener('beforeunload', () => stopMirrorCamera(true));
+    window.addEventListener('beforeunload', () => stopMirrorCamera(true));
 
-// ── SIDEBAR ──
-let sOpen = LS('sb') !== 'closed';
-const sEl = document.getElementById('sidebar');
-const arEl = document.getElementById('sideArrow');
-if (sOpen) { sEl.classList.add('open'); arEl.textContent = '❮'; }
-function toggleSidebar() { sOpen = !sOpen; sEl.classList.toggle('open', sOpen); arEl.textContent = sOpen ? '❮' : '❯'; LSS('sb', sOpen ? 'open' : 'closed'); }
+    // ── SIDEBAR ──
+    let sOpen = LS('sb') !== 'closed';
+    const sEl = document.getElementById('sidebar');
+    const arEl = document.getElementById('sideArrow');
+    if (sOpen) { sEl.classList.add('open'); arEl.textContent = '❮'; }
+    function toggleSidebar() { sOpen = !sOpen; sEl.classList.toggle('open', sOpen); arEl.textContent = sOpen ? '❮' : '❯'; LSS('sb', sOpen ? 'open' : 'closed'); }
 
-// ── PAGES ──
-const PT = { animes: 'Animelar', admins: 'Adminlar', stats: 'Statistika', report: 'Shikoyat / Taklif', settings: 'Sozlamalar', game: '🃏 O\'yinlar', global: '🌐 Global Qidiruv', gallery: '🖼️ Gallery', profile: '👤 Profil' };
-const PS = { animes: 'Barcha anime sarlavhalar', admins: 'Bot boshqaruvchilari', stats: 'Faoliyat ko\'rsatkichlari', report: 'Xabaringiz adminga yetkaziladi', settings: 'Interfeys sozlamalari', game: 'Google bilan kiring va o\'ynang', global: 'AniList orqali dunyo bo\'yicha qidiring', gallery: 'Poster ko\'rinishda barcha animelar', profile: 'Profil va saqlangan animelar' };
-function showPage(name, btn) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.snav,.bnav-item').forEach(b => b.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    document.querySelectorAll(`[onclick*="'${name}'"]`).forEach(b => b.classList.add('active'));
-    const tt = document.getElementById('topTitle'); if (tt) tt.textContent = PT[name] || name;
-    const ts = document.getElementById('topSub'); if (ts) ts.textContent = PS[name] || '';
-    if (name === 'admins') renderAdmins();
-    if (name === 'stats') renderStats();
-    if (name === 'game') switchGameTab(_activeGameTab || 'card');
-    if (name === 'settings') syncSettingsUI();
-    if (name === 'global') _checkAnilistStatus();
-    if (name === 'gallery') renderGallery();
-    if (name === 'profile') renderProfile();
-}
+    // ── PAGES ──
+    const PT = { animes: 'Animelar', admins: 'Adminlar', stats: 'Statistika', report: 'Shikoyat / Taklif', settings: 'Sozlamalar', game: '🃏 O\'yinlar', global: '🌐 Global Qidiruv', gallery: '🖼️ Gallery', profile: '👤 Profil' };
+    const PS = { animes: 'Barcha anime sarlavhalar', admins: 'Bot boshqaruvchilari', stats: 'Faoliyat ko\'rsatkichlari', report: 'Xabaringiz adminga yetkaziladi', settings: 'Interfeys sozlamalari', game: 'Google bilan kiring va o\'ynang', global: 'AniList orqali dunyo bo\'yicha qidiring', gallery: 'Poster ko\'rinishda barcha animelar', profile: 'Profil va saqlangan animelar' };
+    function showPage(name, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.snav,.bnav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      document.querySelectorAll(`[onclick*="'${name}'"]`).forEach(b => b.classList.add('active'));
+      const tt = document.getElementById('topTitle'); if (tt) tt.textContent = PT[name] || name;
+      const ts = document.getElementById('topSub'); if (ts) ts.textContent = PS[name] || '';
+      if (name === 'admins') renderAdmins();
+      if (name === 'stats') renderStats();
+      if (name === 'game') switchGameTab(_activeGameTab || 'card');
+      if (name === 'settings') syncSettingsUI();
+      if (name === 'global') _checkAnilistStatus();
+      if (name === 'gallery') renderGallery();
+      if (name === 'profile') renderProfile();
+      if (name === 'edits') loadAnimeEdits();
+    }
 
-// ── ANIMES ──
-const BOT = 'anime_uz_official_bot';
-let allAnimes = [], curFilter = S.def, srch = '';
+    PT.edits = 'Anime edits';
+    PS.edits = 'Instagramdan tanlangan anime editlar';
 
-// loadAnimes — see cached version below
+    function _editEsc(value) { const d = document.createElement('div'); d.textContent = value || ''; return d.innerHTML; }
+    async function loadAnimeEdits(tag) {
+      const input = document.getElementById('editsSearch');
+      const raw = tag || (input ? input.value : '');
+      if (input && tag) input.value = '#' + tag;
+      const q = String(raw || '').trim();
+      const param = q.startsWith('#') ? 'tag=' + encodeURIComponent(q.slice(1)) : 'q=' + encodeURIComponent(q);
+      const grid = document.getElementById('editsGrid'); if (!grid) return;
+      grid.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+      try {
+        const res = await fetch('/api/anime-edits?' + param); const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Xatolik');
+        grid.innerHTML = (data.edits || []).map(e => `<article class="edit-card"><video controls preload="metadata" playsinline src="${_editEsc(e.video_url)}"></video><div class="edit-card-body"><div class="edit-card-title">${_editEsc(e.title || 'Anime edit')}</div><div class="edit-tags">${(e.tags || []).map(t => `<button class="edit-tag" onclick="loadAnimeEdits('${_editEsc(t)}')">#${_editEsc(t)}</button>`).join('')}</div></div></article>`).join('') || '<div class="edits-empty">Bu qidiruv bo‘yicha edit topilmadi.</div>';
+      } catch (err) { grid.innerHTML = '<div class="edits-empty">' + _editEsc(err.message) + '</div>'; }
+    }
 
-function applyFilter() {
-    let list = [...allAnimes];
-    if (srch) { const q = srch.toLowerCase(); list = list.filter(a => (a.nom || '').toLowerCase().includes(q)); }
-    if (curFilter === 'ongoing') list = list.filter(a => (a.aniType || '').toLowerCase().includes('ongoing'));
-    else if (curFilter === 'completed') list = list.filter(a => a.aniType && !a.aniType.toLowerCase().includes('ongoing'));
-    else if (curFilter === 'top') list = [...list].sort((a, b) => (b.qidiruv || 0) - (a.qidiruv || 0));
-    else if (curFilter === 'new') list = [...list].sort((a, b) => b.id - a.id);
-    else if (curFilter === 'age0') { const AGES = ['0+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
-    else if (curFilter === 'age7') { const AGES = ['0+', '7+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
-    else if (curFilter === 'age13') { const AGES = ['0+', '7+', '13+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
-    else if (curFilter === 'age16') { const AGES = ['0+', '7+', '13+', '16+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
-    else if (curFilter === 'age18') list = list.filter(a => a.yosh_toifa === '18+');
-    const rc = document.getElementById('resultCount'); if (rc) rc.textContent = list.length;
-    renderGrid(list);
-}
+    // ── ANIMES ──
+    const BOT = 'anime_uz_official_bot';
+    let allAnimes = [], curFilter = S.def, srch = '';
 
-// HUD card back HTML generator
-function _hudCardBack(a, idx) {
-    const og = (a.aniType || '').toLowerCase().includes('ongoing');
-    const delay = (idx * 0.15) % 2; // stagger per card, max 2s
-    // Pips: 8 total — ongoing=8, completed=5, unknown=3
-    const pipOn = og ? 8 : (a.aniType ? 5 : 3);
-    const pips = Array.from({ length: 8 }, (_, i) => `<div class="hud-pip${i < pipOn ? ' on' : ''}"></div>`).join('');
-    // Truncate at 24 chars (was 18 — too aggressive)
-    const rawName = a.nom || 'Nomsiz';
-    const shortName = rawName.length > 24 ? rawName.slice(0, 22) + '…' : rawName;
-    // Dynamic typewriter steps matching actual name length
-    const nameSteps = shortName.length;
-    const views = a.qidiruv ? `👁 ${a.qidiruv}` : '—';
-    const fandub = a.fandub || '\u2014';
+    // loadAnimes — see cached version below
 
-    return `<div class="hud-cb" style="--hud-delay:${delay}s">
+    function applyFilter() {
+      let list = [...allAnimes];
+      if (srch) { const q = srch.toLowerCase(); list = list.filter(a => (a.nom || '').toLowerCase().includes(q)); }
+      if (curFilter === 'ongoing') list = list.filter(a => (a.aniType || '').toLowerCase().includes('ongoing'));
+      else if (curFilter === 'completed') list = list.filter(a => a.aniType && !a.aniType.toLowerCase().includes('ongoing'));
+      else if (curFilter === 'top') list = [...list].sort((a, b) => (b.qidiruv || 0) - (a.qidiruv || 0));
+      else if (curFilter === 'new') list = [...list].sort((a, b) => b.id - a.id);
+      else if (curFilter === 'age0') { const AGES = ['0+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
+      else if (curFilter === 'age7') { const AGES = ['0+', '7+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
+      else if (curFilter === 'age13') { const AGES = ['0+', '7+', '13+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
+      else if (curFilter === 'age16') { const AGES = ['0+', '7+', '13+', '16+']; list = list.filter(a => AGES.includes(a.yosh_toifa)); }
+      else if (curFilter === 'age18') list = list.filter(a => a.yosh_toifa === '18+');
+      const rc = document.getElementById('resultCount'); if (rc) rc.textContent = list.length;
+      renderGrid(list);
+    }
+
+    // HUD card back HTML generator
+    function _hudCardBack(a, idx) {
+      const og = (a.aniType || '').toLowerCase().includes('ongoing');
+      const delay = (idx * 0.15) % 2; // stagger per card, max 2s
+      // Pips: 8 total — ongoing=8, completed=5, unknown=3
+      const pipOn = og ? 8 : (a.aniType ? 5 : 3);
+      const pips = Array.from({ length: 8 }, (_, i) => `<div class="hud-pip${i < pipOn ? ' on' : ''}"></div>`).join('');
+      // Truncate at 24 chars (was 18 — too aggressive)
+      const rawName = a.nom || 'Nomsiz';
+      const shortName = rawName.length > 24 ? rawName.slice(0, 22) + '…' : rawName;
+      // Dynamic typewriter steps matching actual name length
+      const nameSteps = shortName.length;
+      const views = a.qidiruv ? `👁 ${a.qidiruv}` : '—';
+      const fandub = a.fandub || '\u2014';
+
+      return `<div class="hud-cb" style="--hud-delay:${delay}s">
     <div class="hud-top-line"></div>
     <div class="hud-bot-line"></div>
 
@@ -291,12 +311,12 @@ function _hudCardBack(a, idx) {
     <div class="hud-pips">${pips}</div>
     <div class="hud-id">#${String(a.id).padStart(3, '0')}</div>
   </div>`;
-}
+    }
 
-function renderGrid(list) {
-    const g = document.getElementById('animeGrid');
-    if (!list.length) { g.innerHTML = `<div class="empty"><div class="empty-ico">😔</div><h3>Topilmadi</h3><p>"${srch}" bo'yicha natija yo'q</p></div>`; return; }
-    g.innerHTML = list.map((a, idx) => {
+    function renderGrid(list) {
+      const g = document.getElementById('animeGrid');
+      if (!list.length) { g.innerHTML = `<div class="empty"><div class="empty-ico">😔</div><h3>Topilmadi</h3><p>"${srch}" bo'yicha natija yo'q</p></div>`; return; }
+      g.innerHTML = list.map((a, idx) => {
         const likedCls = _isLiked(a.id) ? 'liked' : '';
         const savedCls = _isSaved(a.id) ? 'saved' : '';
         return `<div class="card-wrap" title="${a.nom}">
@@ -311,34 +331,34 @@ function renderGrid(list) {
         <button class="ca-btn ${savedCls}" onclick="event.stopPropagation();toggleSave(${a.id})" id="save-${a.id}">💾 Saqlash</button>
       </div>
     </div>`;
-    }).join('');
-}
-
-document.getElementById('searchInput').addEventListener('input', e => { srch = e.target.value.trim(); applyFilter(); });
-document.querySelectorAll('.filter-btn').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active'); curFilter = b.dataset.filter; applyFilter();
-}));
-
-// ── MODAL ──
-let _portalBusy = false;
-let _openingPosterFromRoute = false;
-function _posterRouteId() {
-    const m = location.pathname.match(/^\/poster\/(\d+)\/?$/);
-    return m ? Number(m[1]) : 0;
-}
-function openModal(id, sourceEl, opts = {}) {
-    const a = allAnimes.find(x => x.id === id); if (!a) return;
-    if (_portalBusy) return;
-    if (!opts.skipHistory && location.pathname !== `/poster/${id}`) {
-        history.pushState({ poster: id }, '', `/poster/${id}`);
+      }).join('');
     }
-    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (typeof THREE === 'undefined' || reduced || opts.skipFx) { renderAnimeModal(a); return; }
-    _playPortalFx(sourceEl).then(() => renderAnimeModal(a)).catch(() => { _portalBusy = false; renderAnimeModal(a); });
-}
-function _playPortalFx(sourceEl) {
-    return new Promise(resolve => {
+
+    document.getElementById('searchInput').addEventListener('input', e => { srch = e.target.value.trim(); applyFilter(); });
+    document.querySelectorAll('.filter-btn').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active'); curFilter = b.dataset.filter; applyFilter();
+    }));
+
+    // ── MODAL ──
+    let _portalBusy = false;
+    let _openingPosterFromRoute = false;
+    function _posterRouteId() {
+      const m = location.pathname.match(/^\/poster\/(\d+)\/?$/);
+      return m ? Number(m[1]) : 0;
+    }
+    function openModal(id, sourceEl, opts = {}) {
+      const a = allAnimes.find(x => x.id === id); if (!a) return;
+      if (_portalBusy) return;
+      if (!opts.skipHistory && location.pathname !== `/poster/${id}`) {
+        history.pushState({ poster: id }, '', `/poster/${id}`);
+      }
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (typeof THREE === 'undefined' || reduced || opts.skipFx) { renderAnimeModal(a); return; }
+      _playPortalFx(sourceEl).then(() => renderAnimeModal(a)).catch(() => { _portalBusy = false; renderAnimeModal(a); });
+    }
+    function _playPortalFx(sourceEl) {
+      return new Promise(resolve => {
         _portalBusy = true;
         const wrap = document.getElementById('portalFx'), flash = document.getElementById('portalFlash');
         wrap.innerHTML = '';
@@ -359,45 +379,45 @@ function _playPortalFx(sourceEl) {
         const count = innerWidth < 640 ? 150 : 280;
         const pos = new Float32Array(count * 3);
         for (let i = 0; i < count; i++) {
-            const radius = 9 + Math.random() * 28, theta = Math.random() * Math.PI * 2, phi = Math.acos(2 * Math.random() - 1);
-            pos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-            pos[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-            pos[i * 3 + 2] = radius * Math.cos(phi);
+          const radius = 9 + Math.random() * 28, theta = Math.random() * Math.PI * 2, phi = Math.acos(2 * Math.random() - 1);
+          pos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+          pos[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+          pos[i * 3 + 2] = radius * Math.cos(phi);
         }
         ptsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         const pts = new THREE.Points(ptsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: .075, transparent: true, opacity: .62 }));
         scene.add(pts);
         if (sourceEl) {
-            const rect = sourceEl.getBoundingClientRect();
-            const x = ((rect.left + rect.width / 2) / innerWidth - .5) * 8;
-            const y = -((rect.top + rect.height / 2) / innerHeight - .5) * 5;
-            sphere.position.set(x, y, 0); inner.position.copy(sphere.position);
+          const rect = sourceEl.getBoundingClientRect();
+          const x = ((rect.left + rect.width / 2) / innerWidth - .5) * 8;
+          const y = -((rect.top + rect.height / 2) / innerHeight - .5) * 5;
+          sphere.position.set(x, y, 0); inner.position.copy(sphere.position);
         }
         const start = performance.now(), duration = 850;
         function frame(now) {
-            const t = Math.min(1, (now - start) / duration);
-            const ease = 1 - Math.pow(1 - t, 3);
-            sphere.rotation.x += .012 + ease * .02; sphere.rotation.y += .018 + ease * .03;
-            inner.rotation.x -= .021; inner.rotation.y += .028;
-            pts.rotation.y += .004 + ease * .01;
-            camera.position.z = 22 - 17 * ease;
-            sphere.scale.setScalar(1 + ease * 2.6);
-            inner.scale.setScalar(1 + ease * 3.3);
-            renderer.render(scene, camera);
-            if (t < 1) { requestAnimationFrame(frame); return; }
-            flash.classList.add('on');
-            setTimeout(() => flash.classList.remove('on'), 130);
-            setTimeout(() => { wrap.classList.remove('on'); wrap.innerHTML = ''; renderer.dispose(); _portalBusy = false; resolve(); }, 160);
+          const t = Math.min(1, (now - start) / duration);
+          const ease = 1 - Math.pow(1 - t, 3);
+          sphere.rotation.x += .012 + ease * .02; sphere.rotation.y += .018 + ease * .03;
+          inner.rotation.x -= .021; inner.rotation.y += .028;
+          pts.rotation.y += .004 + ease * .01;
+          camera.position.z = 22 - 17 * ease;
+          sphere.scale.setScalar(1 + ease * 2.6);
+          inner.scale.setScalar(1 + ease * 3.3);
+          renderer.render(scene, camera);
+          if (t < 1) { requestAnimationFrame(frame); return; }
+          flash.classList.add('on');
+          setTimeout(() => flash.classList.remove('on'), 130);
+          setTimeout(() => { wrap.classList.remove('on'); wrap.innerHTML = ''; renderer.dispose(); _portalBusy = false; resolve(); }, 160);
         }
         requestAnimationFrame(frame);
-    });
-}
-function renderAnimeModal(a) {
-    if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
+      });
+    }
+    function renderAnimeModal(a) {
+      if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
         try { window.ytTrailerPlayer.destroy(); } catch (e) { }
         window.ytTrailerPlayer = null;
-    }
-    document.getElementById('modalContent').innerHTML = `
+      }
+      document.getElementById('modalContent').innerHTML = `
     <div class="m-media">
       <img class="m-img" src="${a.rams_url || ''}" onerror="this.outerHTML='<div class=m-img-ph>🎬</div>'">
       <button class="play-btn" onclick="loadVideo(${a.id})">▶</button>
@@ -417,127 +437,127 @@ function renderAnimeModal(a) {
       ${a.filler_info ? `<div class="irow" style="display:block"><span class="ilbl">Filler qismlar</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.filler_info}<br><small>Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.</small></span></div>` : ''}
       <a class="m-btn" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
     </div>`;
-    document.getElementById('modalBg').classList.add('open');
-}
+      document.getElementById('modalBg').classList.add('open');
+    }
 
-async function loadVideo(id) {
-    const m = document.querySelector('.m-media'); if (!m) return;
-    window._curAnimeId = id;
-    m.innerHTML = `<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
-    try {
+    async function loadVideo(id) {
+      const m = document.querySelector('.m-media'); if (!m) return;
+      window._curAnimeId = id;
+      m.innerHTML = `<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
+      try {
         const res = await fetch(`/api/episodes/${id}`);
         const d = await res.json();
         if (!d.episodes || !d.episodes.length) { m.innerHTML = `<div class="verr">🎬 Hali qism yuklanmagan.<br><a href="https://t.me/${BOT}?start=${id}" target="_blank" style="color:var(--accent)">Botda ko'rish</a></div>`; return; }
         _playEp(m, d.episodes, 0);
-    } catch (e) { m.innerHTML = `<div class="verr">⚠️ Xatolik: ${e.message}</div>`; }
-}
-function _playEp(mediaEl, eps, idx) {
-    const ep = eps[idx]; if (!ep) return;
-    window._epCache = eps;
-    const epBtns = eps.map((e, i) => `<button class="ep-btn ${i === idx ? 'active' : ''}" onclick="_playEp(document.querySelector('.m-media'),window._epCache,${i})">${e.qism || (i + 1)}-qism</button>`).join('');
-    const epList = eps.length > 1 ? `<div class="ep-lbl">Qismlar (${eps.length} ta):</div><div class="ep-list">${epBtns}</div>` : '';
-    if (!ep.video_url || ep.too_big) {
+      } catch (e) { m.innerHTML = `<div class="verr">⚠️ Xatolik: ${e.message}</div>`; }
+    }
+    function _playEp(mediaEl, eps, idx) {
+      const ep = eps[idx]; if (!ep) return;
+      window._epCache = eps;
+      const epBtns = eps.map((e, i) => `<button class="ep-btn ${i === idx ? 'active' : ''}" onclick="_playEp(document.querySelector('.m-media'),window._epCache,${i})">${e.qism || (i + 1)}-qism</button>`).join('');
+      const epList = eps.length > 1 ? `<div class="ep-lbl">Qismlar (${eps.length} ta):</div><div class="ep-list">${epBtns}</div>` : '';
+      if (!ep.video_url || ep.too_big) {
         mediaEl.innerHTML = `<div class="verr" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 14px">
       <div style="font-size:1.8rem">📦</div>
       <div>${ep.too_big ? 'Video juda katta (20MB+), botda tomosha qiling.' : 'Video topilmadi.'}</div>
       <a class="m-btn" href="https://t.me/${BOT}?start=${window._curAnimeId || ''}" target="_blank" style="width:auto;padding:10px 20px">▶ Botda ko'rish</a>
     </div>${epList}`; return;
-    }
-    mediaEl.innerHTML = `
+      }
+      mediaEl.innerHTML = `
     <video id="epVid" class="modal-video" controls autoplay playsinline preload="auto">
       <source src="${ep.video_url}" type="video/mp4">
     </video>
     <div id="vErr" style="display:none" class="verr">⚠️ Video ochilmadi.
       <a href="https://t.me/${BOT}?start=${window._curAnimeId || ''}" target="_blank" style="color:var(--accent)">Botda ko'rish</a>
     </div>${epList}`;
-    const v = document.getElementById('epVid');
-    if (v) v.addEventListener('error', () => { const e = document.getElementById('vErr'); if (e) e.style.display = 'block'; v.style.display = 'none'; });
-}
-function closeModal() {
-    const modalBg = document.getElementById('modalBg');
-    modalBg.classList.remove('open');
-    modalBg.querySelector('.modal').classList.remove('al-detail');
+      const v = document.getElementById('epVid');
+      if (v) v.addEventListener('error', () => { const e = document.getElementById('vErr'); if (e) e.style.display = 'block'; v.style.display = 'none'; });
+    }
+    function closeModal() {
+      const modalBg = document.getElementById('modalBg');
+      modalBg.classList.remove('open');
+      modalBg.querySelector('.modal').classList.remove('al-detail');
 
-    const v = document.querySelector('.m-media video');
-    if (v) { v.pause(); v.src = ''; }
+      const v = document.querySelector('.m-media video');
+      if (v) { v.pause(); v.src = ''; }
 
-    if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
+      if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
         try {
-            window.ytTrailerPlayer.destroy();
+          window.ytTrailerPlayer.destroy();
         } catch (e) {
-            console.error("Error destroying YouTube player:", e);
+          console.error("Error destroying YouTube player:", e);
         }
         window.ytTrailerPlayer = null;
-    }
+      }
 
-    // Clear innerHTML to stop any playing YouTube iframe trailers
-    document.getElementById('modalContent').innerHTML = '';
+      // Clear innerHTML to stop any playing YouTube iframe trailers
+      document.getElementById('modalContent').innerHTML = '';
 
-    window._epCache = [];
-    if (!_openingPosterFromRoute && location.pathname.startsWith('/poster/')) {
+      window._epCache = [];
+      if (!_openingPosterFromRoute && location.pathname.startsWith('/poster/')) {
         history.pushState({}, '', location.origin + '/');
+      }
     }
-}
 
-function _loadYtApi(callback) {
-    if (window.YT && window.YT.Player) {
+    function _loadYtApi(callback) {
+      if (window.YT && window.YT.Player) {
         callback();
         return;
-    }
-    if (window._ytCallbacks) {
+      }
+      if (window._ytCallbacks) {
         window._ytCallbacks.push(callback);
         return;
-    }
-    window._ytCallbacks = [callback];
+      }
+      window._ytCallbacks = [callback];
 
-    window.onYouTubeIframeAPIReady = function () {
+      window.onYouTubeIframeAPIReady = function () {
         while (window._ytCallbacks && window._ytCallbacks.length) {
-            const cb = window._ytCallbacks.shift();
-            if (cb) cb();
+          const cb = window._ytCallbacks.shift();
+          if (cb) cb();
         }
         delete window._ytCallbacks;
-    };
+      };
 
-    if (!document.getElementById('yt-iframe-api-script')) {
+      if (!document.getElementById('yt-iframe-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'yt-iframe-api-script';
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      }
     }
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-window.addEventListener('popstate', () => {
-    const id = _posterRouteId();
-    if (id) { _openPosterRoute(id); return; }
-    _openingPosterFromRoute = false;
-});
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    window.addEventListener('popstate', () => {
+      const id = _posterRouteId();
+      if (id) { _openPosterRoute(id); return; }
+      _openingPosterFromRoute = false;
+    });
 
-async function openAlDetail(alId) {
-    if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
+    async function openAlDetail(alId) {
+      if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
         try { window.ytTrailerPlayer.destroy(); } catch (e) { }
         window.ytTrailerPlayer = null;
-    }
-    const modalBg = document.getElementById('modalBg');
-    const modalContent = document.getElementById('modalContent');
-    const modal = modalBg.querySelector('.modal');
+      }
+      const modalBg = document.getElementById('modalBg');
+      const modalContent = document.getElementById('modalContent');
+      const modal = modalBg.querySelector('.modal');
 
-    // Apply the large detailed view class to modal
-    modal.classList.add('al-detail');
-    modalContent.innerHTML = `
+      // Apply the large detailed view class to modal
+      modal.classList.add('al-detail');
+      modalContent.innerHTML = `
     <div class="al-detail-loader">
       <div class="spinner"></div>
       <div>AniList ma'lumotlari yuklanmoqda...</div>
     </div>
   `;
-    modalBg.classList.add('open');
+      modalBg.classList.add('open');
 
-    try {
+      try {
         const res = await fetch(`/api/anilist/detail?id=${alId}`);
         const d = await res.json();
         if (!d.ok) {
-            modalContent.innerHTML = `<div class="verr">⚠️ Ma'lumotlarni yuklab bo'lmadi: ${d.error || 'Noma\'lum xato'}</div>`;
-            return;
+          modalContent.innerHTML = `<div class="verr">⚠️ Ma'lumotlarni yuklab bo'lmadi: ${d.error || 'Noma\'lum xato'}</div>`;
+          return;
         }
         const a = d.result;
 
@@ -559,8 +579,8 @@ async function openAlDetail(alId) {
         if (safeNative && safeNative !== safeTitle) subTitles += `<div><b>Native:</b> ${safeNative}</div>`;
 
         const imgHtml = a.cover
-            ? `<img class="al-detail-cover" src="${_alEscape(a.cover)}" alt="${safeTitle}">`
-            : '<div class="al-detail-cover" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface)">🎬</div>';
+          ? `<img class="al-detail-cover" src="${_alEscape(a.cover)}" alt="${safeTitle}">`
+          : '<div class="al-detail-cover" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface)">🎬</div>';
 
         const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
         const statusCls = `al-badge status-${a.status || ''}`;
@@ -579,7 +599,7 @@ async function openAlDetail(alId) {
 
         // Studios widget
         if (a.studios && a.studios.length > 0) {
-            sidebarHtml += `
+          sidebarHtml += `
         <div class="al-sidebar-widget">
           <div class="al-widget-title">Studiyalar</div>
           <div class="al-widget-value">${a.studios.map(s => _alEscape(s)).join(', ')}</div>
@@ -589,7 +609,7 @@ async function openAlDetail(alId) {
 
         // Genres widget
         if (a.genres && a.genres.length > 0) {
-            sidebarHtml += `
+          sidebarHtml += `
         <div class="al-sidebar-widget">
           <div class="al-widget-title">Janrlar</div>
           <div style="margin: -2px;">
@@ -601,7 +621,7 @@ async function openAlDetail(alId) {
 
         // Synonyms / Alternative titles
         if (a.synonyms && a.synonyms.length > 0) {
-            sidebarHtml += `
+          sidebarHtml += `
         <div class="al-sidebar-widget">
           <div class="al-widget-title">Muqobil Nomlar</div>
           <div class="al-widget-value" style="font-size:0.72rem; max-height:100px; overflow-y:auto;">
@@ -616,7 +636,7 @@ async function openAlDetail(alId) {
 
         // Description
         if (a.description) {
-            mainContentHtml += `
+          mainContentHtml += `
         <div class="al-sidebar-widget" style="background: transparent; border-color: var(--border2); padding: 0;">
           <div class="al-widget-title" style="font-size: 0.75rem;">Tavsif (Description)</div>
           <div class="al-widget-value" style="font-size: 0.82rem; line-height: 1.6; text-align: justify;">${a.description}</div>
@@ -626,7 +646,7 @@ async function openAlDetail(alId) {
 
         // Trailer widget (YouTube iframe embed with referrerpolicy and origin optimization)
         if (a.trailer && a.trailer.site === 'youtube' && a.trailer.id) {
-            mainContentHtml += `
+          mainContentHtml += `
         <div>
           <div class="al-widget-title" style="font-size: 0.75rem;">Treyler (Trailer)</div>
           <div class="al-trailer-wrap">
@@ -645,27 +665,27 @@ async function openAlDetail(alId) {
 
         // Relations widget
         if (a.relations && a.relations.length > 0) {
-            const relationCardsHtml = a.relations.map(rel => {
-                const relTitle = _alEscape(rel.title || 'Nomsiz');
-                const relImg = rel.cover
-                    ? `<div class="al-relation-img-wrap"><img class="al-relation-img" src="${_alEscape(rel.cover)}" alt="${relTitle}" loading="lazy"></div>`
-                    : `<div class="al-relation-img-wrap" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.8rem">🎬</div>`;
+          const relationCardsHtml = a.relations.map(rel => {
+            const relTitle = _alEscape(rel.title || 'Nomsiz');
+            const relImg = rel.cover
+              ? `<div class="al-relation-img-wrap"><img class="al-relation-img" src="${_alEscape(rel.cover)}" alt="${relTitle}" loading="lazy"></div>`
+              : `<div class="al-relation-img-wrap" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.8rem">🎬</div>`;
 
-                // Translate relationType to user friendly labels
-                const relTypeLabels = {
-                    'PREQUEL': 'Prequel (Avvalgi)',
-                    'SEQUEL': 'Sequel (Keyingi)',
-                    'PARENT': 'Asosiy hikoya',
-                    'SIDE_STORY': 'Spin-off',
-                    'SPIN_OFF': 'Spin-off',
-                    'SUMMARY': 'Xulosa',
-                    'ALTERNATIVE': 'Muqobil',
-                    'CHARACTER': 'Qahramon',
-                    'OTHER': 'Boshqa',
-                };
-                const relTypeLabel = relTypeLabels[rel.relation_type] || rel.relation_type;
+            // Translate relationType to user friendly labels
+            const relTypeLabels = {
+              'PREQUEL': 'Prequel (Avvalgi)',
+              'SEQUEL': 'Sequel (Keyingi)',
+              'PARENT': 'Asosiy hikoya',
+              'SIDE_STORY': 'Spin-off',
+              'SPIN_OFF': 'Spin-off',
+              'SUMMARY': 'Xulosa',
+              'ALTERNATIVE': 'Muqobil',
+              'CHARACTER': 'Qahramon',
+              'OTHER': 'Boshqa',
+            };
+            const relTypeLabel = relTypeLabels[rel.relation_type] || rel.relation_type;
 
-                return `
+            return `
           <div class="al-relation-card" onclick="event.stopPropagation(); openAlDetail(${rel.id})">
             ${relImg}
             <div class="al-relation-body">
@@ -674,9 +694,9 @@ async function openAlDetail(alId) {
             </div>
           </div>
         `;
-            }).join('');
+          }).join('');
 
-            mainContentHtml += `
+          mainContentHtml += `
         <div>
           <div class="al-widget-title" style="font-size: 0.75rem;">Aloqador Animelar (Relations)</div>
           <div class="al-relations-grid">${relationCardsHtml}</div>
@@ -686,19 +706,19 @@ async function openAlDetail(alId) {
 
         // Characters widget
         if (a.characters && a.characters.length > 0) {
-            const charCardsHtml = a.characters.map(char => {
-                const charName = _alEscape(char.name);
-                const charRole = char.role === 'MAIN' ? 'Bosh qahramon' : 'Yordamchi qahramon';
-                const charImg = char.image
-                    ? `<img class="al-char-img" src="${_alEscape(char.image)}" alt="${charName}">`
-                    : '<div class="al-char-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.2rem">👤</div>';
+          const charCardsHtml = a.characters.map(char => {
+            const charName = _alEscape(char.name);
+            const charRole = char.role === 'MAIN' ? 'Bosh qahramon' : 'Yordamchi qahramon';
+            const charImg = char.image
+              ? `<img class="al-char-img" src="${_alEscape(char.image)}" alt="${charName}">`
+              : '<div class="al-char-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.2rem">👤</div>';
 
-                const vaName = _alEscape(char.va_name);
-                const vaImg = char.va_image
-                    ? `<img class="al-va-img" src="${_alEscape(char.va_image)}" alt="${vaName}">`
-                    : '<div class="al-va-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.2rem">👤</div>';
+            const vaName = _alEscape(char.va_name);
+            const vaImg = char.va_image
+              ? `<img class="al-va-img" src="${_alEscape(char.va_image)}" alt="${vaName}">`
+              : '<div class="al-va-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:1.2rem">👤</div>';
 
-                return `
+            return `
           <div class="al-char-card">
             <div class="al-char-entity">
               ${charImg}
@@ -718,9 +738,9 @@ async function openAlDetail(alId) {
             ` : '<div style="width:48%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:var(--muted)">Ovoz berilmagan</div>'}
           </div>
         `;
-            }).join('');
+          }).join('');
 
-            mainContentHtml += `
+          mainContentHtml += `
         <div>
           <div class="al-widget-title" style="font-size: 0.75rem;">Qahramonlar va Ovoz Beruvchilar (Characters & Staff)</div>
           <div class="al-chars-grid">${charCardsHtml}</div>
@@ -730,17 +750,17 @@ async function openAlDetail(alId) {
 
         // External and streaming links widget
         if (a.links && a.links.length > 0) {
-            const linksHtml = a.links.map(link => {
-                const linkBgColor = link.color || '#3f3f46';
-                return `
+          const linksHtml = a.links.map(link => {
+            const linkBgColor = link.color || '#3f3f46';
+            return `
           <a class="al-link-btn" href="${_alEscape(link.url)}" target="_blank" style="background-color: ${linkBgColor};">
             <span>🔗</span>
             <span>${_alEscape(link.site)}</span>
           </a>
         `;
-            }).join('');
+          }).join('');
 
-            mainContentHtml += `
+          mainContentHtml += `
         <div>
           <div class="al-widget-title" style="font-size: 0.75rem;">Rasmiy havolalar va Translyatsiya (Streaming & Links)</div>
           <div style="margin: -3px;">${linksHtml}</div>
@@ -750,13 +770,13 @@ async function openAlDetail(alId) {
 
         // Tags widget
         if (a.tags && a.tags.length > 0) {
-            const tagsHtml = a.tags.map(tag => `
+          const tagsHtml = a.tags.map(tag => `
         <span class="al-genre-tag" style="border-color: var(--border2); padding: 4px 10px;" title="Rank: ${tag.rank}%">
           #${_alEscape(tag.name)} <span style="opacity:0.6; font-size:0.55rem; margin-left:2px;">${tag.rank}%</span>
         </span>
       `).join('');
 
-            mainContentHtml += `
+          mainContentHtml += `
         <div>
           <div class="al-widget-title" style="font-size: 0.75rem;">Teglar (Tags)</div>
           <div style="margin: -2px;">${tagsHtml}</div>
@@ -783,40 +803,40 @@ async function openAlDetail(alId) {
 
         // Initialize YouTube trailer player if trailer exists in DOM
         if (a.trailer && a.trailer.site === 'youtube' && a.trailer.id) {
-            _loadYtApi(() => {
-                const iframe = document.getElementById('al-trailer-player');
-                if (!iframe) return;
+          _loadYtApi(() => {
+            const iframe = document.getElementById('al-trailer-player');
+            if (!iframe) return;
 
-                window.ytTrailerPlayer = new YT.Player('al-trailer-player', {
-                    events: {
-                        'onStateChange': (event) => {
-                            if (event.data === YT.PlayerState.PLAYING) {
-                                const epVid = document.getElementById('epVid');
-                                if (epVid && typeof epVid.pause === 'function') {
-                                    epVid.pause();
-                                }
-                            }
-                        }
+            window.ytTrailerPlayer = new YT.Player('al-trailer-player', {
+              events: {
+                'onStateChange': (event) => {
+                  if (event.data === YT.PlayerState.PLAYING) {
+                    const epVid = document.getElementById('epVid');
+                    if (epVid && typeof epVid.pause === 'function') {
+                      epVid.pause();
                     }
-                });
+                  }
+                }
+              }
             });
+          });
         }
 
-    } catch (e) {
+      } catch (e) {
         modalContent.innerHTML = `<div class="verr">⚠️ Kutilmagan xatolik yuz berdi: ${e.message}</div>`;
+      }
     }
-}
 
 
-// ── ADMINS ──
-async function renderAdmins() {
-    const g = document.getElementById('adminGrid');
-    g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-    let admins = [];
-    try { const res = await fetch('/api/admins'); if (res.ok) { const d = await res.json(); admins = d.admins || []; } else throw new Error(); }
-    catch { g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-ico">⚠️</div><h3>Serverga ulanib bo\'lmadi</h3></div>'; return; }
-    if (!admins.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-ico">👥</div><h3>Adminlar topilmadi</h3></div>'; return; }
-    g.innerHTML = admins.map(a => {
+    // ── ADMINS ──
+    async function renderAdmins() {
+      const g = document.getElementById('adminGrid');
+      g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+      let admins = [];
+      try { const res = await fetch('/api/admins'); if (res.ok) { const d = await res.json(); admins = d.admins || []; } else throw new Error(); }
+      catch { g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-ico">⚠️</div><h3>Serverga ulanib bo\'lmadi</h3></div>'; return; }
+      if (!admins.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-ico">👥</div><h3>Adminlar topilmadi</h3></div>'; return; }
+      g.innerHTML = admins.map(a => {
         const sup = a.is_super;
         const av = a.photo ? `<img class="avt" src="${a.photo}" onerror="this.style.display='none'">` : `<div class="avt-ph">${(a.name[0] || 'A').toUpperCase()}</div>`;
         const rc = sup ? 'var(--accent3)' : 'var(--accent)';
@@ -838,182 +858,182 @@ async function renderAdmins() {
           </div>
         </div>
       </div></div>`;
-    }).join('');
-}
+      }).join('');
+    }
 
-// ── STATS ──
-let _sl = false, _ci = null;
-const SDEFS = [
-    { key: 'users', icon: '👥', label: 'Foydalanuvchilar', color: 'sc-cyan', desc: 'Botga /start bosgan foydalanuvchilar' },
-    { key: 'vip', icon: '👑', label: 'VIP Obunachlar', color: 'sc-purple', desc: "Faol VIP obuna bo'lganlar" },
-    { key: 'animes', icon: '🎬', label: 'Animelar', color: 'sc-pink', desc: 'Jami anime sarlavhalar' },
-    { key: 'eps', icon: '🎞', label: 'Jami Qismlar', color: 'sc-green', desc: 'Yuklangan qismlar soni' },
-];
-async function renderStats() {
-    if (_sl) return; _sl = true;
-    let st = { users: 0, vip: 0, animes: 0, eps: 0 };
-    try { const r = await fetch('/api/stats'); if (r.ok) st = await r.json(); } catch { }
-    document.getElementById('statGrid').innerHTML = SDEFS.map(d => {
+    // ── STATS ──
+    let _sl = false, _ci = null;
+    const SDEFS = [
+      { key: 'users', icon: '👥', label: 'Foydalanuvchilar', color: 'sc-cyan', desc: 'Botga /start bosgan foydalanuvchilar' },
+      { key: 'vip', icon: '👑', label: 'VIP Obunachlar', color: 'sc-purple', desc: "Faol VIP obuna bo'lganlar" },
+      { key: 'animes', icon: '🎬', label: 'Animelar', color: 'sc-pink', desc: 'Jami anime sarlavhalar' },
+      { key: 'eps', icon: '🎞', label: 'Jami Qismlar', color: 'sc-green', desc: 'Yuklangan qismlar soni' },
+    ];
+    async function renderStats() {
+      if (_sl) return; _sl = true;
+      let st = { users: 0, vip: 0, animes: 0, eps: 0 };
+      try { const r = await fetch('/api/stats'); if (r.ok) st = await r.json(); } catch { }
+      document.getElementById('statGrid').innerHTML = SDEFS.map(d => {
         const v = st[d.key] || 0; const dv = v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v;
         return `<div class="sc-w ${d.color}"><div class="sc-fl">
       <div class="scf"><div class="sc-ico">${d.icon}</div><div class="sc-val">${dv}</div><div class="sc-lbl">${d.label}</div></div>
       <div class="scb"><div class="sc-bi">${d.icon}</div><div class="sc-bt">${d.label}</div><div class="sc-bv">${dv}</div><div class="sc-bd">${d.desc}</div></div>
     </div></div>`;
-    }).join('');
-    if (_ci) { _ci.destroy(); _ci = null; }
-    _ci = new Chart(document.getElementById('actChart'), { type: 'bar', data: { labels: SDEFS.map(d => d.label), datasets: [{ data: SDEFS.map(d => st[d.key] || 0), backgroundColor: ['rgba(0,212,255,.55)', 'rgba(139,92,246,.55)', 'rgba(240,171,252,.55)', 'rgba(16,255,160,.55)'], borderColor: ['rgba(0,212,255,1)', 'rgba(139,92,246,1)', 'rgba(240,171,252,1)', 'rgba(16,255,160,1)'], borderWidth: 1, borderRadius: 4 }] }, options: { responsive: true, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(4,4,18,.96)', borderColor: 'rgba(0,212,255,.3)', borderWidth: 1, titleColor: '#00d4ff', bodyColor: '#dde8ff', titleFont: { family: 'Orbitron', size: 10 } } }, scales: { x: { ticks: { color: 'rgba(160,185,230,.6)', font: { family: 'Orbitron', size: 9 } }, grid: { color: 'rgba(0,212,255,.06)' } }, y: { ticks: { color: 'rgba(160,185,230,.6)', font: { family: 'Orbitron', size: 9 } }, grid: { color: 'rgba(0,212,255,.06)' } } } } });
-}
+      }).join('');
+      if (_ci) { _ci.destroy(); _ci = null; }
+      _ci = new Chart(document.getElementById('actChart'), { type: 'bar', data: { labels: SDEFS.map(d => d.label), datasets: [{ data: SDEFS.map(d => st[d.key] || 0), backgroundColor: ['rgba(255,107,74,.55)', 'rgba(139,123,255,.55)', 'rgba(255,196,107,.55)', 'rgba(62,230,168,.55)'], borderColor: ['rgba(255,107,74,1)', 'rgba(139,123,255,1)', 'rgba(255,196,107,1)', 'rgba(62,230,168,1)'], borderWidth: 1, borderRadius: 10 }] }, options: { responsive: true, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(16,13,26,.96)', borderColor: 'rgba(255,107,74,.3)', borderWidth: 1, titleColor: '#ff6b4a', bodyColor: '#f4f0ff', titleFont: { family: 'Manrope', size: 10 } } }, scales: { x: { ticks: { color: 'rgba(189,181,218,.7)', font: { family: 'Manrope', size: 9 } }, grid: { color: 'rgba(255,107,74,.06)' } }, y: { ticks: { color: 'rgba(189,181,218,.7)', font: { family: 'Manrope', size: 9 } }, grid: { color: 'rgba(255,107,74,.06)' } } } } });
+    }
 
-// ── REPORT ──
-let rType = 'bug';
-function selectType(btn, type) { document.querySelectorAll('.rf-type-btn').forEach(b => b.classList.remove('sel')); btn.classList.add('sel'); rType = type; }
-function updateChar() { const v = document.getElementById('rMsg')?.value || ''; document.getElementById('rCharCount').textContent = v.length; }
-async function sendReport() {
-    const msg = (document.getElementById('rMsg')?.value || '').trim();
-    if (!msg) { document.getElementById('rMsg').focus(); return; }
-    const btn = document.getElementById('rSendBtn');
-    btn.disabled = true; btn.textContent = '⏳ Yuborilmoqda...';
-    const name = (document.getElementById('rName')?.value || '').trim();
-    const uname = (document.getElementById('rUsername')?.value || '').trim();
-    try {
+    // ── REPORT ──
+    let rType = 'bug';
+    function selectType(btn, type) { document.querySelectorAll('.rf-type-btn').forEach(b => b.classList.remove('sel')); btn.classList.add('sel'); rType = type; }
+    function updateChar() { const v = document.getElementById('rMsg')?.value || ''; document.getElementById('rCharCount').textContent = v.length; }
+    async function sendReport() {
+      const msg = (document.getElementById('rMsg')?.value || '').trim();
+      if (!msg) { document.getElementById('rMsg').focus(); return; }
+      const btn = document.getElementById('rSendBtn');
+      btn.disabled = true; btn.textContent = '⏳ Yuborilmoqda...';
+      const name = (document.getElementById('rName')?.value || '').trim();
+      const uname = (document.getElementById('rUsername')?.value || '').trim();
+      try {
         const res = await fetch('/api/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: rType, name, username: uname, message: msg }) });
         const d = await res.json();
         if (!d.ok) throw new Error(d.error || 'Server xatosi');
-    } catch (e) { btn.disabled = false; btn.textContent = '🚀 Yuborish'; alert('Xatolik: ' + e.message); return; }
-    document.getElementById('rSuccess').classList.add('show');
-    btn.disabled = false; btn.textContent = '🚀 Yuborish';
-    document.getElementById('rMsg').value = '';
-    document.getElementById('rName').value = '';
-    document.getElementById('rUsername').value = '';
-    updateChar();
-    setTimeout(() => document.getElementById('rSuccess').classList.remove('show'), 5000);
-}
+      } catch (e) { btn.disabled = false; btn.textContent = '🚀 Yuborish'; alert('Xatolik: ' + e.message); return; }
+      document.getElementById('rSuccess').classList.add('show');
+      btn.disabled = false; btn.textContent = '🚀 Yuborish';
+      document.getElementById('rMsg').value = '';
+      document.getElementById('rName').value = '';
+      document.getElementById('rUsername').value = '';
+      updateChar();
+      setTimeout(() => document.getElementById('rSuccess').classList.remove('show'), 5000);
+    }
 
-// ── AI CHAT ──
-let _aiAdminPasswordMode = false;
-function toggleAi() { window.location.href = './Ai/Ai.html'; }
-function _escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
-async function sendAi() {
-    const inp = document.getElementById('chatInp');
-    const msg = inp.value.trim(); if (!msg) return;
-    inp.value = '';
-    const m = document.getElementById('chatMsgs');
-    const pendingId = 'aiT' + Date.now();
-    const visibleMsg = _aiAdminPasswordMode ? '••••••' : msg;
-    m.innerHTML += `<div class="msg user">${_escHtml(visibleMsg)}</div><div class="msg ai" id="${pendingId}">...</div>`;
-    m.scrollTop = m.scrollHeight;
-    try {
+    // ── AI CHAT ──
+    let _aiAdminPasswordMode = false;
+    function toggleAi() { window.location.href = './Ai/Ai.html'; }
+    function _escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+    async function sendAi() {
+      const inp = document.getElementById('chatInp');
+      const msg = inp.value.trim(); if (!msg) return;
+      inp.value = '';
+      const m = document.getElementById('chatMsgs');
+      const pendingId = 'aiT' + Date.now();
+      const visibleMsg = _aiAdminPasswordMode ? '••••••' : msg;
+      m.innerHTML += `<div class="msg user">${_escHtml(visibleMsg)}</div><div class="msg ai" id="${pendingId}">...</div>`;
+      m.scrollTop = m.scrollHeight;
+      try {
         const res = await fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, admin_password_mode: _aiAdminPasswordMode }) });
         const d = await res.json();
         _aiAdminPasswordMode = !!d.admin_password_required;
         document.getElementById(pendingId).outerHTML = `<div class="msg ai">${_escHtml(d.reply || '❌ Xatolik')}</div>`;
         if (d.admin_ok) {
-            if (d.admin_token) localStorage.setItem('az_admin_token', d.admin_token);
-            setTimeout(() => { window.location.href = d.admin_url || '/admin'; }, 500);
+          if (d.admin_token) localStorage.setItem('az_admin_token', d.admin_token);
+          setTimeout(() => { window.location.href = d.admin_url || '/admin'; }, 500);
         }
-    } catch { document.getElementById(pendingId).outerHTML = `<div class="msg ai">⚠️ Serverga ulanib bo'lmadi.</div>`; }
-    m.scrollTop = m.scrollHeight;
-}
+      } catch { document.getElementById(pendingId).outerHTML = `<div class="msg ai">⚠️ Serverga ulanib bo'lmadi.</div>`; }
+      m.scrollTop = m.scrollHeight;
+    }
 
-loadAnimes();
+    loadAnimes();
 
-// ══ GAME ══
-let _gToken = localStorage.getItem('az_token') || '';
-let _gUser = JSON.parse(localStorage.getItem('az_user') || 'null');
-let _gGameId = null, _gState = null, _gWaiting = false;
-function _authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _gToken }; }
-function initGame() { _refreshUserBadge(); _refreshTopbarAuth && _refreshTopbarAuth(); if (_gUser && _gToken) { _renderGameReady(); } else { _renderLoginScreen(); } }
-function _refreshUserBadge() { const badge = document.getElementById('game-user-badge'); if (!badge) return; if (_gUser) { badge.style.display = 'flex'; const av = document.getElementById('game-avatar'); if (av) { av.src = _gUser.picture || ''; av.style.display = _gUser.picture ? 'block' : 'none'; } const un = document.getElementById('game-uname'); if (un) un.textContent = _gUser.name || ''; } else { badge.style.display = 'none'; } }
-function _renderLoginScreen() { const root = document.getElementById('game-root'); if (!root) return; const clientId = document.querySelector('meta[name="google-client-id"]')?.content || ''; const redirectUri = window.location.origin + '/callback'; const scope = 'openid profile email'; const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline`; root.innerHTML = `<div class="g-login-wrap"><div class="g-login-ico">🃏</div><div class="g-login-title">Anime Karta Jangi</div><div class="g-login-desc">Anime kartalaringiz bilan CPU ga qarshi jang qiling!</div><button class="g-google-btn" onclick="window.location.href='${authUrl}'"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google bilan kirish</button></div>`; }
-function _renderGameReady() { const root = document.getElementById('game-root'); if (!root) return; root.innerHTML = `<div class="g-over" style="padding:40px 20px"><div class="g-over-ico">🃏</div><div class="g-over-title">Tayyor!</div><div class="g-over-score">Salom, <b>${_gUser.name}</b>! O'yinni boshlang.</div><button class="g-play-again" onclick="startGame()">▶ O'yinni Boshlash</button></div>`; }
-async function startGame() { const root = document.getElementById('game-root'); root.innerHTML = '<div class="g-loading"><div class="spinner" style="margin:0 auto 12px"></div>Kartalar tayyorlanmoqda...</div>'; const res = await fetch('/api/game/start', { method: 'POST', headers: _authHeaders() }); const d = await res.json(); if (!d.ok) { root.innerHTML = `<div class="g-loading">❌ ${d.error}</div>`; return; } _gGameId = d.game_id; _gState = d.state; _gWaiting = false; _renderBoard(); }
-function _renderBoard() { const root = document.getElementById('game-root'); if (!root || !_gState) return; const st = _gState; if (st.finished) { _renderGameOver(); return; } const pc = st.player_card, cc = st.cpu_card, lastRound = st.history.length > 0 ? st.history[st.history.length - 1] : null; root.innerHTML = `<div class="g-board"><div class="g-score-bar"><div class="g-score-side"><div class="g-score-name">👤 Siz</div><div class="g-score-val player">${st.player_score}</div></div><div class="g-score-mid"><div class="g-round-info">Tur ${st.round + 1}/${st.total_rounds}</div><div style="margin-top:3px">VS</div></div><div class="g-score-side"><div class="g-score-name">AnimeUZ AI CPU</div><div class="g-score-val cpu">${st.cpu_score}</div></div></div>${lastRound && _gWaiting ? _roundResultHtml(lastRound) : ''} ${!_gWaiting ? '<div class="g-choose-prompt">⬇ Statistika tanlang</div>' : ''}<div class="g-cards-row">${_cardHtml(pc, 'you', lastRound, true)}<div class="g-vs-badge">VS</div>${_cardHtml(cc, 'cpu', lastRound, false)}</div></div>`; }
-function _cardHtml(card, side, lastRound, isPlayer) { if (!card) return '<div></div>'; const poster = card.poster ? `<img class="g-card-poster" src="${card.poster}" onerror="this.outerHTML='<div class=g-card-poster-ph>🎬</div>'">` : '<div class="g-card-poster-ph">🎬</div>'; const ownerLabel = isPlayer ? 'Sizning karta' : 'CPU kartasi'; const ownerClass = isPlayer ? 'you' : 'cpu-label'; let winnerClass = ''; if (lastRound && _gWaiting) { if (lastRound.result === 'player') winnerClass = isPlayer ? 'winner' : 'loser'; else if (lastRound.result === 'cpu') winnerClass = isPlayer ? 'loser' : 'winner'; else winnerClass = 'draw-c'; } const stats = _gState.stats.map(s => { let cls = 'g-stat-row', txtCls = 'g-stat-lbl'; if (_gWaiting && lastRound && lastRound.stat_key === s.key) { cls += ' chosen'; if (lastRound.result === 'draw') cls = 'g-stat-row draw-s'; else if ((lastRound.result === 'player') === isPlayer) { cls = 'g-stat-row win'; txtCls += ' colored'; } else { cls = 'g-stat-row lose'; txtCls += ' colored'; } } const val = card[s.key] ?? '—'; const clickable = !_gWaiting && isPlayer; const onclick = clickable ? `onclick="playMove('${s.key}')"` : ''; return `<div class="${cls}" ${onclick}><span class="${txtCls}">${s.icon} ${s.label}</span><span class="g-stat-val">${val || '—'}</span></div>`; }).join(''); return `<div class="g-card ${winnerClass}"><div class="g-card-owner ${ownerClass}">${ownerLabel}</div>${poster}<div class="g-card-body"><div class="g-card-title">${card.nom}</div><div class="g-card-stats">${stats}</div></div></div>`; }
-function _roundResultHtml(r) { let cls, ico, txt, sub; if (r.result === 'player') { cls = 'win'; ico = '🎉'; txt = 'Siz yutdingiz!'; sub = `${r.stat_icon} ${r.stat_label}: Siz <b>${r.player_val}</b> vs CPU <b>${r.cpu_val}</b>`; } else if (r.result === 'cpu') { cls = 'lose'; ico = '😤'; txt = 'CPU yutdi!'; sub = `${r.stat_icon} ${r.stat_label}: Siz <b>${r.player_val}</b> vs CPU <b>${r.cpu_val}</b>`; } else { cls = 'draw-r'; ico = '🤝'; txt = 'Durrang!'; sub = `${r.stat_icon} ${r.stat_label}: Ikkalasi ham <b>${r.player_val}</b>`; } return `<div class="g-round-result ${cls}"><div class="g-rr-ico">${ico}</div><div class="g-rr-text">${txt}</div><div class="g-rr-sub">${sub}</div><button class="g-next-btn" onclick="nextRound()">Keyingi tur ➡</button></div>`; }
-function _renderGameOver() { const root = document.getElementById('game-root'); const st = _gState; let ico, title, sub; if (st.winner === 'player') { ico = '🏆'; title = "G'alaba!"; sub = 'Tabriklaymiz!'; } else if (st.winner === 'cpu') { ico = '💀'; title = 'Yutqazdingiz!'; sub = 'CPU sizni yendi.'; } else { ico = '🤝'; title = 'Durrang!'; sub = "Teng natija."; } root.innerHTML = `<div class="g-over"><div class="g-over-ico">${ico}</div><div class="g-over-title">${title}</div><div class="g-over-score">${sub}<br><b>${st.player_score}</b> : <b>${st.cpu_score}</b></div><button class="g-play-again" onclick="startGame()">🔁 Qayta O'ynash</button></div>`; }
-async function playMove(statKey) { if (_gWaiting || !_gGameId) return; const res = await fetch(`/api/game/${_gGameId}/move`, { method: 'POST', headers: _authHeaders(), body: JSON.stringify({ stat: statKey }) }); const d = await res.json(); if (!d.ok) { alert(d.error); return; } _gState = d.state; _gWaiting = true; _renderBoard(); }
-function nextRound() { _gWaiting = false; _renderBoard(); }
+    // ══ GAME ══
+    let _gToken = localStorage.getItem('az_token') || '';
+    let _gUser = JSON.parse(localStorage.getItem('az_user') || 'null');
+    let _gGameId = null, _gState = null, _gWaiting = false;
+    function _authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _gToken }; }
+    function initGame() { _refreshUserBadge(); _refreshTopbarAuth && _refreshTopbarAuth(); if (_gUser && _gToken) { _renderGameReady(); } else { _renderLoginScreen(); } }
+    function _refreshUserBadge() { const badge = document.getElementById('game-user-badge'); if (!badge) return; if (_gUser) { badge.style.display = 'flex'; const av = document.getElementById('game-avatar'); if (av) { av.src = _gUser.picture || ''; av.style.display = _gUser.picture ? 'block' : 'none'; } const un = document.getElementById('game-uname'); if (un) un.textContent = _gUser.name || ''; } else { badge.style.display = 'none'; } }
+    function _renderLoginScreen() { const root = document.getElementById('game-root'); if (!root) return; const clientId = document.querySelector('meta[name="google-client-id"]')?.content || ''; const redirectUri = window.location.origin + '/callback'; const scope = 'openid profile email'; const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline`; root.innerHTML = `<div class="g-login-wrap"><div class="g-login-ico">🃏</div><div class="g-login-title">Anime Karta Jangi</div><div class="g-login-desc">Anime kartalaringiz bilan CPU ga qarshi jang qiling!</div><button class="g-google-btn" onclick="window.location.href='${authUrl}'"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google bilan kirish</button></div>`; }
+    function _renderGameReady() { const root = document.getElementById('game-root'); if (!root) return; root.innerHTML = `<div class="g-over" style="padding:40px 20px"><div class="g-over-ico">🃏</div><div class="g-over-title">Tayyor!</div><div class="g-over-score">Salom, <b>${_gUser.name}</b>! O'yinni boshlang.</div><button class="g-play-again" onclick="startGame()">▶ O'yinni Boshlash</button></div>`; }
+    async function startGame() { const root = document.getElementById('game-root'); root.innerHTML = '<div class="g-loading"><div class="spinner" style="margin:0 auto 12px"></div>Kartalar tayyorlanmoqda...</div>'; const res = await fetch('/api/game/start', { method: 'POST', headers: _authHeaders() }); const d = await res.json(); if (!d.ok) { root.innerHTML = `<div class="g-loading">❌ ${d.error}</div>`; return; } _gGameId = d.game_id; _gState = d.state; _gWaiting = false; _renderBoard(); }
+    function _renderBoard() { const root = document.getElementById('game-root'); if (!root || !_gState) return; const st = _gState; if (st.finished) { _renderGameOver(); return; } const pc = st.player_card, cc = st.cpu_card, lastRound = st.history.length > 0 ? st.history[st.history.length - 1] : null; root.innerHTML = `<div class="g-board"><div class="g-score-bar"><div class="g-score-side"><div class="g-score-name">👤 Siz</div><div class="g-score-val player">${st.player_score}</div></div><div class="g-score-mid"><div class="g-round-info">Tur ${st.round + 1}/${st.total_rounds}</div><div style="margin-top:3px">VS</div></div><div class="g-score-side"><div class="g-score-name">AnimeUZ AI CPU</div><div class="g-score-val cpu">${st.cpu_score}</div></div></div>${lastRound && _gWaiting ? _roundResultHtml(lastRound) : ''} ${!_gWaiting ? '<div class="g-choose-prompt">⬇ Statistika tanlang</div>' : ''}<div class="g-cards-row">${_cardHtml(pc, 'you', lastRound, true)}<div class="g-vs-badge">VS</div>${_cardHtml(cc, 'cpu', lastRound, false)}</div></div>`; }
+    function _cardHtml(card, side, lastRound, isPlayer) { if (!card) return '<div></div>'; const poster = card.poster ? `<img class="g-card-poster" src="${card.poster}" onerror="this.outerHTML='<div class=g-card-poster-ph>🎬</div>'">` : '<div class="g-card-poster-ph">🎬</div>'; const ownerLabel = isPlayer ? 'Sizning karta' : 'CPU kartasi'; const ownerClass = isPlayer ? 'you' : 'cpu-label'; let winnerClass = ''; if (lastRound && _gWaiting) { if (lastRound.result === 'player') winnerClass = isPlayer ? 'winner' : 'loser'; else if (lastRound.result === 'cpu') winnerClass = isPlayer ? 'loser' : 'winner'; else winnerClass = 'draw-c'; } const stats = _gState.stats.map(s => { let cls = 'g-stat-row', txtCls = 'g-stat-lbl'; if (_gWaiting && lastRound && lastRound.stat_key === s.key) { cls += ' chosen'; if (lastRound.result === 'draw') cls = 'g-stat-row draw-s'; else if ((lastRound.result === 'player') === isPlayer) { cls = 'g-stat-row win'; txtCls += ' colored'; } else { cls = 'g-stat-row lose'; txtCls += ' colored'; } } const val = card[s.key] ?? '—'; const clickable = !_gWaiting && isPlayer; const onclick = clickable ? `onclick="playMove('${s.key}')"` : ''; return `<div class="${cls}" ${onclick}><span class="${txtCls}">${s.icon} ${s.label}</span><span class="g-stat-val">${val || '—'}</span></div>`; }).join(''); return `<div class="g-card ${winnerClass}"><div class="g-card-owner ${ownerClass}">${ownerLabel}</div>${poster}<div class="g-card-body"><div class="g-card-title">${card.nom}</div><div class="g-card-stats">${stats}</div></div></div>`; }
+    function _roundResultHtml(r) { let cls, ico, txt, sub; if (r.result === 'player') { cls = 'win'; ico = '🎉'; txt = 'Siz yutdingiz!'; sub = `${r.stat_icon} ${r.stat_label}: Siz <b>${r.player_val}</b> vs CPU <b>${r.cpu_val}</b>`; } else if (r.result === 'cpu') { cls = 'lose'; ico = '😤'; txt = 'CPU yutdi!'; sub = `${r.stat_icon} ${r.stat_label}: Siz <b>${r.player_val}</b> vs CPU <b>${r.cpu_val}</b>`; } else { cls = 'draw-r'; ico = '🤝'; txt = 'Durrang!'; sub = `${r.stat_icon} ${r.stat_label}: Ikkalasi ham <b>${r.player_val}</b>`; } return `<div class="g-round-result ${cls}"><div class="g-rr-ico">${ico}</div><div class="g-rr-text">${txt}</div><div class="g-rr-sub">${sub}</div><button class="g-next-btn" onclick="nextRound()">Keyingi tur ➡</button></div>`; }
+    function _renderGameOver() { const root = document.getElementById('game-root'); const st = _gState; let ico, title, sub; if (st.winner === 'player') { ico = '🏆'; title = "G'alaba!"; sub = 'Tabriklaymiz!'; } else if (st.winner === 'cpu') { ico = '💀'; title = 'Yutqazdingiz!'; sub = 'CPU sizni yendi.'; } else { ico = '🤝'; title = 'Durrang!'; sub = "Teng natija."; } root.innerHTML = `<div class="g-over"><div class="g-over-ico">${ico}</div><div class="g-over-title">${title}</div><div class="g-over-score">${sub}<br><b>${st.player_score}</b> : <b>${st.cpu_score}</b></div><button class="g-play-again" onclick="startGame()">🔁 Qayta O'ynash</button></div>`; }
+    async function playMove(statKey) { if (_gWaiting || !_gGameId) return; const res = await fetch(`/api/game/${_gGameId}/move`, { method: 'POST', headers: _authHeaders(), body: JSON.stringify({ stat: statKey }) }); const d = await res.json(); if (!d.ok) { alert(d.error); return; } _gState = d.state; _gWaiting = true; _renderBoard(); }
+    function nextRound() { _gWaiting = false; _renderBoard(); }
 
-// ── GAME TABS ──
-let _activeGameTab = 'card';
-function switchGameTab(tab) {
-    _activeGameTab = tab;
-    const cardRoot = document.getElementById('game-root'), guessRoot = document.getElementById('guess-root');
-    const tabCard = document.getElementById('gtab-card'), tabGuess = document.getElementById('gtab-guess');
-    if (tab === 'card') {
+    // ── GAME TABS ──
+    let _activeGameTab = 'card';
+    function switchGameTab(tab) {
+      _activeGameTab = tab;
+      const cardRoot = document.getElementById('game-root'), guessRoot = document.getElementById('guess-root');
+      const tabCard = document.getElementById('gtab-card'), tabGuess = document.getElementById('gtab-guess');
+      if (tab === 'card') {
         cardRoot.style.display = ''; guessRoot.style.display = 'none';
         tabCard.style.background = 'var(--accent)'; tabCard.style.color = '#000'; tabCard.style.borderColor = 'var(--accent)';
         tabGuess.style.background = 'var(--card-bg)'; tabGuess.style.color = 'var(--muted)'; tabGuess.style.borderColor = 'var(--border)';
         initGame();
-    } else {
+      } else {
         cardRoot.style.display = 'none'; guessRoot.style.display = '';
         tabGuess.style.background = 'var(--accent)'; tabGuess.style.color = '#000'; tabGuess.style.borderColor = 'var(--accent)';
         tabCard.style.background = 'var(--card-bg)'; tabCard.style.color = 'var(--muted)'; tabCard.style.borderColor = 'var(--border)';
         initGuessGame();
+      }
     }
-}
 
-// ── GUESS GAME ──
-let _guessState = null;
-async function initGuessGame() { const root = document.getElementById('guess-root'); if (!root) return; if (!_gUser || !_gToken) { _renderGuessLogin(root); return; } if (_guessState && !_guessState.finished) { _renderGuessBoard(root); } else { _renderGuessMenu(root); } }
-function _renderGuessLogin(root) { const url = _getGoogleAuthUrl(); root.innerHTML = `<div class="g-login-wrap"><div class="g-login-ico">🎯</div><div class="g-login-title">Anime Taxminlash</div><div class="g-login-desc">Animening rasmini ko'rib, nomini toping!</div><button class="g-google-btn" onclick="window.location.href='${url}'"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google bilan kirish</button></div>`; }
-function _renderGuessMenu(root) { root.innerHTML = `<div class="g-over" style="padding:40px 20px"><div class="g-over-ico">🎯</div><div class="g-over-title">Anime Taxminlash</div><div class="g-over-score">Salom, <b>${_gUser.name}</b>!</div><button class="g-play-again" onclick="startGuessGame()">▶ O'yinni Boshlash</button></div>`; }
-async function startGuessGame() { const root = document.getElementById('guess-root'); root.innerHTML = '<div class="g-loading"><div class="spinner" style="margin:0 auto 12px"></div>Savollar tayyorlanmoqda...</div>'; try { const res = await fetch('/api/animes'); const data = await res.json(); let animes = data.animes || []; if (animes.length < 8) { root.innerHTML = '<div class="g-loading">❌ DB da yetarli anime yo\'q</div>'; return; } animes = animes.sort(() => Math.random() - .5); const selected = animes.slice(0, 6); const otherPool = animes.slice(6); const questions = selected.map(correct => { const wrong = otherPool.filter(a => a.id !== correct.id).sort(() => Math.random() - .5).slice(0, 3).map(a => a.nom); const options = [correct.nom, ...wrong].sort(() => Math.random() - .5); return { anime: correct, options, correct: correct.nom }; }); _guessState = { questions, current: 0, score: 0, total: 6, answered: null, chosenOption: null, finished: false }; _renderGuessBoard(root); } catch (e) { root.innerHTML = `<div class="g-loading">❌ Xatolik: ${e.message}</div>`; } }
-function _renderGuessBoard(root) { if (!_guessState) return; const st = _guessState; if (st.finished) { _renderGuessOver(root); return; } const q = st.questions[st.current]; const anime = q.anime; const imgUrl = anime.rams_url || ''; const progress = Math.round((st.current / st.total) * 100); let optionsHtml = ''; for (let i = 0; i < q.options.length; i++) { const opt = q.options[i]; let cls = 'guess-opt', icon = ''; if (st.answered !== null) { if (opt === q.correct) { cls += ' correct'; icon = ' ✅'; } else if (opt === st.chosenOption && opt !== q.correct) { cls += ' wrong'; icon = ' ❌'; } else { cls += ' disabled'; } } const clickAttr = st.answered === null ? 'onclick="guessAnswer(' + i + ')"' : ''; optionsHtml += '<button class="' + cls + '" ' + clickAttr + '>' + opt + icon + '</button>'; } let nextBtn = ''; if (st.answered !== null) { const btnLabel = (st.current + 1 >= st.total) ? '🏁 Natijani Ko\'rish' : 'Keyingi Savol ➡'; nextBtn = '<button class="g-next-btn" style="margin-top:14px;width:100%" onclick="guessNext()">' + btnLabel + '</button>'; } root.innerHTML = '<div style="max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:.78rem;color:var(--muted)">Savol ' + (st.current + 1) + ' / ' + st.total + '</span><span style="font-size:.78rem;font-weight:700;color:var(--accent)">🏆 ' + st.score + ' ball</span></div><div style="height:5px;background:var(--border);border-radius:4px;margin-bottom:16px;overflow:hidden"><div style="height:100%;width:' + progress + '%;background:var(--accent);border-radius:4px;transition:width .4s"></div></div><div style="position:relative;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;background:var(--card-bg)"><img src="' + imgUrl + '" style="width:100%;height:auto;max-height:320px;object-fit:contain;display:block;background:var(--border2)" onerror="this.style.display=\'none\'"><div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);padding:3px 10px;border-radius:20px;font-size:.72rem;color:#fff;font-weight:600">Bu anime nima? 🤔</div></div><div class="guess-opts-grid">' + optionsHtml + '</div>' + nextBtn + '</div>'; }
-function guessAnswer(optIdx) { if (!_guessState || _guessState.answered !== null) return; const q = _guessState.questions[_guessState.current]; const chosen = q.options[optIdx]; _guessState.chosenOption = chosen; if (chosen === q.correct) { _guessState.answered = 'correct'; _guessState.score++; } else { _guessState.answered = 'wrong'; } _renderGuessBoard(document.getElementById('guess-root')); }
-function guessNext() { if (!_guessState) return; _guessState.current++; _guessState.answered = null; _guessState.chosenOption = null; if (_guessState.current >= _guessState.total) { _guessState.finished = true; } _renderGuessBoard(document.getElementById('guess-root')); }
-function _renderGuessOver(root) { const st = _guessState; const pct = Math.round((st.score / st.total) * 100); let ico, title, sub; if (pct >= 80) { ico = "🏆"; title = "Zo'r natija!"; sub = "Siz haqiqiy anime bilimdonisiz!"; } else if (pct >= 50) { ico = "😊"; title = "Yaxshi urinish!"; sub = "Yana mashq kerak."; } else { ico = "😅"; title = "Qiyin ekan..."; sub = "Ko'proq anime ko'ring!"; } root.innerHTML = `<div class="g-over"><div class="g-over-ico">${ico}</div><div class="g-over-title">${title}</div><div class="g-over-score">${sub}<br><b>${st.score}</b>/<b>${st.total}</b> to'g'ri • <b>${pct}%</b></div><button class="g-play-again" onclick="startGuessGame()">🔁 Qayta O'ynash</button></div>`; }
+    // ── GUESS GAME ──
+    let _guessState = null;
+    async function initGuessGame() { const root = document.getElementById('guess-root'); if (!root) return; if (!_gUser || !_gToken) { _renderGuessLogin(root); return; } if (_guessState && !_guessState.finished) { _renderGuessBoard(root); } else { _renderGuessMenu(root); } }
+    function _renderGuessLogin(root) { const url = _getGoogleAuthUrl(); root.innerHTML = `<div class="g-login-wrap"><div class="g-login-ico">🎯</div><div class="g-login-title">Anime Taxminlash</div><div class="g-login-desc">Animening rasmini ko'rib, nomini toping!</div><button class="g-google-btn" onclick="window.location.href='${url}'"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.78l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google bilan kirish</button></div>`; }
+    function _renderGuessMenu(root) { root.innerHTML = `<div class="g-over" style="padding:40px 20px"><div class="g-over-ico">🎯</div><div class="g-over-title">Anime Taxminlash</div><div class="g-over-score">Salom, <b>${_gUser.name}</b>!</div><button class="g-play-again" onclick="startGuessGame()">▶ O'yinni Boshlash</button></div>`; }
+    async function startGuessGame() { const root = document.getElementById('guess-root'); root.innerHTML = '<div class="g-loading"><div class="spinner" style="margin:0 auto 12px"></div>Savollar tayyorlanmoqda...</div>'; try { const res = await fetch('/api/animes'); const data = await res.json(); let animes = data.animes || []; if (animes.length < 8) { root.innerHTML = '<div class="g-loading">❌ DB da yetarli anime yo\'q</div>'; return; } animes = animes.sort(() => Math.random() - .5); const selected = animes.slice(0, 6); const otherPool = animes.slice(6); const questions = selected.map(correct => { const wrong = otherPool.filter(a => a.id !== correct.id).sort(() => Math.random() - .5).slice(0, 3).map(a => a.nom); const options = [correct.nom, ...wrong].sort(() => Math.random() - .5); return { anime: correct, options, correct: correct.nom }; }); _guessState = { questions, current: 0, score: 0, total: 6, answered: null, chosenOption: null, finished: false }; _renderGuessBoard(root); } catch (e) { root.innerHTML = `<div class="g-loading">❌ Xatolik: ${e.message}</div>`; } }
+    function _renderGuessBoard(root) { if (!_guessState) return; const st = _guessState; if (st.finished) { _renderGuessOver(root); return; } const q = st.questions[st.current]; const anime = q.anime; const imgUrl = anime.rams_url || ''; const progress = Math.round((st.current / st.total) * 100); let optionsHtml = ''; for (let i = 0; i < q.options.length; i++) { const opt = q.options[i]; let cls = 'guess-opt', icon = ''; if (st.answered !== null) { if (opt === q.correct) { cls += ' correct'; icon = ' ✅'; } else if (opt === st.chosenOption && opt !== q.correct) { cls += ' wrong'; icon = ' ❌'; } else { cls += ' disabled'; } } const clickAttr = st.answered === null ? 'onclick="guessAnswer(' + i + ')"' : ''; optionsHtml += '<button class="' + cls + '" ' + clickAttr + '>' + opt + icon + '</button>'; } let nextBtn = ''; if (st.answered !== null) { const btnLabel = (st.current + 1 >= st.total) ? '🏁 Natijani Ko\'rish' : 'Keyingi Savol ➡'; nextBtn = '<button class="g-next-btn" style="margin-top:14px;width:100%" onclick="guessNext()">' + btnLabel + '</button>'; } root.innerHTML = '<div style="max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:.78rem;color:var(--muted)">Savol ' + (st.current + 1) + ' / ' + st.total + '</span><span style="font-size:.78rem;font-weight:700;color:var(--accent)">🏆 ' + st.score + ' ball</span></div><div style="height:5px;background:var(--border);border-radius:4px;margin-bottom:16px;overflow:hidden"><div style="height:100%;width:' + progress + '%;background:var(--accent);border-radius:4px;transition:width .4s"></div></div><div style="position:relative;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;background:var(--card-bg)"><img src="' + imgUrl + '" style="width:100%;height:auto;max-height:320px;object-fit:contain;display:block;background:var(--border2)" onerror="this.style.display=\'none\'"><div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);padding:3px 10px;border-radius:20px;font-size:.72rem;color:#fff;font-weight:600">Bu anime nima? 🤔</div></div><div class="guess-opts-grid">' + optionsHtml + '</div>' + nextBtn + '</div>'; }
+    function guessAnswer(optIdx) { if (!_guessState || _guessState.answered !== null) return; const q = _guessState.questions[_guessState.current]; const chosen = q.options[optIdx]; _guessState.chosenOption = chosen; if (chosen === q.correct) { _guessState.answered = 'correct'; _guessState.score++; } else { _guessState.answered = 'wrong'; } _renderGuessBoard(document.getElementById('guess-root')); }
+    function guessNext() { if (!_guessState) return; _guessState.current++; _guessState.answered = null; _guessState.chosenOption = null; if (_guessState.current >= _guessState.total) { _guessState.finished = true; } _renderGuessBoard(document.getElementById('guess-root')); }
+    function _renderGuessOver(root) { const st = _guessState; const pct = Math.round((st.score / st.total) * 100); let ico, title, sub; if (pct >= 80) { ico = "🏆"; title = "Zo'r natija!"; sub = "Siz haqiqiy anime bilimdonisiz!"; } else if (pct >= 50) { ico = "😊"; title = "Yaxshi urinish!"; sub = "Yana mashq kerak."; } else { ico = "😅"; title = "Qiyin ekan..."; sub = "Ko'proq anime ko'ring!"; } root.innerHTML = `<div class="g-over"><div class="g-over-ico">${ico}</div><div class="g-over-title">${title}</div><div class="g-over-score">${sub}<br><b>${st.score}</b>/<b>${st.total}</b> to'g'ri • <b>${pct}%</b></div><button class="g-play-again" onclick="startGuessGame()">🔁 Qayta O'ynash</button></div>`; }
 
-// ── TOPBAR AUTH ──
-function _getGoogleAuthUrl() { const clientId = document.querySelector('meta[name="google-client-id"]')?.content || ''; const redirectUri = window.location.origin + '/callback'; const scope = 'openid profile email'; return `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline`; }
-function topbarLogin() { const url = _getGoogleAuthUrl(); if (!url.includes('client_id=&')) { window.location.href = url; } else { alert("GOOGLE_CLIENT_ID sozlanmagan."); } }
-// ── ANILIST GLOBAL QIDIRUV ──
-const _alStatusLabels = {
-    RELEASING: '🔴 OnGoing',
-    FINISHED: '✅ Tugallangan',
-    NOT_YET_RELEASED: '⏳ Tez Kunda',
-    CANCELLED: '❌ Bekor',
-    HIATUS: '⏸ Pauza',
-};
+    // ── TOPBAR AUTH ──
+    function _getGoogleAuthUrl() { const clientId = document.querySelector('meta[name="google-client-id"]')?.content || ''; const redirectUri = window.location.origin + '/callback'; const scope = 'openid profile email'; return `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline`; }
+    function topbarLogin() { const url = _getGoogleAuthUrl(); if (!url.includes('client_id=&')) { window.location.href = url; } else { alert("GOOGLE_CLIENT_ID sozlanmagan."); } }
+    // ── ANILIST GLOBAL QIDIRUV ──
+    const _alStatusLabels = {
+      RELEASING: '🔴 OnGoing',
+      FINISHED: '✅ Tugallangan',
+      NOT_YET_RELEASED: '⏳ Tez Kunda',
+      CANCELLED: '❌ Bekor',
+      HIATUS: '⏸ Pauza',
+    };
 
-let _alCountdownTimer = null;
+    let _alCountdownTimer = null;
 
-function _alEscape(v) {
-    return String(v ?? '').replace(/[&<>"']/g, ch => ({
+    function _alEscape(v) {
+      return String(v ?? '').replace(/[&<>"']/g, ch => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[ch]));
-}
-
-function _alFormatAiringDate(airingAt) {
-    if (!airingAt) return '';
-    try {
-        return new Intl.DateTimeFormat('uz-UZ', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        }).format(new Date(airingAt * 1000));
-    } catch {
-        return new Date(airingAt * 1000).toLocaleString();
+      }[ch]));
     }
-}
 
-function _alCountdownParts(airingAt) {
-    const diff = Math.max(0, (airingAt * 1000) - Date.now());
-    const total = Math.floor(diff / 1000);
-    const days = Math.floor(total / 86400);
-    const hours = Math.floor((total % 86400) / 3600);
-    const mins = Math.floor((total % 3600) / 60);
-    const secs = total % 60;
-    return { diff, days, hours, mins, secs };
-}
+    function _alFormatAiringDate(airingAt) {
+      if (!airingAt) return '';
+      try {
+        return new Intl.DateTimeFormat('uz-UZ', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        }).format(new Date(airingAt * 1000));
+      } catch {
+        return new Date(airingAt * 1000).toLocaleString();
+      }
+    }
 
-function _alRenderCountdowns() {
-    document.querySelectorAll('[data-airing-at]').forEach(el => {
+    function _alCountdownParts(airingAt) {
+      const diff = Math.max(0, (airingAt * 1000) - Date.now());
+      const total = Math.floor(diff / 1000);
+      const days = Math.floor(total / 86400);
+      const hours = Math.floor((total % 86400) / 3600);
+      const mins = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      return { diff, days, hours, mins, secs };
+    }
+
+    function _alRenderCountdowns() {
+      document.querySelectorAll('[data-airing-at]').forEach(el => {
         const airingAt = Number(el.dataset.airingAt || 0);
         const p = _alCountdownParts(airingAt);
         if (!airingAt) return;
         if (p.diff <= 0) {
-            el.innerHTML = '<div class="al-airing-ended">Chiqdi yoki AniList yangilanmoqda</div>';
-            return;
+          el.innerHTML = '<div class="al-airing-ended">Chiqdi yoki AniList yangilanmoqda</div>';
+          return;
         }
         const pad = n => String(n).padStart(2, '0');
         el.innerHTML = `
@@ -1021,37 +1041,37 @@ function _alRenderCountdowns() {
       <div class="al-count-unit"><span class="al-count-num">${pad(p.hours)}</span><span class="al-count-lbl">Soat</span></div>
       <div class="al-count-unit"><span class="al-count-num">${pad(p.mins)}</span><span class="al-count-lbl">Daq</span></div>
       <div class="al-count-unit"><span class="al-count-num">${pad(p.secs)}</span><span class="al-count-lbl">Son</span></div>`;
-    });
-}
-
-function _alStartCountdowns() {
-    if (_alCountdownTimer) clearInterval(_alCountdownTimer);
-    _alRenderCountdowns();
-    if (document.querySelector('[data-airing-at]')) {
-        _alCountdownTimer = setInterval(_alRenderCountdowns, 1000);
+      });
     }
-}
 
-async function _checkAnilistStatus() {
-    const bar = document.getElementById('alConnectBar');
-    const btn = document.getElementById('alConnectBtn');
-    if (!bar) return;
+    function _alStartCountdowns() {
+      if (_alCountdownTimer) clearInterval(_alCountdownTimer);
+      _alRenderCountdowns();
+      if (document.querySelector('[data-airing-at]')) {
+        _alCountdownTimer = setInterval(_alRenderCountdowns, 1000);
+      }
+    }
 
-    if (!_gToken) {
+    async function _checkAnilistStatus() {
+      const bar = document.getElementById('alConnectBar');
+      const btn = document.getElementById('alConnectBtn');
+      if (!bar) return;
+
+      if (!_gToken) {
         // Google login qilinmagan — ulash tugmasi Google login ga yo'naltirsin
         if (btn) { btn.textContent = 'Kirish kerak'; btn.onclick = () => topbarLogin(); }
         return;
-    }
+      }
 
-    try {
+      try {
         const res = await fetch('/api/auth/anilist/status', { headers: _authHeaders() });
         const d = await res.json();
         if (d.ok && d.connected && d.anilist) {
-            // Ulangan
-            const av = d.anilist.avatar
-                ? `<img src="${d.anilist.avatar}" style="width:22px;height:22px;border-radius:50%;object-fit:cover">`
-                : '🟦';
-            bar.innerHTML = `
+          // Ulangan
+          const av = d.anilist.avatar
+            ? `<img src="${d.anilist.avatar}" style="width:22px;height:22px;border-radius:50%;object-fit:cover">`
+            : '🟦';
+          bar.innerHTML = `
         <div class="al-logo">${av}</div>
         <div class="al-info">
           <div class="al-title">AniList ulangan</div>
@@ -1059,58 +1079,58 @@ async function _checkAnilistStatus() {
         </div>
         <div class="al-connected-badge">✅ Ulangan</div>`;
         }
-    } catch (_) { }
-}
+      } catch (_) { }
+    }
 
-async function anilistConnect() {
-    if (!_gToken) { topbarLogin(); return; }
-    const btn = document.getElementById('alConnectBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Yo\'naltirilmoqda...'; }
-    try {
+    async function anilistConnect() {
+      if (!_gToken) { topbarLogin(); return; }
+      const btn = document.getElementById('alConnectBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Yo\'naltirilmoqda...'; }
+      try {
         const res = await fetch('/api/auth/anilist', { headers: _authHeaders() });
         const d = await res.json();
         if (d.ok && d.url) {
-            const popup = window.open(d.url, 'anilist_oauth',
-                'width=520,height=640,menubar=no,toolbar=no,status=no');
-            // Popup yopilishini kuzatamiz
-            const timer = setInterval(async () => {
-                if (popup && popup.closed) {
-                    clearInterval(timer);
-                    await _checkAnilistStatus();
-                }
-            }, 800);
+          const popup = window.open(d.url, 'anilist_oauth',
+            'width=520,height=640,menubar=no,toolbar=no,status=no');
+          // Popup yopilishini kuzatamiz
+          const timer = setInterval(async () => {
+            if (popup && popup.closed) {
+              clearInterval(timer);
+              await _checkAnilistStatus();
+            }
+          }, 800);
         } else {
-            alert(d.error || 'AniList ulanishda xatolik');
-            if (btn) { btn.disabled = false; btn.textContent = 'Ulash'; }
+          alert(d.error || 'AniList ulanishda xatolik');
+          if (btn) { btn.disabled = false; btn.textContent = 'Ulash'; }
         }
-    } catch (e) {
+      } catch (e) {
         alert('Xatolik: ' + e.message);
         if (btn) { btn.disabled = false; btn.textContent = 'Ulash'; }
+      }
     }
-}
 
-async function glSearch() {
-    const q = (document.getElementById('glSearchInput')?.value || '').trim();
-    if (!q) return;
+    async function glSearch() {
+      const q = (document.getElementById('glSearchInput')?.value || '').trim();
+      if (!q) return;
 
-    const grid = document.getElementById('glResultGrid');
-    const bar = document.getElementById('glResultBar');
-    const btn = document.getElementById('glSearchBtn');
-    const cntEl = document.getElementById('glResultCount');
+      const grid = document.getElementById('glResultGrid');
+      const bar = document.getElementById('glResultBar');
+      const btn = document.getElementById('glSearchBtn');
+      const cntEl = document.getElementById('glResultCount');
 
-    if (!grid) return;
-    if (_alCountdownTimer) clearInterval(_alCountdownTimer);
-    btn.disabled = true;
-    grid.innerHTML = '<div class="gl-msg"><div class="spinner" style="margin:0 auto 14px"></div>Qidirilmoqda...</div>';
-    if (bar) bar.style.display = 'none';
+      if (!grid) return;
+      if (_alCountdownTimer) clearInterval(_alCountdownTimer);
+      btn.disabled = true;
+      grid.innerHTML = '<div class="gl-msg"><div class="spinner" style="margin:0 auto 14px"></div>Qidirilmoqda...</div>';
+      if (bar) bar.style.display = 'none';
 
-    try {
+      try {
         const res = await fetch(`/api/anilist/search?q=${encodeURIComponent(q)}&per=24`);
         const data = await res.json();
 
         if (!data.ok) {
-            grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${data.error || 'Xatolik'}</div>`;
-            return;
+          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${data.error || 'Xatolik'}</div>`;
+          return;
         }
 
         const items = data.results || [];
@@ -1118,32 +1138,32 @@ async function glSearch() {
         if (bar) bar.style.display = '';
 
         if (!items.length) {
-            grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${q}" bo'yicha hech narsa topilmadi.</div>`;
-            return;
+          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${q}" bo'yicha hech narsa topilmadi.</div>`;
+          return;
         }
 
         grid.innerHTML = items.map(a => {
-            const safeTitle = _alEscape(a.title || 'Nomsiz');
-            const img = a.cover
-                ? `<img class="al-card-img" src="${_alEscape(a.cover)}" alt="${safeTitle}" loading="lazy" onerror="this.outerHTML='<div class=al-card-img-ph>🎬</div>'">`
-                : '<div class="al-card-img-ph">🎬</div>';
+          const safeTitle = _alEscape(a.title || 'Nomsiz');
+          const img = a.cover
+            ? `<img class="al-card-img" src="${_alEscape(a.cover)}" alt="${safeTitle}" loading="lazy" onerror="this.outerHTML='<div class=al-card-img-ph>🎬</div>'">`
+            : '<div class="al-card-img-ph">🎬</div>';
 
-            const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
-            const statusCls = `al-badge status-${a.status || ''}`;
-            const scoreBadge = a.score
-                ? `<span class="al-score">⭐ ${a.score}/100</span>`
-                : '';
-            const epBadge = a.episodes
-                ? `<span class="al-badge">${a.episodes} qism</span>`
-                : '';
-            const yearBadge = a.year
-                ? `<span class="al-badge">${a.year}</span>`
-                : '';
-            const fmtBadge = a.format
-                ? `<span class="al-badge">${a.format}</span>`
-                : '';
-            const airing = a.next_airing && a.next_airing.airingAt
-                ? `<div class="al-airing">
+          const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
+          const statusCls = `al-badge status-${a.status || ''}`;
+          const scoreBadge = a.score
+            ? `<span class="al-score">⭐ ${a.score}/100</span>`
+            : '';
+          const epBadge = a.episodes
+            ? `<span class="al-badge">${a.episodes} qism</span>`
+            : '';
+          const yearBadge = a.year
+            ? `<span class="al-badge">${a.year}</span>`
+            : '';
+          const fmtBadge = a.format
+            ? `<span class="al-badge">${a.format}</span>`
+            : '';
+          const airing = a.next_airing && a.next_airing.airingAt
+            ? `<div class="al-airing">
             <div class="al-airing-top">
               <span>Keyingi qism</span>
               <span>${a.next_airing.episode ? _alEscape(a.next_airing.episode) + '-qism' : ''}</span>
@@ -1151,9 +1171,9 @@ async function glSearch() {
             <div class="al-airing-date">Chiqish vaqti: ${_alEscape(_alFormatAiringDate(a.next_airing.airingAt))}</div>
             <div class="al-countdown" data-airing-at="${Number(a.next_airing.airingAt)}"></div>
           </div>`
-                : '';
+            : '';
 
-            return `<div class="al-card" onclick="openAlDetail(${a.id})" style="cursor: pointer;">
+          return `<div class="al-card" onclick="openAlDetail(${a.id})" style="cursor: pointer;">
         ${img}
         <div class="al-card-body">
           <div class="al-card-title" title="${safeTitle}">${safeTitle}</div>
@@ -1167,91 +1187,91 @@ async function glSearch() {
         }).join('');
         _alStartCountdowns();
 
-    } catch (e) {
+      } catch (e) {
         grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>Xatolik: ${e.message}</div>`;
-    } finally {
+      } finally {
         btn.disabled = false;
+      }
     }
-}
 
-// Global sahifa ochilganda AniList statusini tekshir (showPage ichida handle qilinadi)
+    // Global sahifa ochilganda AniList statusini tekshir (showPage ichida handle qilinadi)
 
-async function topbarLogout() { await fetch('/api/auth/logout', { method: 'POST', headers: _authHeaders() }).catch(() => { }); localStorage.removeItem('az_token'); localStorage.removeItem('az_user'); _gToken = ''; _gUser = null; _gGameId = null; _gState = null; _refreshTopbarAuth(); _refreshUserBadge(); if (document.getElementById('page-game').classList.contains('active')) { _renderLoginScreen(); } }
-function _refreshTopbarAuth() { const loginBtn = document.getElementById('topbar-login-btn'), userDiv = document.getElementById('topbar-user'); if (!loginBtn || !userDiv) return; if (_gUser) { loginBtn.style.display = 'none'; userDiv.style.display = 'flex'; const av = document.getElementById('topbar-avatar'); if (av) { av.src = _gUser.picture || ''; av.style.display = _gUser.picture ? 'block' : 'none'; } const un = document.getElementById('topbar-uname'); if (un) un.textContent = _gUser.name || ''; } else { loginBtn.style.display = 'flex'; userDiv.style.display = 'none'; } }
-(async function () { if (_gToken && !_gUser) { try { const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + _gToken } }); const d = await res.json(); if (d.ok) { _gUser = d.user; localStorage.setItem('az_user', JSON.stringify(_gUser)); _refreshUserBadge(); } else { localStorage.removeItem('az_token'); _gToken = ''; } } catch { } } _refreshTopbarAuth(); })();
-async function gameLogout() { await fetch('/api/auth/logout', { method: 'POST', headers: _authHeaders() }).catch(() => { }); localStorage.removeItem('az_token'); localStorage.removeItem('az_user'); _gToken = ''; _gUser = null; _gGameId = null; _gState = null; _refreshUserBadge(); _refreshTopbarAuth(); if (document.getElementById('page-game').classList.contains('active')) { _renderLoginScreen(); } }
+    async function topbarLogout() { await fetch('/api/auth/logout', { method: 'POST', headers: _authHeaders() }).catch(() => { }); localStorage.removeItem('az_token'); localStorage.removeItem('az_user'); _gToken = ''; _gUser = null; _gGameId = null; _gState = null; _refreshTopbarAuth(); _refreshUserBadge(); if (document.getElementById('page-game').classList.contains('active')) { _renderLoginScreen(); } }
+    function _refreshTopbarAuth() { const loginBtn = document.getElementById('topbar-login-btn'), userDiv = document.getElementById('topbar-user'); if (!loginBtn || !userDiv) return; if (_gUser) { loginBtn.style.display = 'none'; userDiv.style.display = 'flex'; const av = document.getElementById('topbar-avatar'); if (av) { av.src = _gUser.picture || ''; av.style.display = _gUser.picture ? 'block' : 'none'; } const un = document.getElementById('topbar-uname'); if (un) un.textContent = _gUser.name || ''; } else { loginBtn.style.display = 'flex'; userDiv.style.display = 'none'; } }
+    (async function () { if (_gToken && !_gUser) { try { const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + _gToken } }); const d = await res.json(); if (d.ok) { _gUser = d.user; localStorage.setItem('az_user', JSON.stringify(_gUser)); _refreshUserBadge(); } else { localStorage.removeItem('az_token'); _gToken = ''; } } catch { } } _refreshTopbarAuth(); })();
+    async function gameLogout() { await fetch('/api/auth/logout', { method: 'POST', headers: _authHeaders() }).catch(() => { }); localStorage.removeItem('az_token'); localStorage.removeItem('az_user'); _gToken = ''; _gUser = null; _gGameId = null; _gState = null; _refreshUserBadge(); _refreshTopbarAuth(); if (document.getElementById('page-game').classList.contains('active')) { _renderLoginScreen(); } }
 
-// ══ DEVICE ID — har qurilmaga unikal ══
-function _getDeviceId() { let id = localStorage.getItem('az_device_id'); if (!id) { id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('az_device_id', id); } return id; }
-const _DEV = _getDeviceId();
+    // ══ DEVICE ID — har qurilmaga unikal ══
+    function _getDeviceId() { let id = localStorage.getItem('az_device_id'); if (!id) { id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('az_device_id', id); } return id; }
+    const _DEV = _getDeviceId();
 
-// ══ DEVICE CACHE — animelar keshlash ══
-const _CACHE_KEY = 'az_animes_cache_v2';
-const _CACHE_TTL = 30 * 60 * 1000; // 30 daqiqa
-function _saveAnimeCache(data) { try { localStorage.setItem(_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch { } }
-function _loadAnimeCache() { try { const c = JSON.parse(localStorage.getItem(_CACHE_KEY) || 'null'); if (c && Date.now() - c.ts < _CACHE_TTL) return c.data; } catch { } return null; }
+    // ══ DEVICE CACHE — animelar keshlash ══
+    const _CACHE_KEY = 'az_animes_cache_v2';
+    const _CACHE_TTL = 30 * 60 * 1000; // 30 daqiqa
+    function _saveAnimeCache(data) { try { localStorage.setItem(_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch { } }
+    function _loadAnimeCache() { try { const c = JSON.parse(localStorage.getItem(_CACHE_KEY) || 'null'); if (c && Date.now() - c.ts < _CACHE_TTL) return c.data; } catch { } return null; }
 
-// ══ SAVE / LIKE — localStorage per device ══
-function _getLiked() { try { return JSON.parse(localStorage.getItem('az_liked_' + _DEV) || '[]'); } catch { return []; } }
-function _getSaved() { try { return JSON.parse(localStorage.getItem('az_saved_' + _DEV) || '[]'); } catch { return []; } }
-function _saveLiked(arr) { localStorage.setItem('az_liked_' + _DEV, JSON.stringify(arr)); }
-function _saveSavedList(arr) { localStorage.setItem('az_saved_' + _DEV, JSON.stringify(arr)); }
-function _isLiked(id) { return _getLiked().includes(id); }
-function _isSaved(id) { return _getSaved().includes(id); }
+    // ══ SAVE / LIKE — localStorage per device ══
+    function _getLiked() { try { return JSON.parse(localStorage.getItem('az_liked_' + _DEV) || '[]'); } catch { return []; } }
+    function _getSaved() { try { return JSON.parse(localStorage.getItem('az_saved_' + _DEV) || '[]'); } catch { return []; } }
+    function _saveLiked(arr) { localStorage.setItem('az_liked_' + _DEV, JSON.stringify(arr)); }
+    function _saveSavedList(arr) { localStorage.setItem('az_saved_' + _DEV, JSON.stringify(arr)); }
+    function _isLiked(id) { return _getLiked().includes(id); }
+    function _isSaved(id) { return _getSaved().includes(id); }
 
-function toggleLike(id) {
-    let arr = _getLiked();
-    if (arr.includes(id)) arr = arr.filter(x => x !== id); else arr.push(id);
-    _saveLiked(arr);
-    const btn = document.getElementById('like-' + id);
-    if (btn) btn.classList.toggle('liked', arr.includes(id));
-    // gallerydagi tugmani ham yangilaymiz
-    const gbtn = document.getElementById('glike-' + id);
-    if (gbtn) gbtn.classList.toggle('liked', arr.includes(id));
-}
-function toggleSave(id) {
-    let arr = _getSaved();
-    if (arr.includes(id)) arr = arr.filter(x => x !== id); else arr.push(id);
-    _saveSavedList(arr);
-    const btn = document.getElementById('save-' + id);
-    if (btn) btn.classList.toggle('saved', arr.includes(id));
-    const gbtn = document.getElementById('gsave-' + id);
-    if (gbtn) gbtn.classList.toggle('saved', arr.includes(id));
-    _syncSavedToTelegram(id, arr.includes(id));
-}
-function removeFromSaved(id) { let arr = _getSaved().filter(x => x !== id); _saveSavedList(arr); _syncSavedToTelegram(id, false); renderProfile(); }
-function removeFromLiked(id) { let arr = _getLiked().filter(x => x !== id); _saveLiked(arr); renderProfile(); }
+    function toggleLike(id) {
+      let arr = _getLiked();
+      if (arr.includes(id)) arr = arr.filter(x => x !== id); else arr.push(id);
+      _saveLiked(arr);
+      const btn = document.getElementById('like-' + id);
+      if (btn) btn.classList.toggle('liked', arr.includes(id));
+      // gallerydagi tugmani ham yangilaymiz
+      const gbtn = document.getElementById('glike-' + id);
+      if (gbtn) gbtn.classList.toggle('liked', arr.includes(id));
+    }
+    function toggleSave(id) {
+      let arr = _getSaved();
+      if (arr.includes(id)) arr = arr.filter(x => x !== id); else arr.push(id);
+      _saveSavedList(arr);
+      const btn = document.getElementById('save-' + id);
+      if (btn) btn.classList.toggle('saved', arr.includes(id));
+      const gbtn = document.getElementById('gsave-' + id);
+      if (gbtn) gbtn.classList.toggle('saved', arr.includes(id));
+      _syncSavedToTelegram(id, arr.includes(id));
+    }
+    function removeFromSaved(id) { let arr = _getSaved().filter(x => x !== id); _saveSavedList(arr); _syncSavedToTelegram(id, false); renderProfile(); }
+    function removeFromLiked(id) { let arr = _getLiked().filter(x => x !== id); _saveLiked(arr); renderProfile(); }
 
-// ══ GALLERY ══
-let _galFilter = 'all';
-function renderGallery() {
-    const g = document.getElementById('galGrid');
-    if (!allAnimes.length && !g.querySelector('.gal-card')) {
+    // ══ GALLERY ══
+    let _galFilter = 'all';
+    function renderGallery() {
+      const g = document.getElementById('galGrid');
+      if (!allAnimes.length && !g.querySelector('.gal-card')) {
         // Hali yuklanmagan
         g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
         if (!allAnimes.length) { loadAnimes().then(() => renderGallery()); return; }
-    }
-    _renderGalGrid();
-    // Filter buttonlar
-    document.querySelectorAll('[data-gf]').forEach(b => {
+      }
+      _renderGalGrid();
+      // Filter buttonlar
+      document.querySelectorAll('[data-gf]').forEach(b => {
         b.onclick = () => {
-            document.querySelectorAll('[data-gf]').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            _galFilter = b.dataset.gf;
-            _renderGalGrid();
+          document.querySelectorAll('[data-gf]').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          _galFilter = b.dataset.gf;
+          _renderGalGrid();
         };
         b.classList.toggle('active', b.dataset.gf === _galFilter);
-    });
-}
-function _renderGalGrid() {
-    const g = document.getElementById('galGrid');
-    let list = [...allAnimes];
-    if (_galFilter === 'ongoing') list = list.filter(a => (a.aniType || '').toLowerCase().includes('ongoing'));
-    else if (_galFilter === 'completed') list = list.filter(a => a.aniType && !a.aniType.toLowerCase().includes('ongoing'));
-    else if (_galFilter === 'saved') { const ids = _getSaved(); list = list.filter(a => ids.includes(a.id)); }
-    else if (_galFilter === 'liked') { const ids = _getLiked(); list = list.filter(a => ids.includes(a.id)); }
-    if (!list.length) { g.innerHTML = '<div class="prof-empty" style="grid-column:1/-1">Hech narsa topilmadi 😔</div>'; return; }
-    g.innerHTML = list.map(a => {
+      });
+    }
+    function _renderGalGrid() {
+      const g = document.getElementById('galGrid');
+      let list = [...allAnimes];
+      if (_galFilter === 'ongoing') list = list.filter(a => (a.aniType || '').toLowerCase().includes('ongoing'));
+      else if (_galFilter === 'completed') list = list.filter(a => a.aniType && !a.aniType.toLowerCase().includes('ongoing'));
+      else if (_galFilter === 'saved') { const ids = _getSaved(); list = list.filter(a => ids.includes(a.id)); }
+      else if (_galFilter === 'liked') { const ids = _getLiked(); list = list.filter(a => ids.includes(a.id)); }
+      if (!list.length) { g.innerHTML = '<div class="prof-empty" style="grid-column:1/-1">Hech narsa topilmadi 😔</div>'; return; }
+      g.innerHTML = list.map(a => {
         const og = (a.aniType || '').toLowerCase().includes('ongoing');
         const badgeCls = og ? 'on' : 'fin'; const badgeTxt = og ? 'OnGoing' : 'Tugagan';
         const likedCls = _isLiked(a.id) ? 'liked' : '';
@@ -1267,45 +1287,45 @@ function _renderGalGrid() {
         </div>
       </div>
     </div>`;
-    }).join('');
-}
+      }).join('');
+    }
 
-// ══ PROFILE ══
-async function _fetchTelegramProfile() {
-    try { const r = await fetch('/api/telegram/profile?device_id=' + encodeURIComponent(_DEV)); return await r.json(); } catch { return { ok: false, linked: false }; }
-}
-async function _syncSavedToTelegram(animeId, saved) {
-    fetch('/api/profile/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_id: _DEV, anime_id: animeId, saved }) }).catch(() => { });
-}
-async function startTelegramLink() {
-    const input = document.getElementById('tg-link-id');
-    const status = document.getElementById('tg-link-status');
-    const telegramId = (input?.value || '').trim();
-    if (!telegramId) { if (status) status.textContent = 'Telegram ID kiriting'; return; }
-    if (status) status.textContent = 'Botga tasdiqlash xabari yuborilmoqda...';
-    try {
+    // ══ PROFILE ══
+    async function _fetchTelegramProfile() {
+      try { const r = await fetch('/api/telegram/profile?device_id=' + encodeURIComponent(_DEV)); return await r.json(); } catch { return { ok: false, linked: false }; }
+    }
+    async function _syncSavedToTelegram(animeId, saved) {
+      fetch('/api/profile/saved', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_id: _DEV, anime_id: animeId, saved }) }).catch(() => { });
+    }
+    async function startTelegramLink() {
+      const input = document.getElementById('tg-link-id');
+      const status = document.getElementById('tg-link-status');
+      const telegramId = (input?.value || '').trim();
+      if (!telegramId) { if (status) status.textContent = 'Telegram ID kiriting'; return; }
+      if (status) status.textContent = 'Botga tasdiqlash xabari yuborilmoqda...';
+      try {
         const res = await fetch('/api/telegram/link/start', { method: 'POST', headers: _authHeaders(), body: JSON.stringify({ device_id: _DEV, telegram_id: telegramId, saved_ids: _getSaved() }) });
         const d = await res.json();
         if (!d.ok) { if (status) status.textContent = '❌ ' + (d.error || 'Xatolik'); return; }
         if (status) status.textContent = 'Botdagi xabar ostidan Tasdiqlash tugmasini bosing...';
         pollTelegramLink(d.request_id);
-    } catch { if (status) status.textContent = '❌ Serverga ulanib bo\'lmadi'; }
-}
-async function pollTelegramLink(requestId) {
-    const status = document.getElementById('tg-link-status');
-    for (let i = 0; i < 40; i++) {
+      } catch { if (status) status.textContent = '❌ Serverga ulanib bo\'lmadi'; }
+    }
+    async function pollTelegramLink(requestId) {
+      const status = document.getElementById('tg-link-status');
+      for (let i = 0; i < 40; i++) {
         await new Promise(r => setTimeout(r, 2000));
         try {
-            const res = await fetch(`/api/telegram/link/status?request_id=${encodeURIComponent(requestId)}&device_id=${encodeURIComponent(_DEV)}`);
-            const d = await res.json();
-            if (d.status === 'approved') { if (status) status.textContent = '✅ Telegram profil ulandi'; renderProfile(); return; }
-            if (d.status === 'rejected') { if (status) status.textContent = '❌ So\'rov rad etildi'; return; }
+          const res = await fetch(`/api/telegram/link/status?request_id=${encodeURIComponent(requestId)}&device_id=${encodeURIComponent(_DEV)}`);
+          const d = await res.json();
+          if (d.status === 'approved') { if (status) status.textContent = '✅ Telegram profil ulandi'; renderProfile(); return; }
+          if (d.status === 'rejected') { if (status) status.textContent = '❌ So\'rov rad etildi'; return; }
         } catch { }
+      }
+      if (status) status.textContent = '⏳ Tasdiqlash kutilmoqda. Profilni qayta ochib tekshiring.';
     }
-    if (status) status.textContent = '⏳ Tasdiqlash kutilmoqda. Profilni qayta ochib tekshiring.';
-}
-function _telegramConnectBox() {
-    return `<div class="prof-card" style="padding:18px">
+    function _telegramConnectBox() {
+      return `<div class="prof-card" style="padding:18px">
     <div class="prof-sec-title">🔗 Telegram profilni ulash</div>
     <div class="prof-login-desc" style="max-width:none;text-align:left;margin-bottom:12px">Telegram ID kiriting. Bot sizga tasdiqlash xabari yuboradi.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1314,23 +1334,23 @@ function _telegramConnectBox() {
     </div>
     <div id="tg-link-status" style="font-size:.78rem;color:var(--muted);margin-top:10px"></div>
   </div>`;
-}
-async function _fetchSpotifyStatus() {
-    if (!_gToken) return { ok: false, connected: false };
-    try { const r = await fetch('/api/auth/spotify/status', { headers: _authHeaders() }); return await r.json(); } catch { return { ok: false, connected: false }; }
-}
-async function spotifyConnect() {
-    if (!_gToken) { alert('Avval Google bilan kiring.'); return; }
-    try {
+    }
+    async function _fetchSpotifyStatus() {
+      if (!_gToken) return { ok: false, connected: false };
+      try { const r = await fetch('/api/auth/spotify/status', { headers: _authHeaders() }); return await r.json(); } catch { return { ok: false, connected: false }; }
+    }
+    async function spotifyConnect() {
+      if (!_gToken) { alert('Avval Google bilan kiring.'); return; }
+      try {
         const res = await fetch('/api/auth/spotify', { headers: _authHeaders() });
         const d = await res.json();
         if (d.ok && d.url) { window.location.href = d.url; return; }
         alert(d.error || 'Spotify ulashda xatolik');
-    } catch { alert('Serverga ulanib bo\'lmadi'); }
-}
-function _spotifyConnectBox(status) {
-    const s = status?.spotify || {};
-    if (status?.connected) {
+      } catch { alert('Serverga ulanib bo\'lmadi'); }
+    }
+    function _spotifyConnectBox(status) {
+      const s = status?.spotify || {};
+      if (status?.connected) {
         const av = s.image ? `<img class="prof-spotify-avatar" src="${s.image}" onerror="this.style.display='none'">` : '<div class="prof-spotify-avatar" style="background:#1ed760"></div>';
         const link = s.profile_url ? `<a class="prof-spotify-btn" href="${s.profile_url}" target="_blank" rel="noopener">Spotify profil</a>` : '';
         return `<div class="prof-card" style="padding:18px">
@@ -1344,19 +1364,19 @@ function _spotifyConnectBox(status) {
       </div>
       ${link}
     </div>`;
-    }
-    return `<div class="prof-card" style="padding:18px">
+      }
+      return `<div class="prof-card" style="padding:18px">
     <div class="prof-sec-title">Spotify hisobini ulash</div>
     <div class="prof-login-desc" style="max-width:none;text-align:left;margin:12px 0">Spotify profilingizni web profilingizga bog'lang.</div>
     <button class="prof-spotify-btn" onclick="spotifyConnect()">Spotify bilan ulash</button>
   </div>`;
-}
-async function renderProfile() {
-    const c = document.getElementById('profileContent');
-    if (!c) return;
-    c.innerHTML = '<div class="loading"><div class="spinner"></div>Profil yuklanmoqda...</div>';
-    const tgProfile = await _fetchTelegramProfile();
-    if (!_gUser && !tgProfile.linked) {
+    }
+    async function renderProfile() {
+      const c = document.getElementById('profileContent');
+      if (!c) return;
+      c.innerHTML = '<div class="loading"><div class="spinner"></div>Profil yuklanmoqda...</div>';
+      const tgProfile = await _fetchTelegramProfile();
+      if (!_gUser && !tgProfile.linked) {
         const url = _getGoogleAuthUrl();
         c.innerHTML = `<div class="prof-login-wrap">
       <div class="prof-login-ico">👤</div>
@@ -1369,26 +1389,26 @@ async function renderProfile() {
     </div>`;
         c.innerHTML += _telegramConnectBox();
         return;
-    }
-    if (tgProfile.linked && Array.isArray(tgProfile.watchlist)) {
+      }
+      if (tgProfile.linked && Array.isArray(tgProfile.watchlist)) {
         _saveSavedList(tgProfile.watchlist.map(Number));
-    }
-    const saved = _getSaved(); const liked = _getLiked();
-    const savedAnimes = allAnimes.filter(a => saved.includes(a.id));
-    const likedAnimes = allAnimes.filter(a => liked.includes(a.id));
-    const displayUser = tgProfile.linked ? {
+      }
+      const saved = _getSaved(); const liked = _getLiked();
+      const savedAnimes = allAnimes.filter(a => saved.includes(a.id));
+      const likedAnimes = allAnimes.filter(a => liked.includes(a.id));
+      const displayUser = tgProfile.linked ? {
         name: tgProfile.telegram?.name || 'Telegram foydalanuvchi',
         email: (tgProfile.telegram?.username ? '@' + tgProfile.telegram.username : 'ID: ' + tgProfile.telegram?.id),
         picture: tgProfile.telegram?.photo_url || ''
-    } : _gUser;
-    const avatarEl = displayUser.picture ? `<img class="prof-av" src="${displayUser.picture}" onerror="this.outerHTML='<div class=prof-av-ph>👤</div>'">` : '<div class="prof-av-ph">👤</div>';
-    const _animeItem = (a, rmFn) => `<div class="prof-anime-item" onclick="openModal(${a.id},this)">
+      } : _gUser;
+      const avatarEl = displayUser.picture ? `<img class="prof-av" src="${displayUser.picture}" onerror="this.outerHTML='<div class=prof-av-ph>👤</div>'">` : '<div class="prof-av-ph">👤</div>';
+      const _animeItem = (a, rmFn) => `<div class="prof-anime-item" onclick="openModal(${a.id},this)">
     <img class="prof-anime-img" src="${a.rams_url || ''}" loading="lazy" onerror="this.style.display='none'">
     <div class="prof-anime-label">${a.nom || 'Nomsiz'}</div>
     <button class="prof-anime-rm" onclick="event.stopPropagation();${rmFn}(${a.id})" title="O'chirish">✕</button>
   </div>`;
 
-    c.innerHTML = `<div class="profile-wrap">
+      c.innerHTML = `<div class="profile-wrap">
     <div class="prof-card">
       <div class="prof-cover"><div class="prof-cover::after"></div></div>
       <div class="prof-av-wrap">${avatarEl}</div>
@@ -1425,62 +1445,62 @@ async function renderProfile() {
       <div class="prof-anime-grid">${likedAnimes.length ? likedAnimes.map(a => _animeItem(a, 'removeFromLiked')).join('') : '<div class="prof-empty">Yoqtirilgan anime yo\'q.<br>Kartada ❤️ tugmasini bosing.</div>'}</div>
     </div>
   </div>`;
-}
+    }
 
-// ══ HERO + SPLASH BOTINFO ══
-async function _loadBotInfo() {
-    let BOT_UN = '{{BOT_USERNAME}}' || 'anime_uz_official_bot';
-    let displayName = BOT_UN.replace(/_/g, ' ').toUpperCase().replace(' BOT', '');
-    let botPhoto = '';
-    try {
+    // ══ HERO + SPLASH BOTINFO ══
+    async function _loadBotInfo() {
+      let BOT_UN = '{{BOT_USERNAME}}' || 'anime_uz_official_bot';
+      let displayName = BOT_UN.replace(/_/g, ' ').toUpperCase().replace(' BOT', '');
+      let botPhoto = '';
+      try {
         const res = await fetch('/api/bot-info');
         const d = await res.json();
         if (d.ok) {
-            BOT_UN = (d.username || BOT_UN || 'anime_uz_official_bot').replace(/^@/, '');
-            displayName = (d.name || BOT_UN).replace(/_/g, ' ').toUpperCase().replace(' BOT', '');
-            botPhoto = d.photo_url || '';
+          BOT_UN = (d.username || BOT_UN || 'anime_uz_official_bot').replace(/^@/, '');
+          displayName = (d.name || BOT_UN).replace(/_/g, ' ').toUpperCase().replace(' BOT', '');
+          botPhoto = d.photo_url || '';
         }
-    } catch { }
-    const setLogo = (id, cls, sizeLetter) => {
+      } catch { }
+      const setLogo = (id, cls, sizeLetter) => {
         const el = document.getElementById(id); if (!el) return;
         if (botPhoto) { el.innerHTML = `<img src="${botPhoto}" alt="${displayName}" onerror="this.remove();this.parentElement.textContent='${sizeLetter}'">`; }
         else { el.textContent = sizeLetter; }
-    };
-    const setHeadImage = (selector, url) => {
+      };
+      const setHeadImage = (selector, url) => {
         const el = document.querySelector(selector); if (el && url) el.setAttribute(selector.startsWith('link') ? 'href' : 'content', url);
-    };
-    if (botPhoto) {
+      };
+      if (botPhoto) {
         setHeadImage('link[rel="icon"]', botPhoto);
         setHeadImage('link[rel="apple-touch-icon"]', botPhoto);
         setHeadImage('meta[property="og:image"]', botPhoto);
         setHeadImage('meta[name="twitter:image"]', botPhoto);
-    }
-    // Splash update
-    const sn = document.getElementById('splashBotName'); if (sn) sn.textContent = displayName;
-    const su = document.getElementById('splashBotUser'); if (su) su.textContent = '@' + BOT_UN;
-    setLogo('splashLogoEl', 'splash-logo-img', displayName[0] || 'A');
-    // Hero update
-    const hn = document.getElementById('heroBotName'); if (hn) hn.textContent = displayName;
-    const hu = document.getElementById('heroBotUser'); if (hu) hu.textContent = '@' + BOT_UN;
-    const tb = document.getElementById('heroTgBtn'); if (tb) tb.href = 'https://t.me/' + BOT_UN;
-    setLogo('heroLogoEl', 'hero-logo-img', displayName[0] || 'A');
-    // Sidebar
-    const sbn = document.getElementById('sideBotName'); if (sbn) sbn.textContent = displayName.split(' ')[0];
-    setLogo('sideLogoEl', 'sidebar-logo-img', displayName[0] || 'A');
-    // stats
-    try {
+      }
+      // Splash update
+      const sn = document.getElementById('splashBotName'); if (sn) sn.textContent = displayName;
+      const su = document.getElementById('splashBotUser'); if (su) su.textContent = '@' + BOT_UN;
+      setLogo('splashLogoEl', 'splash-logo-img', displayName[0] || 'A');
+      // Hero update
+      const hn = document.getElementById('heroBotName'); if (hn) hn.textContent = displayName;
+      const hu = document.getElementById('heroBotUser'); if (hu) hu.textContent = '@' + BOT_UN;
+      const tb = document.getElementById('heroTgBtn'); if (tb) tb.href = 'https://t.me/' + BOT_UN;
+      setLogo('heroLogoEl', 'hero-logo-img', displayName[0] || 'A');
+      // Sidebar
+      const sbn = document.getElementById('sideBotName'); if (sbn) sbn.textContent = displayName.split(' ')[0];
+      setLogo('sideLogoEl', 'sidebar-logo-img', displayName[0] || 'A');
+      // stats
+      try {
         const res = await fetch('/api/stats'); const d = await res.json();
         const hu2 = document.getElementById('heroUsers'); if (hu2) hu2.textContent = d.users?.toLocaleString() || '—';
         const ha = document.getElementById('heroAnimes'); if (ha) ha.textContent = d.animes?.toLocaleString() || '—';
         const ho = document.getElementById('heroOnline'); if (ho) { ho.textContent = '● Online'; ho.style.color = 'var(--green)'; }
-    } catch { }
-}
+      } catch { }
+    }
 
-// ══ ANIME CACHE patching ══
-async function loadAnimes() {
-    // Cached version check
-    const cached = _loadAnimeCache();
-    if (cached && cached.length) {
+    // ══ ANIME CACHE patching ══
+    async function loadAnimes() {
+      // Cached version check
+      const cached = _loadAnimeCache();
+      if (cached && cached.length) {
         allAnimes = cached;
         const tcEl = document.getElementById('sideCount'); if (tcEl) tcEl.textContent = allAnimes.length;
         curFilter = S.def;
@@ -1489,57 +1509,57 @@ async function loadAnimes() {
         // Background refresh
         _refreshAnimesFromServer();
         return;
+      }
+      await _refreshAnimesFromServer();
     }
-    await _refreshAnimesFromServer();
-}
-async function _refreshAnimesFromServer() {
-    const g = document.getElementById('animeGrid');
-    if (!allAnimes.length && g) g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-    try {
+    async function _refreshAnimesFromServer() {
+      const g = document.getElementById('animeGrid');
+      if (!allAnimes.length && g) g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
+      try {
         const res = await fetch('/api/animes');
         if (!res.ok) throw new Error('Server xatosi');
         const d = await res.json();
         allAnimes = d.animes || [];
         _saveAnimeCache(allAnimes);
-    } catch {
+      } catch {
         if (!allAnimes.length && g) g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-ico">⚠️</div><h3>Serverga ulanib bo\'lmadi</h3></div>';
         return;
+      }
+      const tcEl = document.getElementById('sideCount'); if (tcEl) tcEl.textContent = allAnimes.length;
+      curFilter = S.def;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === curFilter));
+      applyFilter();
     }
-    const tcEl = document.getElementById('sideCount'); if (tcEl) tcEl.textContent = allAnimes.length;
-    curFilter = S.def;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === curFilter));
-    applyFilter();
-}
 
-async function _openPosterRoute(id) {
-    if (!id) return;
-    let anime = allAnimes.find(a => a.id === id);
-    if (!anime) {
+    async function _openPosterRoute(id) {
+      if (!id) return;
+      let anime = allAnimes.find(a => a.id === id);
+      if (!anime) {
         try {
-            const res = await fetch(`/api/animes/${id}`);
-            const d = await res.json();
-            if (d.ok && d.anime) {
-                anime = d.anime;
-                allAnimes = [anime, ...allAnimes.filter(a => a.id !== id)];
-                _saveAnimeCache(allAnimes);
-            }
+          const res = await fetch(`/api/animes/${id}`);
+          const d = await res.json();
+          if (d.ok && d.anime) {
+            anime = d.anime;
+            allAnimes = [anime, ...allAnimes.filter(a => a.id !== id)];
+            _saveAnimeCache(allAnimes);
+          }
         } catch { }
+      }
+      if (!anime) return;
+      showPage('animes', null);
+      _openingPosterFromRoute = true;
+      openModal(id, null, { skipHistory: true, skipFx: true });
+      _openingPosterFromRoute = false;
     }
-    if (!anime) return;
-    showPage('animes', null);
-    _openingPosterFromRoute = true;
-    openModal(id, null, { skipHistory: true, skipFx: true });
-    _openingPosterFromRoute = false;
-}
 
-// ══ SPLASH HIDE ══
-function _hideSplash() { const s = document.getElementById('splash'); if (s) s.classList.add('hidden'); }
-// 2.5 soniyadan keyin yoki animelar yuklangandan keyin
-setTimeout(_hideSplash, 2500);
+    // ══ SPLASH HIDE ══
+    function _hideSplash() { const s = document.getElementById('splash'); if (s) s.classList.add('hidden'); }
+    // 2.5 soniyadan keyin yoki animelar yuklangandan keyin
+    setTimeout(_hideSplash, 2500);
 
-// ══ INIT ══
-_loadBotInfo();
-loadAnimes().then(() => { const id = _posterRouteId(); if (id) _openPosterRoute(id); });
-if (location.hash === '#profile') {
-    setTimeout(() => showPage('profile', null), 0);
-}
+    // ══ INIT ══
+    _loadBotInfo();
+    loadAnimes().then(() => { const id = _posterRouteId(); if (id) _openPosterRoute(id); });
+    if (location.hash === '#profile') {
+      setTimeout(() => showPage('profile', null), 0);
+    }

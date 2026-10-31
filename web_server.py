@@ -26,7 +26,7 @@ from aiohttp import web
 from urllib.parse import urlencode, urlparse
 
 from config import (
-    DB_PATH, BOT_TOKEN, BOT_USERNAME,
+    DB_PATH, DATA_DIR, BOT_TOKEN, BOT_USERNAME,
     SUPER_ADMIN_ID, ADMIN_IDS,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI,
     SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI,
@@ -721,6 +721,140 @@ async def resolve_file_id(file_id: str) -> dict:
     return {"url": None, "type": "photo"}
 
 
+# ─── Poster keshi: har anime uchun bitta fayl volume ichida ──────────
+POSTER_CACHE_DIR = os.path.join(DATA_DIR, "posters")
+POSTER_MAX_BYTES = 20 * 1024 * 1024
+POSTER_RETRIES = 4
+_POSTER_EXTS = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif"}
+_poster_locks: dict = {}
+
+
+class _PosterPermanentError(Exception):
+    """Qayta urinishning foydasi yo'q xato (masalan, file_id noto'g'ri yoki fayl katta)."""
+
+
+def _poster_key(rams: str) -> str:
+    return hashlib.sha1((rams or "").encode("utf-8", "ignore")).hexdigest()[:10]
+
+
+def _cached_poster_path(anime_id, rams: str) -> str | None:
+    prefix = f"{int(anime_id)}_{_poster_key(rams)}."
+    try:
+        for name in os.listdir(POSTER_CACHE_DIR):
+            if name.startswith(prefix) and not name.endswith(".tmp"):
+                return os.path.join(POSTER_CACHE_DIR, name)
+    except FileNotFoundError:
+        pass
+    return None
+
+
+async def _poster_source_url(session: aiohttp.ClientSession, rams: str) -> str:
+    if rams.startswith("http"):
+        return rams
+    async with session.get(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/getFile", params={"file_id": rams}
+    ) as resp:
+        data = await resp.json(content_type=None)
+    if data.get("ok"):
+        return f"https://api.telegram.org/file/bot{BOT_TOKEN}/{data['result']['file_path']}"
+    desc = str(data.get("description", "unknown"))
+    code = int(data.get("error_code") or 0)
+    if code == 429 or code >= 500:
+        retry_after = (data.get("parameters") or {}).get("retry_after")
+        if retry_after:
+            await asyncio.sleep(min(int(retry_after), 30))
+        raise RuntimeError(f"getFile {code}: {desc}")
+    raise _PosterPermanentError(f"getFile {code}: {desc}")
+
+
+async def _download_poster(anime_id, rams: str) -> str | None:
+    """Posterni volumega yuklaydi (retry + backoff). Muvaffaqiyatda fayl yo'lini qaytaradi."""
+    os.makedirs(POSTER_CACHE_DIR, exist_ok=True)
+    timeout = aiohttp.ClientTimeout(total=60)
+    for attempt in range(1, POSTER_RETRIES + 1):
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                url = await _poster_source_url(session, rams)
+                async with session.get(url) as resp:
+                    if resp.status == 404 or (400 <= resp.status < 500 and resp.status != 429):
+                        raise _PosterPermanentError(f"HTTP {resp.status}")
+                    if resp.status != 200:
+                        raise RuntimeError(f"HTTP {resp.status}")
+                    ctype = (resp.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+                    body = await resp.content.read(POSTER_MAX_BYTES + 1)
+            if len(body) > POSTER_MAX_BYTES:
+                raise _PosterPermanentError("fayl juda katta")
+            if not body:
+                raise RuntimeError("bo'sh javob")
+            ext = _POSTER_EXTS.get(ctype)
+            if not ext:
+                low = url.lower().split("?")[0]
+                ext = next((e for e in ("png", "webp", "gif") if low.endswith("." + e)), "jpg")
+            path = os.path.join(POSTER_CACHE_DIR, f"{int(anime_id)}_{_poster_key(rams)}.{ext}")
+            tmp = f"{path}.{uuid.uuid4().hex[:6]}.tmp"
+            with open(tmp, "wb") as f:
+                f.write(body)
+            os.replace(tmp, path)
+            # Shu animening eski (boshqa rams) posterlarini o'chiramiz — bitta fayl qoladi.
+            for name in os.listdir(POSTER_CACHE_DIR):
+                if name.startswith(f"{int(anime_id)}_") and os.path.join(POSTER_CACHE_DIR, name) != path:
+                    try:
+                        os.remove(os.path.join(POSTER_CACHE_DIR, name))
+                    except OSError:
+                        pass
+            return path
+        except _PosterPermanentError as e:
+            print(f"[poster] anime={anime_id} yuklab bo'lmadi: {e}")
+            return None
+        except Exception as e:
+            if attempt == POSTER_RETRIES:
+                print(f"[poster] anime={anime_id} {attempt} urinishdan keyin xato: {e}")
+                return None
+            await asyncio.sleep(min(2 ** attempt, 20))
+    return None
+
+
+async def get_cached_poster(anime_id, rams: str) -> str | None:
+    """Kesh bor bo'lsa uni, aks holda bir marta yuklab olib fayl yo'lini qaytaradi."""
+    try:
+        int(anime_id)
+    except (TypeError, ValueError):
+        return None
+    path = _cached_poster_path(anime_id, rams)
+    if path:
+        return path
+    lock = _poster_locks.setdefault(int(anime_id), asyncio.Lock())
+    async with lock:
+        path = _cached_poster_path(anime_id, rams)
+        if path:
+            return path
+        return await _download_poster(anime_id, rams)
+
+
+async def warm_poster_cache():
+    """Startda keshda yo'q posterlarni fon rejimida asta-sekin yuklab qo'yadi."""
+    await asyncio.sleep(20)
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute(
+                "SELECT id, rams FROM animelar WHERE rams IS NOT NULL AND rams != ''"
+            ) as c:
+                rows = await c.fetchall()
+    except Exception as e:
+        print(f"[poster] warmup: animelar o'qilmadi: {e}")
+        return
+    missing = [(r[0], r[1]) for r in rows if not _cached_poster_path(r[0], r[1])]
+    if not missing:
+        return
+    print(f"[poster] warmup: {len(missing)} ta poster keshga yuklanadi")
+    ok = 0
+    for anime_id, rams in missing:
+        if await get_cached_poster(anime_id, rams):
+            ok += 1
+        await asyncio.sleep(0.5)
+    print(f"[poster] warmup tugadi: {ok}/{len(missing)} ta saqlandi")
+
+
 async def media_proxy(request):
     """Stream qilish — rasm yoki video. Range request qo'llab-quvvatlaydi."""
     file_id = request.match_info["file_id"]
@@ -986,6 +1120,9 @@ async def anime_poster(request):
             row = await c.fetchone()
     if row and row[0]:
         rams = row[0]
+        cached = await get_cached_poster(anime_id, rams)
+        if cached:
+            return web.FileResponse(cached, headers={"Cache-Control": "public, max-age=604800"})
         if rams.startswith("http"):
             raise web.HTTPFound(rams)
         info = await resolve_file_id(rams)
@@ -3829,4 +3966,5 @@ async def start_web_server():
     site = web.TCPSite(runner, "0.0.0.0", WEB_PORT)
     await site.start()
     print(f"🌐 Web server: http://0.0.0.0:{WEB_PORT}")
+    asyncio.create_task(warm_poster_cache())
     return runner
