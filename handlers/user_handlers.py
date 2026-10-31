@@ -21,6 +21,7 @@ import urllib.parse
 from utils import check_subscription, get_subscription_keyboard, is_admin, is_maintenance, get_bot_username, is_content_restricted
 from utils.logger import log_admin_action
 from utils.ai_assistant import generate_anime_tavsif
+from utils.custom_emoji import EMOJI_IDS
 from states import UserStates, AdminStates, PaymentStates, VipStates, TransferStates
 
 async def _push(event_type, text, color="c"):
@@ -52,22 +53,34 @@ def ae(emoji_id: str | None, fallback: str) -> str:
         return fallback
     return f'<tg-emoji emoji-id="{emoji_id}">{fallback}</tg-emoji>'
 
-# Eng ko'p ishlatiladigan animated emojilar.
-# ID larni bot egasi /emoji buyrug'i orqali oladi; None — hali tanlanmagan.
-STAR      = ae("4999015678238262018", "✨")   # yulduzcha
-FIRE      = ae(None, "🔥")   # olov
-HEART     = ae(None, "❤️")  # yurak
-CLAP      = ae(None, "👏")   # qarsak
-PARTY     = ae(None, "🎉")   # bayram
-CHECK     = ae(None, "✅")   # tayyor
-SEARCH    = ae(None, "🔍")   # qidiruv
-ANIME     = ae(None, "🎬")   # kino
-DIAMOND   = ae(None, "💎")   # olmos
-MONEY     = ae(None, "💰")   # pul
-GIFT      = ae(None, "🎁")   # sovg'a
-ROCKET    = ae(None, "🚀")   # raketa
-WAVE      = ae(None, "👋")   # salom
-CROWN     = ae(None, "👑")   # toj
+# Eng ko'p ishlatiladigan animated emojilar. ID lar utils.custom_emoji da;
+# bot ishga tushib ID larni Telegram'dan aniqlagach apply_animated_emojis()
+# chaqiriladi va quyidagi qiymatlar yangilanadi.
+def apply_animated_emojis() -> None:
+    global STAR, FIRE, HEART, CLAP, PARTY, CHECK, SEARCH, ANIME, DIAMOND
+    global MONEY, GIFT, ROCKET, WAVE, CROWN, DEFAULT_START_TEXT
+    STAR    = ae(EMOJI_IDS["✨"], "✨")   # yulduzcha
+    FIRE    = ae(EMOJI_IDS["🔥"], "🔥")   # olov
+    HEART   = ae(EMOJI_IDS["❤️"], "❤️")  # yurak
+    CLAP    = ae(EMOJI_IDS["👏"], "👏")   # qarsak
+    PARTY   = ae(EMOJI_IDS["🎉"], "🎉")   # bayram
+    CHECK   = ae(EMOJI_IDS["✅"], "✅")   # tayyor
+    SEARCH  = ae(EMOJI_IDS["🔍"], "🔍")   # qidiruv
+    ANIME   = ae(EMOJI_IDS["🎬"], "🎬")   # kino
+    DIAMOND = ae(EMOJI_IDS["💎"], "💎")   # olmos
+    MONEY   = ae(EMOJI_IDS["💰"], "💰")   # pul
+    GIFT    = ae(EMOJI_IDS["🎁"], "🎁")   # sovg'a
+    ROCKET  = ae(EMOJI_IDS["🚀"], "🚀")   # raketa
+    WAVE    = ae(EMOJI_IDS["👋"], "👋")   # salom
+    CROWN   = ae(EMOJI_IDS["👑"], "👑")   # toj
+    DEFAULT_START_TEXT = (
+        f"{WAVE} Assalomu alaykum, {{name}}!\n\n"
+        f"{ANIME} Anime botiga xush kelibsiz!\n"
+        f"{STAR} Botimizda minglab animeni o'zbek tilida tomosha qiling!"
+    )
+
+
+apply_animated_emojis()
 
 
 async def get_watch_state(user_id: int, anime_id: int) -> tuple[bool, int]:
@@ -296,13 +309,6 @@ MAINTENANCE_MSG = (
     "<i>Tez orada ishga tushadi, kuting...</i>"
 )
 
-DEFAULT_START_TEXT = (
-    f"{WAVE} Assalomu alaykum, {{name}}!\n\n"
-    f"{ANIME} Anime botiga xush kelibsiz!\n"
-    f"{STAR} Botimizda minglab animeni o'zbek tilida tomosha qiling!"
-)
-
-
 async def anime_exists(anime_id: int) -> bool:
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT 1 FROM animelar WHERE id=?", (anime_id,)) as c:
@@ -409,6 +415,13 @@ async def command_start_handler(message: Message, state: FSMContext, bot: Bot):
         await _push("new_user", f"Yangi foydalanuvchi: {name}", "gr")
 
     await state.clear()
+
+    # Animatsiyali ✨ — yolg'iz custom emoji katta animatsiya bo'lib ko'rinadi
+    if CUSTOM_EMOJI_ENABLED and EMOJI_IDS.get("✨"):
+        try:
+            await message.answer(STAR, parse_mode="HTML")
+        except Exception as exc:
+            logger.warning("[start] animatsiyali ✨ yuborilmadi: %s", exc)
 
     # Start parametrini tekshirish
     args = message.text.split()
