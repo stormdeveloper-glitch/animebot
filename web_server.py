@@ -1267,6 +1267,15 @@ def _admin_authorized(request: web.Request) -> bool:
     return False
 
 
+def _current_admin_id(request: web.Request) -> int:
+    """Sessiya orqali kirgan adminning Telegram ID si (WEB_ADMIN_TOKEN bilan kirilsa 0)."""
+    session = _admin_web_sessions.get(request.cookies.get(ADMIN_SESSION_COOKIE, "").strip())
+    try:
+        return int(session.get("admin_id") or 0) if session else 0
+    except (TypeError, ValueError):
+        return 0
+
+
 def _admin_denied() -> web.Response:
     return web.json_response({"ok": False, "error": "Admin token noto'g'ri yoki kiritilmagan"}, status=401)
 
@@ -3797,6 +3806,9 @@ def create_app():
     app.router.add_post("/api/game/start",          api_game_start)
     app.router.add_get( "/api/game/{game_id}",       api_game_state)
     app.router.add_post("/api/game/{game_id}/move",  api_game_move)
+    # MCP server (Claude Code va boshqa MCP klientlar uchun) + admin token boshqaruvi
+    from mcp_server import register_mcp_routes
+    register_mcp_routes(app, is_admin=_admin_authorized, admin_id=_current_admin_id)
     return app
 
 

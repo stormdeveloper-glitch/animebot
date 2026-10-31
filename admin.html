@@ -794,6 +794,7 @@
         <button data-page="edits">Anime edits</button>
         <button data-page="users">Foydalanuvchilar</button>
         <button data-page="reports">Reportlar</button>
+        <button data-page="mcp">MCP tokenlar</button>
       </div>
     </aside>
     <main class="main">
@@ -892,6 +893,41 @@
           <h2>Reportlar</h2>
           <p class="muted">Reportlar uchun alohida jadval topilsa keyingi bosqichda shu yerga ulaymiz.</p>
         </div>
+      </section>
+      <section id="mcpPage" class="hidden">
+        <div class="panel">
+          <h2>Yangi MCP token yaratish</h2>
+          <p class="muted">Token Claude Code (yoki boshqa MCP klient) bot ma'lumotlarini <b>faqat o'qishi</b> uchun. Faqat kerakli ruxsatlarni bering va qisqa muddat tanlang.</p>
+          <form class="form-grid" onsubmit="createMcpToken(event)" style="margin-top:14px">
+            <label>Nom <span class="muted">(masalan: noutbuk-claude)</span><input id="mcpName" required maxlength="64" placeholder="noutbuk-claude"></label>
+            <label>Muddat
+              <select id="mcpDays">
+                <option value="7">7 kun</option>
+                <option value="30" selected>30 kun</option>
+                <option value="90">90 kun</option>
+              </select>
+            </label>
+            <div class="wide" id="mcpScopes"></div>
+            <div><button class="btn primary" id="mcpCreateBtn" type="submit">Token yaratish</button></div>
+          </form>
+          <div id="mcpNewToken" class="hidden" style="margin-top:16px">
+            <p><b>⚠️ Token faqat hozir ko'rsatiladi.</b> Nusxa oling va xavfsiz joyda saqlang. Sahifani yangilasangiz qayta ko'rinmaydi.</p>
+            <label>Token<input id="mcpTokenValue" readonly autocomplete="off" spellcheck="false" style="font-family:monospace"></label>
+            <label style="margin-top:10px">Claude Code'ga ulash buyrug'i<textarea id="mcpCmdValue" readonly rows="3" spellcheck="false" style="font-family:monospace"></textarea></label>
+            <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+              <button class="btn" type="button" onclick="copyField('#mcpTokenValue')">Tokenni nusxalash</button>
+              <button class="btn" type="button" onclick="copyField('#mcpCmdValue')">Buyruqni nusxalash</button>
+              <button class="btn danger" type="button" onclick="hideMcpToken()">Yashirish</button>
+            </div>
+          </div>
+        </div>
+        <div class="tools" style="margin-top:18px"><button class="btn" onclick="loadMcp()">Yangilash</button></div>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nom</th><th>Token</th><th>Ruxsatlar</th><th>Muddati</th><th>Oxirgi foydalanish</th><th>Holat</th><th>Amal</th></tr></thead><tbody id="mcpRows"><tr><td colspan="8">Yuklanmoqda...</td></tr></tbody></table></div>
+        <div class="panel" style="margin-top:18px">
+          <h2>Audit jurnali (oxirgi 100)</h2>
+          <p class="muted">Barcha MCP so'rovlari, rad etilgan urinishlar va token o'zgarishlari. Tokenlar va argument qiymatlari yozilmaydi.</p>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Vaqt</th><th>Token</th><th>IP</th><th>Hodisa</th><th>Tool</th><th>Natija</th><th>Izoh</th></tr></thead><tbody id="mcpAuditRows"><tr><td colspan="7">Yuklanmoqda...</td></tr></tbody></table></div>
       </section>
     </main>
   </div>
@@ -999,7 +1035,47 @@
     function showNoticeHtml(html) { const n = qs('#notice'); n.innerHTML = html; n.classList.toggle('hidden', !html); }
     async function api(url, opt = {}) { const r = await fetch(url, { ...opt, headers: { ...headers(), ...(opt.headers || {}) } }); const d = await r.json().catch(() => ({ ok: false, error: 'Server javobi noto‘g‘ri' })); if (!r.ok || d.ok === false) throw new Error(d.error || 'Xatolik'); return d; }
     document.querySelectorAll('.nav button').forEach(b => b.onclick = () => showPage(b.dataset.page));
-    function showPage(p) { document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.page === p));['dashboard', 'animes', 'edits', 'users', 'reports'].forEach(x => qs('#' + x + 'Page').classList.toggle('hidden', x !== p)); qs('#pageTitle').textContent = { dashboard: 'Dashboard', animes: 'Animelar', edits: 'Anime edits', users: 'Foydalanuvchilar', reports: 'Reportlar' }[p]; if (p === 'animes') loadAnimes(); if (p === 'edits') loadEdits(); if (p === 'users') loadUsers(); }
+    function showPage(p) { document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.page === p));['dashboard', 'animes', 'edits', 'users', 'reports', 'mcp'].forEach(x => qs('#' + x + 'Page').classList.toggle('hidden', x !== p)); qs('#pageTitle').textContent = { dashboard: 'Dashboard', animes: 'Animelar', edits: 'Anime edits', users: 'Foydalanuvchilar', reports: 'Reportlar', mcp: 'MCP tokenlar' }[p]; if (p === 'animes') loadAnimes(); if (p === 'edits') loadEdits(); if (p === 'users') loadUsers(); if (p === 'mcp') loadMcp(); else hideMcpToken(); }
+    // ── MCP tokenlar ──
+    function fmtTs(ts) { if (!ts) return '—'; const d = new Date(Number(ts) * 1000); return isNaN(d) ? '—' : d.toLocaleString(); }
+    function hideMcpToken() { const box = qs('#mcpNewToken'); if (!box) return; qs('#mcpTokenValue').value = ''; qs('#mcpCmdValue').value = ''; box.classList.add('hidden'); }
+    async function copyField(sel) { const el = qs(sel); try { await navigator.clipboard.writeText(el.value); } catch (e) { el.select(); document.execCommand('copy'); } }
+    async function loadMcp() {
+      try {
+        const d = await api('/api/admin/mcp/tokens');
+        const box = qs('#mcpScopes');
+        if (!box.dataset.ready) {
+          box.innerHTML = '<div class="muted" style="margin-bottom:6px">Ruxsatlar (scope):</div>' + Object.entries(d.scopes || {}).map(([k, v]) => `<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" name="mcpScope" value="${esc(k)}" ${k === 'anime:read' ? 'checked' : ''} style="width:auto"> <b>${esc(k)}</b> <span class="muted">— ${esc(v)}</span></label>`).join('');
+          box.dataset.ready = '1';
+        }
+        if (!d.enabled) showNotice('MCP serverda o‘chirilgan (MCP_ENABLED=0).');
+        qs('#mcpRows').innerHTML = (d.tokens || []).map(t => {
+          const st = { active: '🟢 Faol', expired: '⚪ Muddati o‘tgan', revoked: '🔴 Bekor qilingan' }[t.status] || esc(t.status);
+          const act = t.status === 'active' ? `<button class="btn small danger" onclick="revokeMcpToken(${Number(t.id)})">Bekor qilish</button>` : '';
+          return `<tr><td>${Number(t.id)}</td><td><b>${esc(t.name)}</b></td><td><code>${esc(t.token_hint)}</code></td><td>${(t.scopes || []).map(esc).join('<br>')}</td><td>${fmtTs(t.expires_at)}</td><td>${fmtTs(t.last_used_at)}<div class="muted">${esc(t.last_used_ip || '')} · ${Number(t.use_count) || 0} marta</div></td><td>${st}</td><td>${act}</td></tr>`;
+        }).join('') || '<tr><td colspan="8">Hali token yo‘q</td></tr>';
+      } catch (e) { qs('#mcpRows').innerHTML = '<tr><td colspan="8">' + esc(e.message) + '</td></tr>'; }
+      try {
+        const a = await api('/api/admin/mcp/audit');
+        qs('#mcpAuditRows').innerHTML = (a.entries || []).map(r => `<tr><td>${fmtTs(r.ts)}</td><td>${r.token_id ? '#' + Number(r.token_id) : '—'}</td><td>${esc(r.ip)}</td><td>${esc(r.event)}</td><td>${esc(r.tool || '')}</td><td>${esc(r.status)}</td><td class="muted">${esc(r.detail || '')}</td></tr>`).join('') || '<tr><td colspan="7">Jurnal bo‘sh</td></tr>';
+      } catch (e) { qs('#mcpAuditRows').innerHTML = '<tr><td colspan="7">' + esc(e.message) + '</td></tr>'; }
+    }
+    async function createMcpToken(ev) {
+      ev.preventDefault();
+      const scopes = [...document.querySelectorAll('input[name="mcpScope"]:checked')].map(i => i.value);
+      if (!scopes.length) { alert('Kamida bitta ruxsat tanlang.'); return; }
+      if (scopes.includes('users:read') && !confirm('users:read foydalanuvchilarning shaxsiy ma’lumotlarini ochadi. Rostdan ham kerakmi?')) return;
+      const btn = qs('#mcpCreateBtn'); btn.disabled = true;
+      try {
+        const d = await api('/api/admin/mcp/tokens', { method: 'POST', body: JSON.stringify({ name: qs('#mcpName').value.trim(), scopes, expires_days: Number(qs('#mcpDays').value) }) });
+        qs('#mcpTokenValue').value = d.token;
+        qs('#mcpCmdValue').value = `claude mcp add --transport http animeuz ${location.origin}/mcp --header "Authorization: Bearer ${d.token}"`;
+        qs('#mcpNewToken').classList.remove('hidden');
+        ev.target.reset(); delete qs('#mcpScopes').dataset.ready;
+        await loadMcp();
+      } catch (e) { alert(e.message); } finally { btn.disabled = false; }
+    }
+    async function revokeMcpToken(id) { if (!confirm('Token #' + id + ' bekor qilinsinmi? Bu tokendan foydalanayotgan klientlar darhol uziladi.')) return; try { await api('/api/admin/mcp/tokens/' + id + '/revoke', { method: 'POST', body: '{}' }); await loadMcp(); } catch (e) { alert(e.message); } }
     async function loadStats() { try { const d = await api('/api/admin/stats'); qs('#stUsers').textContent = d.users; qs('#stAnimes').textContent = d.animes; qs('#stEpisodes').textContent = d.eps; qs('#stVip').textContent = d.vip; showNotice(''); } catch (e) { showNotice(e.message); } }
     async function loadAnimes() { const q = encodeURIComponent(qs('#animeSearch')?.value || ''); try { const d = await api('/api/admin/animes?q=' + q); animes = d.animes || []; qs('#animeRows').innerHTML = animes.map(a => { const epBtn = a.add_episode_url ? `<a class="btn small primary" href="${esc(a.add_episode_url)}" target="_blank" rel="noopener">Qism qo'shish</a>` : ''; return `<tr><td>${a.id}</td><td>${a.rams_url ? `<img src="${a.rams_url}" onerror="this.outerHTML='<span class=&quot;muted&quot;>Poster yo‘q</span>'">` : '<span class="muted">Poster yo‘q</span>'}</td><td><b>${esc(a.nom)}</b><div class="muted">${esc(a.nom_en || '')}</div></td><td>${esc(a.janri || '')}</td><td>${esc(a.yili || '')}</td><td>${esc(a.aniType || '')}</td><td>${a.ep_count}</td><td><div class="actions">${epBtn}<button class="btn small" onclick="editAnime(${a.id})">Edit</button><button class="btn small danger" onclick="deleteAnime(${a.id})">Delete</button></div></td></tr>`; }).join('') || '<tr><td colspan="8">Anime topilmadi</td></tr>'; } catch (e) { qs('#animeRows').innerHTML = '<tr><td colspan="8">' + esc(e.message) + '</td></tr>'; } }
     async function loadUsers() { try { const d = await api('/api/admin/users'); qs('#userRows').innerHTML = (d.users || []).map(u => `<tr><td>${u.user_id}</td><td>${esc(u.status)}</td><td>${u.pul}</td><td>${u.pul2}</td><td>${u.odam}</td><td>${esc(u.ban)}</td></tr>`).join('') || '<tr><td colspan="6">Foydalanuvchi yo‘q</td></tr>'; } catch (e) { qs('#userRows').innerHTML = '<tr><td colspan="6">' + esc(e.message) + '</td></tr>'; } }
