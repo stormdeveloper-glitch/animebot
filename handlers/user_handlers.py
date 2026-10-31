@@ -21,7 +21,7 @@ import urllib.parse
 from utils import check_subscription, get_subscription_keyboard, is_admin, is_maintenance, get_bot_username, is_content_restricted
 from utils.logger import log_admin_action
 from utils.ai_assistant import generate_anime_tavsif
-from utils.custom_emoji import EMOJI_IDS
+from utils.custom_emoji import EMOJI_IDS, strip_custom_emoji
 from states import UserStates, AdminStates, PaymentStates, VipStates, TransferStates
 
 async def _push(event_type, text, color="c"):
@@ -367,6 +367,15 @@ async def _send_menu_message(message: Message, user_id: int, text: str, log_labe
         return
     except TelegramBadRequest as exc:
         logger.warning("[menu] %s menu rejected for user=%s: %s", log_label, user_id, exc)
+
+    # Custom emoji rad etilgan bo'lishi mumkin — oddiy emoji bilan qayta urinamiz
+    plain_text = strip_custom_emoji(text)
+    if plain_text != text:
+        try:
+            await message.answer(plain_text, reply_markup=kb, parse_mode="HTML")
+            return
+        except TelegramBadRequest as exc:
+            logger.warning("[menu] %s menu (oddiy emoji) rejected for user=%s: %s", log_label, user_id, exc)
 
     fallback_kb = menu_kb(await is_admin(user_id), web_app_url="")
     await message.answer("🏠 <b>Asosiy menyu</b>", reply_markup=fallback_kb, parse_mode="HTML")

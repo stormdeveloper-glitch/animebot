@@ -8,8 +8,10 @@ Topilmagan emoji oddiy ko'rinishda qoladi — noto'g'ri animatsiya chiqmaydi.
 """
 import logging
 import os
+import re
 
 from aiogram import Bot
+from aiogram.utils.text_decorations import html_decoration
 
 logger = logging.getLogger(__name__)
 
@@ -79,3 +81,54 @@ async def resolve_custom_emojis(bot: Bot) -> None:
         "[custom-emoji] to'plam=%s | animatsiyali: %s | oddiy: %s",
         pack_name or "—", "".join(found) or "—", "".join(missing) or "—",
     )
+
+
+# ─── Admin yozgan matndagi custom emoji larni saqlash ─────────────────────────
+# Telegram custom emoji ni matn ichida emas, alohida entity (offset/length UTF-16
+# bo'yicha) sifatida yuboradi. message.text ni o'zini saqlasak ular yo'qoladi,
+# shuning uchun matnni <tg-emoji> teglari bilan HTML ko'rinishida saqlaymiz.
+
+_RAW_HTML_RE = re.compile(
+    r"</?(b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji|span)\b",
+    re.IGNORECASE,
+)
+_TG_EMOJI_RE = re.compile(r"<tg-emoji\b[^>]*>(.*?)</tg-emoji>", re.IGNORECASE | re.DOTALL)
+
+
+def _insert_custom_emoji_tags(text: str, entities) -> str:
+    """Xom matnga faqat <tg-emoji> teglarini qo'yadi (offsetlar UTF-16 da)."""
+    raw = text.encode("utf-16-le")
+    parts: list[str] = []
+    pos = 0
+    for e in sorted(entities, key=lambda e: e.offset):
+        start, end = e.offset * 2, (e.offset + e.length) * 2
+        if start < pos:
+            continue
+        parts.append(raw[pos:start].decode("utf-16-le"))
+        emoji = raw[start:end].decode("utf-16-le")
+        parts.append(f'<tg-emoji emoji-id="{e.custom_emoji_id}">{emoji}</tg-emoji>')
+        pos = end
+    parts.append(raw[pos:].decode("utf-16-le"))
+    return "".join(parts)
+
+
+def message_to_html(text: str, entities) -> str:
+    """Admin xabarini custom emoji va formatlash bilan HTML ga aylantiradi.
+
+    Admin teglarni qo'lda yozgan bo'lsa (<b> va h.k.) matn o'zgarmaydi, faqat
+    custom emoji lar <tg-emoji> bilan o'raladi. Aks holda Telegram entity lari
+    (qalin, havola, custom emoji...) to'liq HTML ga o'giriladi.
+    """
+    entities = list(entities or [])
+    if not text or not entities:
+        return text
+    if _RAW_HTML_RE.search(text):
+        return _insert_custom_emoji_tags(
+            text, [e for e in entities if e.type == "custom_emoji"]
+        )
+    return html_decoration.unparse(text, entities)
+
+
+def strip_custom_emoji(text: str) -> str:
+    """<tg-emoji> teglarini olib tashlaydi — ichidagi oddiy emoji qoladi."""
+    return _TG_EMOJI_RE.sub(r"\1", text)

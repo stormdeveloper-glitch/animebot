@@ -6,6 +6,7 @@ from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
+from aiogram.exceptions import TelegramBadRequest
 from config import ADMIN_IDS, SUPER_ADMIN_ID, DB_PATH
 from keyboards import (
     panel_kb, boshqarish_kb, menu_kb, InlineKeyboardButton,
@@ -15,6 +16,7 @@ from states import AdminStates, EditAnimeStates, SettingsStates, ButtonStates, P
 from utils import is_admin, is_super_admin, get_bot_username, invalidate_channel_cache, invalidate_admin_cache, is_content_restricted, invalidate_restriction_cache
 from utils.admin_manager import add_json_admin, remove_json_admin
 from utils.logger import log_admin_action
+from utils.custom_emoji import message_to_html
 from utils.ai_assistant import chat_with_ai, generate_anime_tavsif
 
 async def _push(event_type, text, color="c"):
@@ -2304,7 +2306,11 @@ async def basic_settings_handler(message: Message, state: FSMContext):
     text = "<b>*️⃣ Birlamchi sozlamalar:</b>\n\n"
     for key, label in labels.items():
         val = settings.get(key, "—")
-        text += f"{label}: <b>{val}</b>\n"
+        if key == "start_text":
+            # HTML (tg-emoji, blockquote) <b> ichida rad etilishi mumkin
+            text += f"{label}:\n{val}\n"
+        else:
+            text += f"{label}: <b>{val}</b>\n"
 
     if is_super:
         text += "\n<i>Rang qiymatlari: primary, success, danger</i>"
@@ -2353,6 +2359,9 @@ async def process_setting_value(message: Message, state: FSMContext):
     key = data.get("setting_key")
     if not key:
         return
+    if key == "start_text":
+        # Custom (premium) emoji va formatlash entity sifatida keladi — HTML ga o'giramiz
+        value = message_to_html(value, message.entities or message.caption_entities)
     if key.startswith("button_style_"):
         if not await is_super_admin(message.from_user.id):
             await message.answer("❌ Bu sozlama faqat superadmin uchun!")
@@ -2376,8 +2385,22 @@ async def process_setting_value(message: Message, state: FSMContext):
     label = (SETTINGS_LABELS | BUTTON_STYLE_LABELS).get(key, key)
     await state.clear()
     is_super = await is_super_admin(message.from_user.id)
+    if key == "start_text":
+        await message.answer(
+            f"✅ <b>{label}</b> yangilandi. Foydalanuvchiga shunday ko'rinadi:",
+            reply_markup=panel_kb(is_super), parse_mode="HTML"
+        )
+        preview = value.replace("{name}", html.escape(message.from_user.first_name or ""))
+        try:
+            await message.answer(preview, parse_mode="HTML")
+        except TelegramBadRequest as exc:
+            await message.answer(
+                f"⚠️ Telegram matnni qabul qilmadi: <code>{html.escape(str(exc))}</code>",
+                parse_mode="HTML"
+            )
+        return
     await message.answer(
-        f"✅ <b>{label}</b> yangilandi: <code>{value}</code>",
+        f"✅ <b>{label}</b> yangilandi: <code>{html.escape(value)}</code>",
         reply_markup=panel_kb(is_super), parse_mode="HTML"
     )
 
