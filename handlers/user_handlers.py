@@ -2785,20 +2785,38 @@ async def ai_card_info_callback(callback: CallbackQuery):
 # Bot egasi animatsiyali emoji ID larini topishi uchun yordamchi buyruq:
 # "/emoji 🔥✨" yuborilsa, har bir custom emoji ning ID si qaytariladi.
 
+def _custom_emoji_pairs(msg: Message | None) -> list[tuple[str, str]]:
+    """Xabar (matn yoki caption) ichidagi (emoji, custom_emoji_id) juftliklari."""
+    if msg is None:
+        return []
+    text = msg.text or msg.caption or ""
+    entities = msg.entities or msg.caption_entities or []
+    return [
+        (e.extract_from(text), e.custom_emoji_id)
+        for e in entities
+        if e.type == "custom_emoji"
+    ]
+
+
 @router.message(Command("emoji"))
 async def custom_emoji_ids_handler(message: Message):
-    entities = [e for e in (message.entities or []) if e.type == "custom_emoji"]
-    if not entities:
+    # Buyruq xabarida bo'lmasa, reply qilingan xabardan olamiz
+    pairs = _custom_emoji_pairs(message) or _custom_emoji_pairs(message.reply_to_message)
+    if not pairs:
         await message.answer(
-            "Premium (animatsiyali) emoji ID sini olish uchun buyruqdan keyin "
-            "emoji larni yuboring.\n\nMasalan: <code>/emoji</code> ✨🔥✅",
+            "❌ Bu xabarda Premium (animatsiyali) emoji topilmadi.\n\n"
+            "Klaviaturadagi oddiy emoji larning ID si bo'lmaydi. Emoji panelini "
+            "oching, pastdagi <b>Premium to'plamlardan</b> animatsiyali emoji "
+            "tanlang va buyruq bilan <b>bitta xabarda</b> yuboring:\n"
+            "<code>/emoji</code> 🔥✨✅\n\n"
+            "Yoki Premium emoji bor istalgan xabarga <b>reply</b> qilib "
+            "<code>/emoji</code> yozing.",
             parse_mode="HTML",
         )
         return
     lines = ["🆔 <b>Custom emoji ID lari:</b>", ""]
-    for entity in entities:
-        emoji = entity.extract_from(message.text)
-        lines.append(f"{html.escape(emoji)} — <code>{entity.custom_emoji_id}</code>")
+    for emoji, emoji_id in pairs:
+        lines.append(f"{html.escape(emoji)} — <code>{emoji_id}</code>")
     await message.answer("\n".join(lines), parse_mode="HTML")
 
 
