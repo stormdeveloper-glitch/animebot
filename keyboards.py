@@ -142,7 +142,7 @@ def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True
         keyboard.insert(0, [btn("🌐 Web App", web_app=WebAppInfo(url=safe_web_app_url))])
     if is_admin:
         keyboard.append([btn("🗄 Boshqarish")])
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, is_persistent=True)
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def panel_kb(is_super_admin: bool = False, animated: bool = True):
@@ -163,15 +163,15 @@ def panel_kb(is_super_admin: bool = False, animated: bool = True):
         keyboard.append([btn("📋 Adminlar")])
         keyboard.append([btn("📋 Jurnallar")])
     keyboard.append([btn("🤖 Bot holati"), btn("◀️ Orqaga")])
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, is_persistent=True)
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def back_kb():
-    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="◀️ Orqaga")]], resize_keyboard=True, is_persistent=True)
+    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="◀️ Orqaga")]], resize_keyboard=True)
 
 
 def boshqarish_kb():
-    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🗄 Boshqarish")]], resize_keyboard=True, is_persistent=True)
+    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🗄 Boshqarish")]], resize_keyboard=True)
 
 
 def search_type_kb():
