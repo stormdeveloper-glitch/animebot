@@ -3,15 +3,17 @@ import time
 import aiosqlite
 from config import ADMIN_IDS, SUPER_ADMIN_ID, DB_PATH
 from aiogram import Bot
+from utils.tenant import current_owner, current_tenant
 
 # ─── Cache ────────────────────────────────────────────────────────────────────
 # Kichik TTL cache — DB va API chaqiruvlarini keskin kamaytiradi
 
-_admin_cache: dict[int, tuple[bool, float]] = {}       # user_id → (is_admin, expire_time)
-_maintenance_cache: tuple[bool, float] = (False, 0.0)  # (value, expire_time)
-_bot_username_cache: str = ""
-_channel_names_cache: tuple[list, float] = ([], 0.0)   # (channels, expire_time)
-_restriction_cache: tuple[bool, float] = (False, 0.0)      # (value, expire_time)
+# Klon botlar (tenant) ma'lumoti aralashmasligi uchun keshlar tenant bo'yicha
+_admin_cache: dict[tuple, tuple[bool, float]] = {}     # (tenant, user_id) → (is_admin, expire_time)
+_maintenance_cache: dict = {}                          # tenant → (value, expire_time)
+_bot_username_cache: dict[int, str] = {}               # bot_id → username
+_channel_names_cache: dict = {}                        # tenant → (channels, expire_time)
+_restriction_cache: dict = {}                          # tenant → (value, expire_time)
 
 ADMIN_CACHE_TTL    = 60.0   # 1 daqiqa
 MAINT_CACHE_TTL    = 5.0    # 5 soniya
@@ -19,12 +21,17 @@ CHANNEL_CACHE_TTL  = 120.0  # 2 daqiqa
 
 
 async def is_admin(user_id: int) -> bool:
-    # Env adminlar — hech qanday DB siz
-    if user_id in ADMIN_IDS or user_id == SUPER_ADMIN_ID:
+    tenant = current_tenant()
+    if tenant:
+        # Klon botda env adminlar emas, bot egasi va uning adminlari
+        if user_id == current_owner():
+            return True
+    elif user_id in ADMIN_IDS or user_id == SUPER_ADMIN_ID:
+        # Env adminlar — hech qanday DB siz
         return True
 
     now = time.monotonic()
-    cached = _admin_cache.get(user_id)
+    cached = _admin_cache.get((tenant, user_id))
     if cached and now < cached[1]:
         return cached[0]
 
@@ -41,27 +48,38 @@ async def is_admin(user_id: int) -> bool:
         return False
 
     value = result is not None
-    _admin_cache[user_id] = (value, now + ADMIN_CACHE_TTL)
+    _admin_cache[(tenant, user_id)] = (value, now + ADMIN_CACHE_TTL)
     return value
 
 
 def invalidate_admin_cache(user_id: int = None):
     """Admin qo'shilganda/o'chirilganda chaqiring."""
     if user_id:
-        _admin_cache.pop(user_id, None)
+        _admin_cache.pop((current_tenant(), user_id), None)
     else:
         _admin_cache.clear()
 
 
 async def is_super_admin(user_id: int) -> bool:
+    if current_tenant():
+        return user_id == current_owner()
     return user_id == SUPER_ADMIN_ID or user_id in ADMIN_IDS
 
 
+def payment_admin_ids() -> list[int]:
+    """To'lov cheklari yuboriladigan adminlar (klon botda — egasi)."""
+    if current_tenant():
+        owner = current_owner()
+        return [owner] if owner else []
+    return [i for i in dict.fromkeys([SUPER_ADMIN_ID, *ADMIN_IDS]) if i]
+
+
 async def is_maintenance() -> bool:
-    global _maintenance_cache
+    tenant = current_tenant()
     now = time.monotonic()
-    if now < _maintenance_cache[1]:
-        return _maintenance_cache[0]
+    cached = _maintenance_cache.get(tenant)
+    if cached and now < cached[1]:
+        return cached[0]
 
     try:
         async with aiosqlite.connect(DB_PATH) as db:
@@ -73,15 +91,16 @@ async def is_maintenance() -> bool:
     except Exception:
         value = False
 
-    _maintenance_cache = (value, now + MAINT_CACHE_TTL)
+    _maintenance_cache[tenant] = (value, now + MAINT_CACHE_TTL)
     return value
 
 
 async def is_content_restricted() -> bool:
-    global _restriction_cache
+    tenant = current_tenant()
     now = time.monotonic()
-    if now < _restriction_cache[1]:
-        return _restriction_cache[0]
+    cached = _restriction_cache.get(tenant)
+    if cached and now < cached[1]:
+        return cached[0]
 
     try:
         async with aiosqlite.connect(DB_PATH) as db:
@@ -93,13 +112,12 @@ async def is_content_restricted() -> bool:
     except Exception:
         value = False
 
-    _restriction_cache = (value, now + MAINT_CACHE_TTL)
+    _restriction_cache[tenant] = (value, now + MAINT_CACHE_TTL)
     return value
 
 
 def invalidate_restriction_cache():
-    global _restriction_cache
-    _restriction_cache = (False, 0.0)
+    _restriction_cache.pop(current_tenant(), None)
 
 
 def _parse_chat_id(channel_id: str):
@@ -110,19 +128,20 @@ def _parse_chat_id(channel_id: str):
 
 
 async def get_bot_username(bot: Bot) -> str:
-    global _bot_username_cache
-    if not _bot_username_cache:
+    username = _bot_username_cache.get(bot.id)
+    if not username:
         me = await bot.get_me()
-        _bot_username_cache = me.username
-    return _bot_username_cache
+        username = _bot_username_cache[bot.id] = me.username
+    return username
 
 
 async def _get_channels_cached(db_filter: str) -> list:
     """Kanallarni DB dan olib, cache da saqlaydi."""
-    global _channel_names_cache
+    tenant = current_tenant()
     now = time.monotonic()
-    if now < _channel_names_cache[1]:
-        return _channel_names_cache[0]
+    cached = _channel_names_cache.get((tenant, db_filter))
+    if cached and now < cached[1]:
+        return cached[0]
 
     async with aiosqlite.connect(DB_PATH) as db:
         try:
@@ -137,13 +156,12 @@ async def _get_channels_cached(db_filter: str) -> list:
                 rows_raw = await cursor.fetchall()
                 rows = [(r[0], r[1], r[2], None) for r in rows_raw]
 
-    _channel_names_cache = (rows, now + CHANNEL_CACHE_TTL)
+    _channel_names_cache[(tenant, db_filter)] = (rows, now + CHANNEL_CACHE_TTL)
     return rows
 
 
 def invalidate_channel_cache():
-    global _channel_names_cache
-    _channel_names_cache = ([], 0.0)
+    _channel_names_cache.clear()
 
 
 async def check_subscription(user_id: int, bot: Bot) -> bool:

@@ -274,6 +274,11 @@ async def init_db():
     # shuning uchun DATABASE_URL bo'lsa ham SQLite jadvallari doim yaratiladi.
     # Aks holda oddiy foydalanuvchilarda is_admin() "no such table: admins"
     # bilan yiqilib, bot hech narsaga javob bermay qoladi.
+    await init_sqlite_db()
+
+
+async def init_sqlite_db():
+    """SQLite jadvallari. Klon bot bazalari ham shu bilan yaratiladi (utils.tenant)."""
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (

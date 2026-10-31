@@ -13,13 +13,15 @@ from aiogram.types import ErrorEvent
 
 from config import BOT_TOKEN, SUPPORT_BOT_TOKEN, DB_PATH, BOT_USER_RATE_LIMIT_PER_MIN, CUSTOM_EMOJI_ENABLED
 from database import init_db, init_support_db
-from handlers import user_handlers, admin_handlers, inline_handlers
+from handlers import user_handlers, admin_handlers, inline_handlers, clone_handlers
 from keyboards import load_button_styles
 from utils.text_sanitizer import patch_aiogram_text_sanitizer
 from utils.throttle import UserRateLimitMiddleware
 from utils.navigation import NavigationStateClearMiddleware
 from utils.error_reporter import report_error
 from utils.custom_emoji import resolve_custom_emojis, MenuIconTextMiddleware
+from utils.tenant import MAIN_BOT_ID, TenantMiddleware, install_db_router, reset_tenant, set_tenant
+from utils import clones
 from web_server import start_web_server
 
 logging.basicConfig(
@@ -37,6 +39,17 @@ async def handle_update_error(event: ErrorEvent, bot: Bot):
     bo'lsa — "soat" belgisi to'xtatiladi).
     """
     logger.error("Update ishlovida xato: %s", event.exception, exc_info=event.exception)
+    # Xato handleri TenantMiddleware dan tashqarida ishlaydi — klon bazasini qayta tanlaymiz
+    if bot.id != MAIN_BOT_ID:
+        tokens = set_tenant(bot.id, clones.clone_owner(bot.id))
+        try:
+            return await _report_update_error(event, bot)
+        finally:
+            reset_tenant(tokens)
+    return await _report_update_error(event, bot)
+
+
+async def _report_update_error(event: ErrorEvent, bot: Bot):
     update = event.update
     await report_error(bot, update, event.exception)
     try:
@@ -59,6 +72,8 @@ async def run_main_bot():
     dp = Dispatcher(storage=MemoryStorage())
     throttle = UserRateLimitMiddleware(limit=BOT_USER_RATE_LIMIT_PER_MIN)
     dp.message.middleware(throttle)
+    # Klon botlar: update qaysi botdan kelganiga qarab o'z bazasi ishlatiladi
+    dp.update.outer_middleware(TenantMiddleware())
     # Tugma matnlari faol FSM holatini yutib qolmasligi uchun update darajasida
     # (handler tanlanishidan OLDIN ishlaydigan) outer middleware qo'shamiz.
     # Ikonkali menyu tugmalari label yuboradi — avval to'liq matnga qaytaramiz
@@ -66,6 +81,7 @@ async def run_main_bot():
     dp.update.outer_middleware(NavigationStateClearMiddleware())
     dp.callback_query.middleware(throttle)
 
+    dp.include_router(clone_handlers.router)
     dp.include_router(admin_handlers.router)
     dp.include_router(user_handlers.router)
     dp.include_router(inline_handlers.router)
@@ -86,6 +102,13 @@ async def run_main_bot():
         await resolve_custom_emojis(bot)
         user_handlers.apply_animated_emojis()
     logger.info(f"[MainBot] @{me.username} ishga tushdi.")
+
+    # Klon botlar webhook orqali shu Dispatcher'ga ulanadi
+    clones.set_dispatcher(dp)
+    try:
+        await clones.load_clones()
+    except Exception as e:
+        logger.warning("[clones] klonlar yuklanmadi: %s", e)
     print(f"✅ Asosiy bot @{me.username} ishga tushdi.")
 
     try:
@@ -113,6 +136,7 @@ async def run_support_bot_safe():
 
 async def main():
     patch_aiogram_text_sanitizer()
+    install_db_router()
 
     # DB larni ishga tushirish
     await init_db()

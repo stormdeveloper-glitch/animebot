@@ -6,6 +6,7 @@ from aiogram.types import (
 )
 from config import CUSTOM_EMOJI_ENABLED
 from utils.custom_emoji import MENU_ICON_IDS, menu_icon_label
+from utils.tenant import current_tenant
 from utils.text_sanitizer import fix_mojibake_text
 
 PRIMARY = "primary"
@@ -137,6 +138,9 @@ def menu_kb(is_admin: bool = False, web_app_url: str = "", animated: bool = True
         [btn("👥 Referal"), btn("💸 Pul o'tkazmasi")],
         [btn("🎁 Cashback"), btn("💵 Reklama va Homiylik")]
     ]
+    if not current_tenant():
+        # O'z botini yaratish faqat asosiy botda
+        keyboard.append([btn("🤖 Bot yaratish")])
     safe_web_app_url = normalize_web_app_url(web_app_url)
     if safe_web_app_url:
         keyboard.insert(0, [btn("🌐 Web App", web_app=WebAppInfo(url=safe_web_app_url))])

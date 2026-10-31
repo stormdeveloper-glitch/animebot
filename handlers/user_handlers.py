@@ -18,7 +18,7 @@ from keyboards import (
     search_by_age_kb, YOSH_TOIFALAR, InlineKeyboardButton, normalize_web_app_url
 )
 import urllib.parse
-from utils import check_subscription, get_subscription_keyboard, is_admin, is_maintenance, get_bot_username, is_content_restricted
+from utils import check_subscription, get_subscription_keyboard, is_admin, is_maintenance, get_bot_username, is_content_restricted, payment_admin_ids
 from utils.logger import log_admin_action
 from utils.ai_assistant import generate_anime_tavsif
 from utils.custom_emoji import EMOJI_IDS, strip_custom_emoji
@@ -1590,8 +1590,7 @@ async def deposit_check_received(message: Message, state: FSMContext, bot: Bot):
 
     await message.answer("✅ Chek qabul qilindi! Admin tez orada tasdiqlaydi.")
 
-    notify_ids = list(ADMIN_IDS) + [SUPER_ADMIN_ID]
-    for admin_id in set(notify_ids):
+    for admin_id in payment_admin_ids():
         try:
             caption_text = (
                 f"💳 <b>Balans to'ldirilishi</b>\n\n"
@@ -2369,7 +2368,7 @@ async def vip_purchase(callback: CallbackQuery, state: FSMContext, bot: Bot):
     total_price = vip_price * (days // 30)
     
     # To'lov tasdiqlovchi admin'ni tanlash
-    super_admin_id = SUPER_ADMIN_ID or (ADMIN_IDS[0] if ADMIN_IDS else None)
+    super_admin_id = next(iter(payment_admin_ids()), None)
     
     if not super_admin_id:
         await callback.answer("❌ Admin topilmadi!", show_alert=True)
@@ -2401,7 +2400,7 @@ async def vip_send_check(message: Message, state: FSMContext, bot: Bot):
         return
     
     # To'lov tasdiqlovchi admin'ni tanlash
-    super_admin_id = SUPER_ADMIN_ID or (ADMIN_IDS[0] if ADMIN_IDS else None)
+    super_admin_id = next(iter(payment_admin_ids()), None)
     
     # File ID ni olish
     file_id = message.photo[0].file_id if message.photo else message.document.file_id

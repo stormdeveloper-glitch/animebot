@@ -9,6 +9,12 @@ from config import DATA_DIR, SUPER_ADMIN_ID
 
 LOGS_FILE = os.path.join(DATA_DIR, "admin_logs.json")
 
+
+def _logs_path() -> str:
+    from utils.tenant import CLONES_DIR, current_tenant
+    tenant = current_tenant()
+    return os.path.join(CLONES_DIR, f"{tenant}_admin_logs.json") if tenant else LOGS_FILE
+
 # Logs papkasi mavjud bo'lmasa yaratish
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -30,9 +36,9 @@ def write_log(action_type: str, user_id: int, username: str = "", details: str =
     try:
         # Eski loglarni oʻqish
         logs = []
-        if os.path.exists(LOGS_FILE):
+        if os.path.exists(_logs_path()):
             try:
-                with open(LOGS_FILE, 'r', encoding='utf-8') as f:
+                with open(_logs_path(), 'r', encoding='utf-8') as f:
                     logs = json.load(f)
             except:
                 logs = []
@@ -54,7 +60,7 @@ def write_log(action_type: str, user_id: int, username: str = "", details: str =
             logs = logs[-1000:]
         
         # Faylga yozish
-        with open(LOGS_FILE, 'w', encoding='utf-8') as f:
+        with open(_logs_path(), 'w', encoding='utf-8') as f:
             json.dump(logs, f, indent=2, ensure_ascii=False)
         
         return True
@@ -66,10 +72,10 @@ def write_log(action_type: str, user_id: int, username: str = "", details: str =
 def get_logs(limit: int = 50) -> list:
     """Oxirgi N log'ni oʻqish"""
     try:
-        if not os.path.exists(LOGS_FILE):
+        if not os.path.exists(_logs_path()):
             return []
         
-        with open(LOGS_FILE, 'r', encoding='utf-8') as f:
+        with open(_logs_path(), 'r', encoding='utf-8') as f:
             logs = json.load(f)
         
         # Oxirgi log'larni koʻrsatish

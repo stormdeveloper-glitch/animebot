@@ -5,6 +5,12 @@ from config import DATA_DIR, SUPER_ADMIN_ID, ADMIN_IDS
 
 ADMINS_JSON_PATH = os.path.join(DATA_DIR, "admins.json")
 
+
+def _admins_path() -> str:
+    from utils.tenant import CLONES_DIR, current_tenant
+    tenant = current_tenant()
+    return os.path.join(CLONES_DIR, f"{tenant}_admins.json") if tenant else ADMINS_JSON_PATH
+
 # Default permissions for a new JSON admin
 DEFAULT_PERMISSIONS = {
     "stats": False,
@@ -16,10 +22,10 @@ DEFAULT_PERMISSIONS = {
 }
 
 def load_admins() -> Dict[str, Dict]:
-    if not os.path.exists(ADMINS_JSON_PATH):
+    if not os.path.exists(_admins_path()):
         return {}
     try:
-        with open(ADMINS_JSON_PATH, 'r', encoding='utf-8') as f:
+        with open(_admins_path(), 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
         print(f"Error loading admins.json: {e}")
@@ -27,7 +33,7 @@ def load_admins() -> Dict[str, Dict]:
 
 def save_admins(admins: Dict[str, Dict]):
     try:
-        with open(ADMINS_JSON_PATH, 'w', encoding='utf-8') as f:
+        with open(_admins_path(), 'w', encoding='utf-8') as f:
             json.dump(admins, f, indent=4, ensure_ascii=False)
     except Exception as e:
         print(f"Error saving admins.json: {e}")

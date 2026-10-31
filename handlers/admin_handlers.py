@@ -17,6 +17,7 @@ from utils import is_admin, is_super_admin, get_bot_username, invalidate_channel
 from utils.admin_manager import add_json_admin, remove_json_admin
 from utils.logger import log_admin_action
 from utils.custom_emoji import message_to_html
+from utils.tenant import current_tenant
 from utils.ai_assistant import chat_with_ai, generate_anime_tavsif
 
 async def _push(event_type, text, color="c"):
@@ -2301,6 +2302,8 @@ async def basic_settings_handler(message: Message, state: FSMContext):
     settings = {r[0]: r[1] for r in rows}
 
     is_super = await is_super_admin(message.from_user.id)
+    # Tugma ranglari barcha botlar uchun umumiy — klon egasi o'zgartira olmaydi
+    is_super = is_super and not current_tenant()
     labels = SETTINGS_LABELS | (BUTTON_STYLE_LABELS if is_super else {})
 
     text = "<b>*️⃣ Birlamchi sozlamalar:</b>\n\n"
@@ -2325,7 +2328,7 @@ async def basic_settings_handler(message: Message, state: FSMContext):
 @router.callback_query(F.data.startswith("editSetting="))
 async def edit_setting_prompt(callback: CallbackQuery, state: FSMContext):
     key = callback.data.split("=")[1]
-    if key.startswith("button_style_") and not await is_super_admin(callback.from_user.id):
+    if key.startswith("button_style_") and (current_tenant() or not await is_super_admin(callback.from_user.id)):
         await callback.answer("❌ Bu sozlama faqat superadmin uchun!", show_alert=True)
         return
 

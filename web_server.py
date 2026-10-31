@@ -503,6 +503,9 @@ def _public_origin(request: web.Request) -> str:
 
 @web.middleware
 async def traffic_guard_middleware(request: web.Request, handler):
+    # Klon bot webhooklari Telegram'dan keladi va sir bilan tekshiriladi
+    if request.path.startswith("/tg/clone/"):
+        return await handler(request)
     if _is_suspicious_request(request):
         return web.Response(status=404, text="Not found")
 
@@ -3881,6 +3884,20 @@ async def serve_terms(request):
         return web.Response(text=f.read(), content_type="text/html", charset="utf-8")
 
 
+async def clone_webhook(request: web.Request):
+    """Klon botlar update'lari (utils.clones)."""
+    from utils.clones import feed_webhook
+    try:
+        bot_id = int(request.match_info["bot_id"])
+        payload = await request.json()
+    except (ValueError, KeyError, json.JSONDecodeError):
+        return web.Response(status=400)
+    secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+    if not await feed_webhook(bot_id, secret, payload):
+        return web.Response(status=403)
+    return web.Response(text="ok")
+
+
 def create_app():
     app = web.Application(
         client_max_size=2 * 1024 * 1024,
@@ -3925,6 +3942,7 @@ def create_app():
     app.router.add_post("/api/ai/sessions", api_ai_sessions_upsert)
     app.router.add_delete("/api/ai/sessions/{session_id}", api_ai_sessions_delete)
     app.router.add_post("/api/report",  api_report)
+    app.router.add_post("/tg/clone/{bot_id}", clone_webhook)
     # OAuth — Google
     app.router.add_get( "/callback",         serve_callback)
     app.router.add_get( "/callbackspotify",  serve_callback_spotify)
