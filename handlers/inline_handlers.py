@@ -146,16 +146,32 @@ async def inline_search(query: InlineQuery):
                 parse_mode="HTML",
             )
         elif is_file_id:
+            # Telegram file_id prefiksi turni bildiradi: rasm "AgAC", video "BAAC".
+            # Noto'g'ri turdagi file_id butun inline javobni buzmasligi uchun
+            # faqat mos keladigan natija turi ishlatiladi.
             try:
-                result = InlineQueryResultCachedPhoto(
-                    id=str(anime_id),
-                    photo_file_id=rams,
-                    title=nom,
-                    description=description,
-                    caption=caption,
-                    reply_markup=btn,
-                    parse_mode="HTML",
-                )
+                if rams.startswith("BAAC"):
+                    result = InlineQueryResultCachedVideo(
+                        id=str(anime_id),
+                        video_file_id=rams,
+                        title=nom,
+                        description=description,
+                        caption=caption,
+                        reply_markup=btn,
+                        parse_mode="HTML",
+                    )
+                elif rams.startswith("AgAC"):
+                    result = InlineQueryResultCachedPhoto(
+                        id=str(anime_id),
+                        photo_file_id=rams,
+                        title=nom,
+                        description=description,
+                        caption=caption,
+                        reply_markup=btn,
+                        parse_mode="HTML",
+                    )
+                else:
+                    raise ValueError("unknown file_id type")
             except Exception:
                 result = InlineQueryResultArticle(
                     id=str(anime_id),

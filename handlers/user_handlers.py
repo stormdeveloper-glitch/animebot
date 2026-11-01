@@ -536,7 +536,11 @@ async def check_subscription_callback(callback: CallbackQuery, bot: Bot):
             async with db.execute("SELECT value FROM bot_settings WHERE key='web_app_url'") as c:
                 web_row = await c.fetchone()
             web_url = (web_row[0] if web_row else "") or ""
-        await callback.message.delete()
+        try:
+            await callback.message.delete()
+        except TelegramBadRequest:
+            # Xabar allaqachon o'chirilgan bo'lishi mumkin — javobni baribir yuboramiz
+            pass
         await callback.message.answer(
             f"{CHECK} Obuna tasdiqlandi!\n\n{WAVE} Xush kelibsiz, "
             f"<b>{html.escape(callback.from_user.first_name or '')}</b>!\n"
