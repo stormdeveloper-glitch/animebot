@@ -23,3 +23,7 @@ data/cache/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Instagram/yt-dlp cookie fayllari (maxfiy, commit qilinmasin)
+cookies*.txt
+*cookies.txt

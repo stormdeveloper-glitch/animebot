@@ -94,7 +94,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap"
     rel="stylesheet"
   >
 
@@ -720,352 +720,62 @@
     color: var(--border)
   }
 
-  /* ══ HUD CARD BACK ══ */
+  /* ══ KARTA ORQA TOMONI — hover'da ochiladigan ma'lumot ══ */
   .hud-cb {
     width: 100%;
     aspect-ratio: 3/4;
     position: relative;
     overflow: hidden;
-    background: var(--card-bg);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 10px 10px 10px;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 14px 48px;
+    background: linear-gradient(180deg, rgba(14, 12, 26, .93), rgba(10, 8, 20, .97));
   }
 
-  /* scan lines overlay */
-  .hud-cb::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(var(--hud-rgb, 108, 99, 255), .03) 3px, rgba(var(--hud-rgb, 108, 99, 255), .03) 4px);
-    pointer-events: none;
-    z-index: 0;
-    animation: hudFlicker .12s infinite;
-  }
-
-  @keyframes hudFlicker {
-
-    0%,
-    100% {
-      opacity: 1
-    }
-
-    50% {
-      opacity: .88
-    }
-  }
-
-  /* corner cuts */
-  .hud-cb::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    height: 0;
-    border-top: 18px solid var(--surface);
-    border-left: 18px solid transparent;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  
-
-  
-
-  /* TOP LINE — right to left */
-  .hud-top-line {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 2px;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  .hud-top-line::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--hud-line, var(--accent)));
-    width: 0;
-    animation: hudTopLine .7s cubic-bezier(.16, 1, .3, 1) var(--hud-delay, .1s) forwards;
-    box-shadow: 0 0 8px var(--accent);
-  }
-
-  @keyframes hudTopLine {
-    from {
-      width: 0;
-      right: 0
-    }
-
-    to {
-      width: 100%;
-      right: 0
-    }
-  }
-
-  /* HEADER TAG */
-  .hud-tag {
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-mono);
-    font-size: .52rem;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    opacity: 0;
-    animation: hudFadeIn .3s ease calc(var(--hud-delay, .1s) + .7s) forwards;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .hud-tag::before {
-    content: '◆';
-    font-size: .5rem
-  }
-
-  /* ANIME NAME — typewriter */
   .hud-name {
-    position: relative;
-    z-index: 1;
     font-family: var(--font-display);
-    font-size: .76rem;
-    font-weight: 900;
-    color: var(--hud-text, var(--text));
-    letter-spacing: .04em;
-    line-height: 1.3;
+    font-weight: 800;
+    font-size: 1.02rem;
+    line-height: 1.2;
+    color: #fff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    white-space: nowrap;
-    width: 0;
-    text-shadow: 0 0 10px var(--accent);
-    animation: hudTypeName .6s steps(18, end) calc(var(--hud-delay, .1s) + .85s) forwards;
+    flex-shrink: 0;
   }
 
-  @keyframes hudTypeName {
-    from {
-      width: 0;
-      opacity: 1
-    }
-
-    to {
-      width: 100%;
-      opacity: 1
-    }
-  }
-
-  /* DIVIDER with angled cap */
-  .hud-div-wrap {
-    position: relative;
-    z-index: 1;
-    height: 14px;
-    margin: 3px 0;
-  }
-
-  .hud-div-line {
-    position: absolute;
-    left: 0;
-    top: 5px;
-    height: 1.5px;
-    width: 0;
-    background: linear-gradient(90deg, var(--accent), rgba(0, 0, 0, 0));
-    box-shadow: 0 0 6px var(--accent);
-    animation: hudDivLine .6s cubic-bezier(.16, 1, .3, 1) calc(var(--hud-delay, .1s) + 1.5s) forwards;
-  }
-
-  @keyframes hudDivLine {
-    from {
-      width: 0
-    }
-
-    to {
-      width: 88%
-    }
-  }
-
-  .hud-div-cap {
-    position: absolute;
-    top: 0;
-    right: 12%;
-    width: 16px;
-    height: 1.5px;
-    background: var(--accent);
-    transform: rotate(-30deg);
-    transform-origin: left center;
-    box-shadow: 0 0 5px var(--accent);
-    opacity: 0;
-    animation: hudFadeIn .2s ease calc(var(--hud-delay, .1s) + 2.1s) forwards;
-  }
-
-  /* INFO ROWS */
   .hud-rows {
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    flex: 1;
+    flex-shrink: 0;
   }
 
   .hud-row {
-    display: grid;
-    grid-template-columns: 6px 52px 1px 1fr;
-    align-items: center;
-    gap: 4px;
-    opacity: 0;
-  }
-
-  .hud-row:nth-child(1) {
-    animation: hudRowIn .4s ease calc(var(--hud-delay, .1s) + 2.2s) forwards
-  }
-
-  .hud-row:nth-child(2) {
-    animation: hudRowIn .4s ease calc(var(--hud-delay, .1s) + 2.45s) forwards
-  }
-
-  .hud-row:nth-child(3) {
-    animation: hudRowIn .4s ease calc(var(--hud-delay, .1s) + 2.7s) forwards
-  }
-
-  .hud-row:nth-child(4) {
-    animation: hudRowIn .4s ease calc(var(--hud-delay, .1s) + 2.95s) forwards
-  }
-
-  .hud-row:nth-child(5) {
-    animation: hudRowIn .4s ease calc(var(--hud-delay, .1s) + 3.2s) forwards
-  }
-
-  .hud-row:nth-child(6) {
-    animation: hudRowIn .4s ease calc(var(--hud-delay, .1s) + 3.45s) forwards
-  }
-
-  @keyframes hudRowIn {
-    from {
-      opacity: 0;
-      transform: translateX(-6px)
-    }
-
-    to {
-      opacity: 1;
-      transform: none
-    }
-  }
-
-  .hud-dot {
-    width: 4px;
-    height: 4px;
-    border: 1.5px solid var(--accent);
-    transform: rotate(45deg);
-    box-shadow: 0 0 4px var(--accent);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
   }
 
   .hud-key {
-    font-family: var(--font-display);
-    font-size: .46rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    color: var(--accent);
-    text-transform: uppercase;
-    opacity: .75;
-  }
-
-  .hud-sep {
-    width: 1px;
-    height: 10px;
-    background: var(--border);
-    justify-self: center;
+    font-family: var(--font-body);
+    font-size: .74rem;
+    color: var(--muted);
   }
 
   .hud-val {
-    font-family: var(--font-mono);
-    font-size: .62rem;
-    color: var(--hud-text, var(--text));
+    font-family: var(--font-body);
+    font-size: .78rem;
+    font-weight: 700;
+    color: #fff;
+    text-align: right;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-  }
-
-  /* STATUS PIPS */
-  .hud-pips {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    gap: 3px;
-    margin-top: 4px;
-    opacity: 0;
-    animation: hudFadeIn .5s ease calc(var(--hud-delay, .1s) + 3.8s) forwards;
-  }
-
-  .hud-pip {
-    width: 16px;
-    height: 3px;
-    background: var(--border2);
-    border: 1px solid var(--border);
-    clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
-  }
-
-  .hud-pip.on {
-    background: var(--accent);
-    box-shadow: 0 0 4px var(--accent);
-  }
-
-  /* BOTTOM LINE */
-  .hud-bot-line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  .hud-bot-line::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-    width: 0;
-    animation: hudBotLine .7s cubic-bezier(.16, 1, .3, 1) calc(var(--hud-delay, .1s) + .5s) forwards;
-    box-shadow: 0 0 6px var(--accent);
-  }
-
-  @keyframes hudBotLine {
-    from {
-      width: 0
-    }
-
-    to {
-      width: 85%
-    }
-  }
-
-  @keyframes hudFadeIn {
-    to {
-      opacity: 1
-    }
-  }
-
-  /* ID corner */
-  .hud-id {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    z-index: 1;
-    font-family: var(--font-display);
-    font-size: .55rem;
-    font-weight: 700;
-    color: var(--border);
-    letter-spacing: .1em;
-    opacity: 0;
-    animation: hudFadeIn .3s ease calc(var(--hud-delay, .1s) + 3.1s) forwards;
   }
 
   /* ══ ADMIN GRID ══ */
@@ -5046,54 +4756,6 @@
     background: linear-gradient(135deg, #1d1930, #120f1d);
   }
 
-  .hud-cb {
-    background:
-      radial-gradient(240px 160px at 100% 0%, rgba(var(--a1), .18), transparent 70%),
-      radial-gradient(240px 160px at 0% 100%, rgba(var(--a2), .18), transparent 70%),
-      linear-gradient(160deg, #1d1931, #110e1c) !important;
-  }
-
-  .hud-cb::before {
-    background-image: var(--noise) !important;
-    background-size: 160px !important;
-    opacity: .1;
-    animation: none !important;
-    mix-blend-mode: overlay;
-  }
-
-  .hud-cb::after {
-    display: none;
-  }
-
-  .hud-name {
-    font-family: var(--font-display) !important;
-    color: #fff !important;
-    text-shadow: 0 2px 0 rgba(0, 0, 0, .55);
-  }
-
-  .hud-key {
-    color: var(--muted) !important;
-    font-family: var(--font-body) !important;
-  }
-
-  .hud-val {
-    color: var(--text) !important;
-    font-family: var(--font-mono) !important;
-  }
-
-  .hud-tag {
-    background: rgba(var(--a1), .16) !important;
-    color: var(--accent) !important;
-    border-color: rgba(var(--a1), .35) !important;
-    border-radius: 999px !important;
-  }
-
-  .hud-pip.on,
-  .hud-dot {
-    background: var(--accent) !important;
-    box-shadow: 0 0 8px rgba(var(--a1), .7) !important;
-  }
-
   .card-action-bar .ca-btn,
   .gal-actions button,
   .ca-btn {
@@ -5442,6 +5104,1519 @@
 
     .filters {
       scrollbar-width: none;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ANIME QATLAMI — kinematografik uslub
+     Qorong'i tungi fon, bitta asosiy rang (qizil-sakura), ingichka
+     chiziqlar, poster-markazli kartalar. Yagona yorqin element:
+     qizil quyosh (hinomaru) va vertikal yapon yozuvi.
+     ══════════════════════════════════════════════════════════════ */
+  :root,
+  [data-theme] {
+    --font-display: 'Zen Kaku Gothic New', 'Manrope', system-ui, sans-serif;
+    --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --bg0: #08070f;
+    --bg1: #0f0d1a;
+    --bg2: #161325;
+    --a1: 255, 77, 109;
+    --a2: 140, 160, 255;
+    --a3: 255, 196, 107;
+    --accent: #ff4d6d;
+    --accent2: #8ca0ff;
+    --accent3: #ffc46b;
+    --text: #f6f3ff;
+    --muted: rgba(205, 199, 232, .62);
+    --border: rgba(255, 255, 255, .08);
+    --surface: #131122;
+    --card-bg: #14111f;
+    --sidebar-bg: #0a0912;
+    --nav-bg: #0a0912;
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --grad-accent: linear-gradient(135deg, #ff6b86, #ff4d6d);
+    --grad-violet: linear-gradient(135deg, #a7b6ff, #8ca0ff);
+    --depth-1: 0 4px 14px -6px rgba(0, 0, 0, .7);
+    --depth-2: 0 12px 30px -14px rgba(0, 0, 0, .85);
+    --depth-3: 0 22px 44px -18px rgba(0, 0, 0, .9);
+    --pressed: inset 0 2px 6px rgba(0, 0, 0, .5);
+  }
+
+  body {
+    background:
+      radial-gradient(900px 600px at 100% -10%, rgba(255, 77, 109, .13), transparent 62%),
+      radial-gradient(800px 560px at -5% 105%, rgba(140, 160, 255, .09), transparent 60%),
+      linear-gradient(180deg, #0f0d1a 0%, #08070f 100%);
+    background-attachment: fixed;
+  }
+
+  /* Perspektiv to'rni o'chiramiz — kinematografik fon tinch bo'lsin */
+  body::after {
+    display: none;
+  }
+
+  #bg3d {
+    opacity: .3;
+  }
+
+  ::selection {
+    background: rgba(255, 77, 109, .45);
+  }
+
+  /* Qizil quyosh: sahifa fonida, yarmi kadrdan tashqarida */
+  html::before {
+    content: '';
+    position: fixed;
+    top: -26vmin;
+    right: -20vmin;
+    width: 64vmin;
+    height: 64vmin;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 38%, #ff6b86 0%, #ff4d6d 55%, #c8294a 100%);
+    opacity: .16;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  html::after {
+    content: '';
+    position: fixed;
+    top: -34vmin;
+    right: -28vmin;
+    width: 80vmin;
+    height: 80vmin;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .07);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Sarlavhalar */
+  .page-title,
+  .topbar-title,
+  .hero-bot-name,
+  .sidebar-head-title {
+    font-family: var(--font-display) !important;
+    font-weight: 900;
+    letter-spacing: 0;
+    text-shadow: none !important;
+  }
+
+  .page-title {
+    background: none !important;
+    -webkit-text-fill-color: var(--text) !important;
+    color: var(--text) !important;
+    font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+  }
+
+  /* Yon panel */
+  .sidebar {
+    background: #0a0912 !important;
+    border-right: 1px solid var(--border) !important;
+    box-shadow: none !important;
+  }
+
+  .snav {
+    border-radius: var(--r-md) !important;
+    border: 1px solid transparent !important;
+    font-weight: 600;
+    transition: background .15s ease, color .15s ease;
+  }
+
+  .snav:hover {
+    background: rgba(255, 255, 255, .05) !important;
+  }
+
+  .snav.active {
+    background: linear-gradient(90deg, rgba(255, 77, 109, .22), rgba(255, 77, 109, .06)) !important;
+    border-color: rgba(255, 77, 109, .35) !important;
+    color: #fff !important;
+    box-shadow: inset 3px 0 0 #ff4d6d !important;
+  }
+
+  .snav-badge {
+    background: #ff4d6d !important;
+    color: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Yuqori panel */
+  .topbar {
+    background: rgba(10, 9, 18, .88) !important;
+    border-bottom: 1px solid var(--border) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(14px) !important;
+  }
+
+  /* Hero: qorong'i panel + qizil quyosh + vertikal yozuv */
+  .hero-header {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(110deg, rgba(255, 77, 109, .16) 0%, rgba(20, 17, 36, .92) 48%, rgba(14, 12, 26, .96) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, .1) !important;
+    border-radius: var(--r-lg) !important;
+    box-shadow: var(--depth-2) !important;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-right: 150px !important;
+  }
+
+  .hero-header::before {
+    content: '';
+    position: absolute;
+    right: -96px;
+    top: 50%;
+    width: 220px;
+    height: 220px;
+    margin-top: -110px;
+    left: auto;
+    bottom: auto;
+    opacity: .78;
+    mix-blend-mode: normal;
+    animation: none;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 38%, #ff6b86 0%, #ff4d6d 58%, #c8294a 100%);
+    pointer-events: none;
+  }
+
+  .hero-header::after {
+    content: 'アニメ';
+    position: absolute;
+    top: 16px;
+    right: 22px;
+    writing-mode: vertical-rl;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: .3em;
+    color: #fff;
+    opacity: .85;
+    pointer-events: none;
+  }
+
+  .hero-header > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-info {
+    min-width: 0;
+    flex: 1 1 220px;
+  }
+
+  .hero-bot-name {
+    color: #fff !important;
+    font-size: clamp(1.1rem, 2.2vw, 1.7rem) !important;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-stats-row {
+    flex-wrap: wrap !important;
+    gap: 6px 18px !important;
+  }
+
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .hero-neon-ring {
+    border: 2px solid rgba(255, 77, 109, .8) !important;
+    box-shadow: 0 0 0 4px rgba(255, 77, 109, .15) !important;
+    animation: none !important;
+  }
+
+  .hero-tg-btn {
+    background: #ff4d6d !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, .18) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 8px 22px -10px rgba(255, 77, 109, .8) !important;
+    font-weight: 800;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+
+  .hero-tg-btn.download {
+    background: rgba(255, 255, 255, .08) !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, .22) !important;
+  }
+
+  .hero-tg-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Qidiruv */
+  .search-wrap {
+    background: rgba(255, 255, 255, .05) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    box-shadow: none !important;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+
+  .search-wrap:focus-within {
+    border-color: rgba(255, 77, 109, .6) !important;
+    box-shadow: 0 0 0 4px rgba(255, 77, 109, .14) !important;
+  }
+
+  /* Filtrlar */
+  .filter-btn {
+    background: rgba(255, 255, 255, .05) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-weight: 600;
+    transition: background .15s ease, border-color .15s ease;
+  }
+
+  .filter-btn:hover {
+    border-color: rgba(255, 77, 109, .5) !important;
+  }
+
+  .filter-btn.active {
+    background: #ff4d6d !important;
+    border-color: #ff4d6d !important;
+    color: #fff !important;
+    box-shadow: 0 8px 20px -10px rgba(255, 77, 109, .9) !important;
+  }
+
+  /* Anime kartalari: poster birinchi o'rinda */
+  .cf,
+  .cb {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    box-shadow: var(--depth-2) !important;
+    background: var(--card-bg) !important;
+  }
+
+  .cf::after {
+    background: linear-gradient(180deg, transparent 55%, rgba(8, 7, 15, .75) 100%) !important;
+  }
+
+  .card-wrap {
+    transition: transform .2s ease;
+  }
+
+  .card-wrap:hover {
+    transform: translateY(-5px);
+  }
+
+  .card-wrap:hover .cf,
+  .card-wrap:hover .cb {
+    border-color: rgba(255, 77, 109, .6) !important;
+    box-shadow: var(--depth-3), 0 0 0 1px rgba(255, 77, 109, .3), 0 18px 40px -20px rgba(255, 77, 109, .6) !important;
+  }
+
+  .card-action-bar .ca-btn,
+  .ca-btn {
+    background: rgba(255, 255, 255, .07) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-weight: 600;
+  }
+
+  .card-action-bar .ca-btn.liked,
+  .ca-btn.liked {
+    background: rgba(255, 77, 109, .22) !important;
+    border-color: rgba(255, 77, 109, .6) !important;
+  }
+
+  .card-action-bar .ca-btn.saved,
+  .ca-btn.saved {
+    background: rgba(140, 160, 255, .22) !important;
+    border-color: rgba(140, 160, 255, .6) !important;
+  }
+
+  .empty {
+    border: 1px dashed rgba(255, 255, 255, .16) !important;
+    border-radius: var(--r-lg) !important;
+    background: rgba(255, 255, 255, .03) !important;
+  }
+
+  :focus-visible {
+    outline: 2px solid #ff8aa0 !important;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 760px) {
+    html::before {
+      width: 50vmin;
+      height: 50vmin;
+    }
+
+    .hero-header {
+      padding-right: 96px !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .card-wrap,
+    .hero-tg-btn,
+    .snav,
+    .filter-btn {
+      transition: none !important;
+    }
+
+    .card-wrap:hover {
+      transform: none;
+    }
+  }
+
+  /* ── Kartalar 2.0: statik poster, ma'lumot hover'da ochiladi ── */
+  #animeGrid {
+    gap: 18px;
+  }
+
+  .card-flipper {
+    animation: none !important;
+    transform: none !important;
+    transform-style: flat !important;
+  }
+
+  .cf {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-poster {
+    transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+  }
+
+  .card-wrap:hover .card-poster {
+    transform: scale(1.06);
+  }
+
+  .cf::after {
+    background: linear-gradient(180deg, rgba(8, 7, 15, .35) 0%, transparent 28%, transparent 42%, rgba(8, 7, 15, .94) 100%) !important;
+    z-index: 1;
+  }
+
+  .cf-info {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    pointer-events: none;
+  }
+
+  .cf-badges {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .cf-chip,
+  .cf-vid {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .7rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    background: rgba(8, 7, 15, .8);
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 999px;
+  }
+
+  .cf-chip {
+    padding: 5px 10px;
+  }
+
+  .cf-chip.live {
+    background: #ff4d6d;
+    border-color: transparent;
+  }
+
+  .cf-chip.done {
+    color: #9ff3c9;
+    border-color: rgba(159, 243, 201, .4);
+  }
+
+  .cf-vid {
+    padding: 3px 10px 3px 3px;
+  }
+
+  .cf-vid i {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff4d6d;
+    font-style: normal;
+    font-size: .55rem;
+    padding-left: 1px;
+  }
+
+  .cf-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .cf-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: .95rem;
+    line-height: 1.22;
+    color: #fff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cf-meta {
+    font-size: .72rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .7);
+  }
+
+  /* Hover'da ma'lumot qatlami (eski aylanuvchi orqa tomon o'rniga) */
+  .cb {
+    position: absolute !important;
+    inset: 0;
+    z-index: 3;
+    transform: none !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+
+  .card-wrap:hover .cb,
+  .card-wrap:focus-within .cb {
+    opacity: 1;
+  }
+
+  /* ── Modal va video vidjeti ── */
+  .modal-bg.open .modal {
+    background: #100e1c !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-lg) !important;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .9) !important;
+  }
+
+  .m-media {
+    background: #05040b;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .m-media .modal-video {
+    display: block;
+    width: 100%;
+    max-height: 62vh;
+    background: #000;
+  }
+
+  .play-btn {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    width: 64px;
+    height: 64px;
+    margin: -32px 0 0 -32px;
+    background: #ff4d6d !important;
+    border: 0 !important;
+    color: #fff !important;
+    font-size: 1.15rem;
+    padding-left: 4px;
+    box-shadow: 0 0 0 8px rgba(255, 77, 109, .22), 0 14px 34px -8px rgba(255, 77, 109, .8);
+  }
+
+  .play-btn:hover {
+    background: #ff6b86 !important;
+    transform: scale(1.08);
+  }
+
+  .m-media .ep-lbl {
+    padding: 12px 14px 0;
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--muted);
+    background: #100e1c;
+  }
+
+  .m-media .ep-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px 14px;
+    background: #100e1c;
+  }
+
+  .ep-btn {
+    background: rgba(255, 255, 255, .06) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-weight: 700;
+  }
+
+  .ep-btn {
+    padding: 8px 16px !important;
+    font-size: .8rem !important;
+    cursor: pointer;
+  }
+
+  .ep-btn.active,
+  .ep-btn.on {
+    background: #ff4d6d !important;
+    border-color: #ff4d6d !important;
+    color: #fff !important;
+  }
+
+  .m-btn {
+    background: #ff4d6d !important;
+    color: #fff !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    box-shadow: 0 10px 24px -12px rgba(255, 77, 109, .9) !important;
+  }
+
+  /* Anime edit (video post) kartalari */
+  .edits-grid .edit-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: #100e1c;
+    box-shadow: var(--depth-2);
+    transition: transform .2s ease, border-color .2s ease;
+  }
+
+  .edits-grid .edit-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 77, 109, .55);
+  }
+
+  .edits-grid .edit-tag {
+    background: rgba(255, 77, 109, .14);
+    color: #ff9fb2;
+    font-weight: 700;
+  }
+
+  .edits-search input {
+    background: rgba(255, 255, 255, .05);
+    border-color: var(--border);
+  }
+
+  .edits-search button {
+    background: #ff4d6d;
+    border-radius: 999px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .card-poster,
+    .cb,
+    .edits-grid .edit-card {
+      transition: none !important;
+    }
+
+    .card-wrap:hover .card-poster {
+      transform: none;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     SAYQAL — premium qatlam: tipografiya, bo'shliq, kartalar, modal
+     Bitta rang (qizil-sakura), qolgani neytral. Harakat faqat ma'noli.
+     ══════════════════════════════════════════════════════════════ */
+  :root,
+  [data-theme] {
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+    --line: rgba(255, 255, 255, .09);
+    --text-soft: rgba(236, 232, 252, .78);
+    --accent-ink: #ff9db0;
+  }
+
+  html {
+    scrollbar-color: rgba(255, 255, 255, .18) transparent;
+    scrollbar-width: thin;
+  }
+
+  .modal,
+  .ep-list {
+    scrollbar-color: rgba(255, 255, 255, .2) transparent;
+    scrollbar-width: thin;
+  }
+
+  /* Kontrast: oq matn tashuvchi to'ldirmalar WCAG AA (4.5:1) dan o'tadi */
+  .filter-btn.active,
+  .hero-tg-btn:not(.download),
+  .cf-chip.live,
+  .ep-btn.active,
+  .ep-btn.on,
+  .m-btn,
+  .edits-search button,
+  .snav-badge,
+  .play-btn {
+    background: #e0294d !important;
+  }
+
+  .filter-btn.active {
+    border-color: #e0294d !important;
+  }
+
+  .ep-btn.active,
+  .ep-btn.on {
+    border-color: #e0294d !important;
+  }
+
+  .m-body>.m-btn.m-btn-ghost {
+    background: transparent !important;
+  }
+
+  .hero-tg-btn:not(.download):hover,
+  .m-btn:hover,
+  .play-btn:hover {
+    background: #ea3c5f !important;
+  }
+
+  .m-body>.m-btn.m-btn-ghost:hover {
+    background: transparent !important;
+  }
+
+  /* Tipografiya */
+  .page-title {
+    font-weight: 800;
+    letter-spacing: -.015em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .page-subtitle,
+  .page-sub {
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+
+  .hero-bot-name {
+    font-weight: 800;
+    letter-spacing: -.01em;
+  }
+
+  .hero-tg-btn {
+    box-shadow: 0 10px 24px -12px rgba(255, 77, 109, .75) !important;
+    transition: transform .2s var(--ease-out), background-color .2s ease;
+  }
+
+  .hero-tg-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .hero-tg-btn:active {
+    transform: translateY(0) scale(.98);
+  }
+
+  /* Qidiruv va filtrlar: bir xil balandlik, jim holat */
+  .search-wrap {
+    min-height: 48px;
+  }
+
+  .filters {
+    gap: 8px;
+  }
+
+  .filter-btn {
+    min-height: 36px;
+    padding-inline: 14px;
+    font-size: .8rem;
+    color: var(--text-soft) !important;
+  }
+
+  .filter-btn:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, .08) !important;
+  }
+
+  .filter-btn.active {
+    color: #fff !important;
+    box-shadow: 0 8px 18px -12px rgba(255, 77, 109, .9) !important;
+  }
+
+  /* Kartalar: nafas oladigan setka, sokin hover */
+  #animeGrid {
+    gap: 22px;
+  }
+
+  .card-wrap {
+    transition: transform .28s var(--ease-out);
+  }
+
+  .card-wrap:hover {
+    transform: translateY(-3px);
+  }
+
+  .cf,
+  .cb {
+    border-radius: 16px !important;
+    border-color: var(--line) !important;
+    box-shadow: 0 14px 28px -16px rgba(0, 0, 0, .9) !important;
+  }
+
+  .card-wrap:hover .cf,
+  .card-wrap:hover .cb {
+    border-color: rgba(255, 77, 109, .55) !important;
+    box-shadow: 0 22px 36px -18px rgba(0, 0, 0, .95) !important;
+  }
+
+  .card-poster {
+    transition: transform .6s var(--ease-out);
+  }
+
+  .card-wrap:hover .card-poster {
+    transform: scale(1.04);
+  }
+
+  .cf::after {
+    background: linear-gradient(180deg, rgba(8, 7, 15, .4) 0%, transparent 26%, transparent 38%, rgba(8, 7, 15, .96) 100%) !important;
+  }
+
+  .cf-info {
+    padding: 12px;
+  }
+
+  .cf-chip,
+  .cf-vid {
+    font-size: .68rem;
+    letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cf-chip {
+    padding: 6px 10px;
+  }
+
+  /* ▶ belgisi: unicode emas, chizilgan uchburchak */
+  .cf-vid i {
+    font-size: 0;
+    padding: 0;
+    width: 22px;
+    height: 22px;
+    position: relative;
+  }
+
+  .cf-vid i::before {
+    content: '';
+    width: 7px;
+    height: 8px;
+    background: #fff;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    margin-left: 1px;
+  }
+
+  .cf-vid {
+    padding: 3px 11px 3px 3px;
+    gap: 7px;
+  }
+
+  .cf-title {
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1.2;
+    letter-spacing: -.005em;
+    text-wrap: balance;
+  }
+
+  .cf-bottom {
+    gap: 5px;
+  }
+
+  .cf-meta {
+    font-size: .74rem;
+    color: rgba(255, 255, 255, .72);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Hover orqa tomoni: o'qiladigan qatorlar */
+  /* Yoqtir / Saqlash: o'qiladigan o'lcham */
+  .ca-btn {
+    height: 30px;
+    font-family: var(--font-body);
+    font-size: .72rem;
+    letter-spacing: .01em;
+    text-transform: none;
+    border-radius: 999px;
+    gap: 5px;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+
+  .ca-btn:hover {
+    transform: none;
+    background: rgba(255, 255, 255, .14) !important;
+  }
+
+  .ca-btn:active {
+    transform: scale(.97);
+  }
+
+  .card-action-bar {
+    gap: 6px;
+    padding: 28px 8px 8px;
+  }
+
+  /* Modal: tinch kirish (sakramasdan), aniq ierarxiya */
+  .modal-bg {
+    background: rgba(5, 4, 11, .78);
+  }
+
+  .modal {
+    transition: transform .38s var(--ease-out);
+    transform: translateY(14px) scale(.985);
+    max-width: 680px;
+    box-shadow: 0 32px 70px -24px rgba(0, 0, 0, .95) !important;
+  }
+
+  .m-media {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .m-media>.m-img {
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
+  }
+
+  .m-media .modal-video {
+    flex: 0 0 auto;
+    aspect-ratio: 16 / 9;
+    max-height: none;
+    object-fit: contain;
+  }
+
+  .m-media:has(.ep-list) {
+    aspect-ratio: auto;
+    overflow: visible;
+  }
+
+  .m-media .verr {
+    margin: auto;
+  }
+
+  .play-btn {
+    transition: transform .2s var(--ease-out), background-color .2s ease;
+  }
+
+  .play-btn:active {
+    transform: scale(.96);
+  }
+
+  .m-media .ep-lbl {
+    padding: 14px 20px 0;
+    font-size: .74rem;
+    letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .m-media .ep-list {
+    padding: 10px 20px 16px;
+    gap: 8px;
+    max-height: 116px;
+    overflow-y: auto;
+  }
+
+  .ep-btn {
+    min-height: 36px;
+    min-width: 44px;
+    padding: 6px 14px !important;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-soft) !important;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+
+  .ep-btn:hover {
+    border-color: rgba(255, 77, 109, .55) !important;
+    color: #fff !important;
+  }
+
+  .ep-btn:active {
+    transform: scale(.97);
+  }
+
+  .m-body {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 24px 26px;
+  }
+
+  .m-title {
+    order: 0;
+    font-size: clamp(1.25rem, 3.4vw, 1.6rem);
+    font-weight: 800;
+    letter-spacing: -.015em;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    text-wrap: balance;
+  }
+
+  /* Avval tavsif (sinopsis), keyin xususiyatlar, keyin tugmalar */
+  .m-body>.irow.irow-long {
+    order: 1;
+    border-bottom: 0;
+    padding: 0 0 14px;
+  }
+
+  .m-body>.irow.irow-long .ival {
+    color: var(--text-soft);
+    font-size: .92rem;
+    max-width: 62ch;
+  }
+
+  .m-body>.irow {
+    order: 2;
+  }
+
+  .m-body>.irow.irow-long {
+    order: 1;
+  }
+
+  .m-body>.m-btn {
+    order: 3;
+  }
+
+  .m-body>.m-btn.m-btn-ghost {
+    order: 4;
+    background: transparent !important;
+    color: var(--text-soft) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: none !important;
+    font-weight: 700;
+  }
+
+  .m-body>.m-btn.m-btn-ghost:hover {
+    border-color: rgba(255, 77, 109, .5) !important;
+    color: #fff !important;
+  }
+
+  .irow {
+    align-items: baseline;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom-color: var(--line);
+    font-size: .88rem;
+  }
+
+  .ilbl {
+    font-family: var(--font-body);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    min-width: 104px;
+    padding-top: 0;
+  }
+
+  .ival {
+    color: #fff;
+    font-weight: 600;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .m-btn {
+    min-height: 48px;
+    margin-top: 18px;
+    font-family: var(--font-body);
+    font-size: .88rem;
+    font-weight: 800;
+    letter-spacing: .02em;
+    text-transform: none;
+    transition: transform .2s var(--ease-out), border-color .2s ease, color .2s ease;
+  }
+
+  .m-btn+.irow,
+  .m-btn+.m-btn {
+    margin-top: 10px;
+  }
+
+  .m-body>.m-btn.m-btn-ghost {
+    margin-top: 10px;
+    min-height: 44px;
+  }
+
+  .m-btn:active {
+    transform: scale(.985);
+  }
+
+  .m-btn:hover {
+    color: #fff;
+  }
+
+  .mcl {
+    transition: border-color .15s ease, color .15s ease;
+  }
+
+  /* Anime edit kartalari */
+  .edits-grid {
+    gap: 20px;
+  }
+
+  .edits-grid .edit-card {
+    border-radius: 16px;
+    transition: transform .28s var(--ease-out), border-color .2s ease;
+  }
+
+  .edits-grid .edit-card:hover {
+    transform: translateY(-3px);
+  }
+
+  .edit-card-body {
+    padding: 14px 16px 16px;
+  }
+
+  .edit-card-title {
+    font-weight: 800;
+    font-size: .95rem;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .edits-grid .edit-tag {
+    padding: 5px 10px;
+    font-size: .72rem;
+    transition: background-color .15s ease;
+  }
+
+  .edits-grid .edit-tag:hover {
+    background: rgba(255, 77, 109, .26);
+  }
+
+  .edits-search input {
+    min-height: 46px;
+    border-radius: 14px;
+  }
+
+  .edits-search button {
+    min-height: 46px;
+    padding-inline: 20px;
+  }
+
+  /* Fokus: kartalar va interaktiv elementlar uchun aniq halqa */
+  :focus-visible {
+    outline-offset: 3px;
+  }
+
+  .card-flipper:focus-visible {
+    outline: 2px solid #ff8aa0;
+    outline-offset: 3px;
+    border-radius: 16px;
+  }
+
+  /* Tegishli ekranlar (sensorli): hover yo'q, shuning uchun sakramaydi */
+  @media (hover: none) {
+
+    .card-wrap:hover,
+    .edits-grid .edit-card:hover {
+      transform: none;
+    }
+
+    .card-wrap:hover .card-poster {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .hero-header {
+      padding-right: 56px !important;
+    }
+
+    .hero-header::before {
+      width: 150px;
+      height: 150px;
+      margin-top: -75px;
+      right: -64px;
+    }
+
+    #animeGrid {
+      gap: 14px;
+    }
+
+    .cf-title {
+      font-size: .9rem;
+    }
+
+    .m-body {
+      padding: 20px 18px 22px;
+    }
+
+    .ilbl {
+      min-width: 86px;
+    }
+
+    .m-media .ep-lbl {
+      padding-inline: 18px;
+    }
+
+    .m-media .ep-list {
+      padding-inline: 18px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .modal,
+    .play-btn,
+    .m-btn,
+    .hero-tg-btn,
+    .ca-btn,
+    .ep-btn,
+    .card-poster {
+      transition: none !important;
+    }
+
+    .modal {
+      transform: none;
+    }
+  }
+  /* ══════════════════════════════════════════════════════════════
+     TUGMALAR — yagona tizim
+     Ikkilamchi: yengil "shisha" (qora kvadratlar o'rniga).
+     Asosiy: qizil-sakura, yumshoq yorug'lik. Hover'da ko'tarilish.
+     ══════════════════════════════════════════════════════════════ */
+  .tbtn,
+  .sidebar-arrow,
+  .rf-type-btn,
+  .prof-logout-btn,
+  .hero-tg-btn.download,
+  .ga-btn,
+  .pill {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .04)) !important;
+    color: var(--text) !important;
+    border: 1px solid rgba(255, 255, 255, .14) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease !important;
+  }
+
+  .tbtn,
+  .sidebar-arrow {
+    border-radius: 999px !important;
+  }
+
+  .tbtn {
+    width: auto;
+    min-width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .tbtn:hover,
+  .sidebar-arrow:hover,
+  .rf-type-btn:hover,
+  .prof-logout-btn:hover,
+  .hero-tg-btn.download:hover,
+  .ga-btn:hover,
+  .pill:hover {
+    background: linear-gradient(180deg, rgba(255, 77, 109, .28), rgba(255, 77, 109, .12)) !important;
+    border-color: rgba(255, 77, 109, .65) !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px -12px rgba(255, 77, 109, .85), inset 0 1px 0 rgba(255, 255, 255, .12) !important;
+  }
+
+  .tbtn:active,
+  .sidebar-arrow:active,
+  .rf-type-btn:active,
+  .prof-logout-btn:active,
+  .ga-btn:active,
+  .pill:active {
+    transform: translateY(0) scale(.96);
+  }
+
+  .rf-type-btn.sel,
+  .pill.on,
+  .ga-btn.liked {
+    background: linear-gradient(180deg, #ff6b86, #ff4d6d) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 10px 22px -10px rgba(255, 77, 109, .9) !important;
+  }
+
+  .ga-btn.saved {
+    background: linear-gradient(180deg, #a7b6ff, #8ca0ff) !important;
+    border-color: transparent !important;
+    color: #0c0a1a !important;
+  }
+
+  /* Asosiy (primary) tugmalar */
+  .hero-tg-btn:not(.download),
+  .rf-send,
+  .gl-search-btn,
+  .g-next-btn,
+  .g-play-again,
+  .al-connect-btn {
+    background: linear-gradient(180deg, #ff6b86 0%, #ff4d6d 100%) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, .22) !important;
+    border-radius: 999px !important;
+    font-weight: 800;
+    box-shadow: 0 12px 26px -12px rgba(255, 77, 109, .95), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease !important;
+  }
+
+  .hero-tg-btn:not(.download):hover,
+  .rf-send:hover,
+  .gl-search-btn:hover,
+  .g-next-btn:hover,
+  .g-play-again:hover,
+  .al-connect-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 16px 30px -12px rgba(255, 77, 109, 1), inset 0 1px 0 rgba(255, 255, 255, .3) !important;
+  }
+
+  .rf-send:disabled,
+  .gl-search-btn:disabled {
+    filter: grayscale(.6) brightness(.8);
+    box-shadow: none !important;
+    transform: none;
+  }
+
+  .hero-tg-btn.download {
+    border-radius: 999px !important;
+  }
+
+  /* Pastki navigatsiya (mobil) */
+  .bnav-item.active {
+    background: linear-gradient(180deg, rgba(255, 77, 109, .3), rgba(255, 77, 109, .1)) !important;
+    border: 1px solid rgba(255, 77, 109, .5) !important;
+    color: #fff !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .tbtn,
+    .sidebar-arrow,
+    .rf-type-btn,
+    .prof-logout-btn,
+    .hero-tg-btn,
+    .ga-btn,
+    .pill,
+    .rf-send,
+    .gl-search-btn,
+    .g-next-btn,
+    .g-play-again,
+    .al-connect-btn {
+      transition: none !important;
+    }
+
+    .tbtn:hover,
+    .hero-tg-btn:hover,
+    .pill:hover {
+      transform: none;
+    }
+  }
+
+  /* ── Scroll animatsiyalar va 3D: faqat transform/opacity/translate, bitta rang ── */
+  #bg3d {
+    opacity: .6;
+  }
+
+  .hero-logo-wrap {
+    transform: translate3d(0, calc(var(--hp, 0) * 26px), 0);
+  }
+
+  .hero-info {
+    transform: translate3d(0, calc(var(--hp, 0) * -10px), 0);
+  }
+
+  @keyframes fxHeroIn {
+    from {
+      opacity: 0;
+      translate: 0 14px;
+    }
+
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  @keyframes fxRingIn {
+    from {
+      opacity: 0;
+      scale: .88;
+    }
+
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-logo-wrap {
+      animation: fxRingIn 1s var(--ease-out) .2s both;
+    }
+
+    .hero-bot-name,
+    .hero-bot-user,
+    .hero-stats-row,
+    .hero-actions {
+      animation: fxHeroIn .8s var(--ease-out) both;
+    }
+
+    .hero-bot-name {
+      animation-delay: .35s;
+    }
+
+    .hero-bot-user {
+      animation-delay: .45s;
+    }
+
+    .hero-stats-row {
+      animation-delay: .55s;
+    }
+
+    .hero-actions {
+      animation-delay: .7s;
+    }
+
+    .rv {
+      opacity: 0;
+      transition: opacity .8s var(--ease-out) var(--d, 0ms), translate .8s var(--ease-out) var(--d, 0ms), scale .8s var(--ease-out) var(--d, 0ms);
+    }
+
+    .card-wrap.rv,
+    .al-card.rv {
+      translate: 0 22px;
+      scale: .97;
+      transition: transform .28s var(--ease-out), opacity .8s var(--ease-out) var(--d, 0ms), translate .8s var(--ease-out) var(--d, 0ms), scale .8s var(--ease-out) var(--d, 0ms);
+    }
+
+    .sec-title.rv {
+      translate: -14px 0;
+    }
+
+    .rv.in {
+      opacity: 1;
+      translate: 0 0;
+      scale: 1;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .card-wrap .card-flipper {
+      transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) !important;
+      transition: transform .35s var(--ease-out);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .hero-logo-wrap,
+    .hero-info {
+      transform: none;
+    }
+  }
+
+  /* ── Global qidiruv: poster uslubi, bitta rang ── */
+  #glResultGrid {
+    gap: 18px;
+  }
+
+  #page-global .gl-search-wrap:focus-within {
+    border-color: rgba(255, 77, 109, .6) !important;
+    box-shadow: 0 0 0 4px rgba(255, 77, 109, .12) !important;
+  }
+
+  .al-card {
+    border-radius: 16px !important;
+    border-color: var(--line) !important;
+    box-shadow: 0 14px 28px -16px rgba(0, 0, 0, .9) !important;
+  }
+
+  .al-card:hover {
+    transform: translateY(-3px) !important;
+    border-color: rgba(255, 77, 109, .55) !important;
+    box-shadow: 0 22px 36px -18px rgba(0, 0, 0, .95) !important;
+  }
+
+  .al-card-img {
+    transition: transform .6s var(--ease-out);
+  }
+
+  .al-card:hover .al-card-img {
+    transform: scale(1.05);
+  }
+
+  .al-card-title {
+    font-size: .86rem;
+    letter-spacing: .01em;
+  }
+
+  .al-badge {
+    background: rgba(255, 255, 255, .05) !important;
+    color: var(--muted) !important;
+    border: 1px solid var(--line) !important;
+  }
+
+  .al-badge.status-RELEASING {
+    background: rgba(255, 77, 109, .12) !important;
+    color: #ff8aa0 !important;
+    border-color: rgba(255, 77, 109, .5) !important;
+  }
+
+  .al-score {
+    background: none;
+    border: 0;
+    padding: 3px 0;
+    color: #ff8aa0;
+  }
+
+  .al-airing {
+    border-color: rgba(255, 77, 109, .3);
+    background: rgba(255, 77, 109, .07);
+  }
+
+  .al-airing-top {
+    color: #ff8aa0;
+  }
+
+  .al-count-unit {
+    background: rgba(255, 255, 255, .04);
+  }
+
+  @keyframes fxFloat {
+
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .gl-msg .gl-msg-ico {
+      animation: fxFloat 4s ease-in-out infinite;
     }
   }
 </style>
@@ -5952,36 +7127,83 @@
     </div>
   </div>
   <script>
-    // ── THREE.JS BG ──
+    // ── SCROLL FX: reveal, hero parallax, card tilt (calm: faqat transform/opacity) ──
+    (function () {
+      const root = document.documentElement;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+      window._fxY = 0;
+      let raf = 0;
+      document.addEventListener('scroll', e => {
+        window._fxY = e.target === document ? scrollY : (e.target.scrollTop || 0);
+        if (!raf) raf = requestAnimationFrame(() => { raf = 0; root.style.setProperty('--hp', Math.min(window._fxY / 420, 1).toFixed(3)); });
+      }, { capture: true, passive: true });
+      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: .08 });
+      const watch = (el, d) => { if (el.dataset.rv) return; el.dataset.rv = 1; el.style.setProperty('--d', d + 'ms'); el.classList.add('rv'); io.observe(el); };
+      document.querySelectorAll('.sec-title').forEach(el => watch(el, 0));
+      const grid = document.getElementById('animeGrid');
+      [[grid, '.card-wrap'], [document.getElementById('glResultGrid'), '.al-card']].forEach(([g, sel]) => {
+        if (!g) return;
+        const run = () => g.querySelectorAll(sel + ':not([data-rv])').forEach((el, i) => watch(el, (i % 6) * 55));
+        new MutationObserver(run).observe(g, { childList: true }); run();
+      });
+      if (!grid) return;
+      // nozik 3D tilt (faqat sichqoncha)
+      let tf = null, tr = 0, rx = 0, ry = 0;
+      grid.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        const w = e.target.closest('.card-wrap'); if (!w) return;
+        const b = w.getBoundingClientRect();
+        ry = ((e.clientX - b.left) / b.width - .5) * 8; rx = -((e.clientY - b.top) / b.height - .5) * 8;
+        tf = w.querySelector('.card-flipper');
+        if (!tr) tr = requestAnimationFrame(() => { tr = 0; if (tf) { tf.style.setProperty('--rx', rx.toFixed(2) + 'deg'); tf.style.setProperty('--ry', ry.toFixed(2) + 'deg'); } });
+      });
+      grid.addEventListener('pointerout', e => {
+        const w = e.target.closest('.card-wrap'); if (!w || w.contains(e.relatedTarget)) return;
+        const f = w.querySelector('.card-flipper'); f.style.removeProperty('--rx'); f.style.removeProperty('--ry'); if (f === tf) tf = null;
+      });
+    })();
+
+    // ── THREE.JS BG: sakura halqalar + sokin yaproqlar ──
     (function () {
       if (typeof THREE === 'undefined') { console.warn('THREE.js not loaded – skipping 3D background.'); return; }
       const c = document.getElementById('bg3d');
-      const r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
-      r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); r.setSize(innerWidth, innerHeight);
-      const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .1, 1000);
+      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const small = innerWidth < 760;
+      let r;
+      try { r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: !small, powerPreference: 'low-power' }); } catch (_) { return; }
+      r.setPixelRatio(Math.min(devicePixelRatio, small ? 1 : 1.25)); r.setSize(innerWidth, innerHeight);
+      const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, .1, 200);
       cam.position.z = 26;
-      const mk = (g, col, o) => new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: o }));
-      const i1 = mk(new THREE.IcosahedronGeometry(9, 1), 0xff6b4a, .07), i2 = mk(new THREE.IcosahedronGeometry(5.5, 0), 0x8b7bff, .08);
-      s.add(i1, i2);
-      const geos = [new THREE.TetrahedronGeometry(.8), new THREE.OctahedronGeometry(.7), new THREE.BoxGeometry(1, 1, 1), new THREE.IcosahedronGeometry(.6, 0)];
-      const cols = [0xff6b4a, 0x8b7bff, 0xffc46b, 0x3ee6a8];
-      Array.from({ length: 22 }, (_, i) => {
-        const m = mk(geos[i % 4], cols[i % 4], .06 + Math.random() * .09);
-        const rr = 14 + Math.random() * 20, t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1);
-        m.position.set(rr * Math.sin(p) * Math.cos(t), rr * Math.sin(p) * Math.sin(t), rr * Math.cos(p) - 10);
-        m.userData = { sx: (Math.random() - .5) * .009, sy: (Math.random() - .5) * .009 }; s.add(m); return m;
-      });
-      let mx = 0, my = 0;
-      document.addEventListener('mousemove', e => { mx = (e.clientX / innerWidth - .5) * .016; my = (e.clientY / innerHeight - .5) * .016; });
-      const smalls = [...s.children].slice(2);
-      (function a() {
-        requestAnimationFrame(a);
-        i1.rotation.x += .0017 + mx * .35; i1.rotation.y += .0026 + my * .35;
-        i2.rotation.x -= .0022; i2.rotation.y -= .0016;
-        smalls.forEach(m => { m.rotation.x += m.userData.sx; m.rotation.y += m.userData.sy; });
+      const ring = (rad, tube, op, x, y, z, rx) => {
+        const m = new THREE.Mesh(new THREE.TorusGeometry(rad, tube, 6, 140), new THREE.MeshBasicMaterial({ color: 0xff4d6d, transparent: true, opacity: op }));
+        m.position.set(x, y, z); m.rotation.x = rx; s.add(m); return m;
+      };
+      const r1 = ring(11, .045, .55, 12, 7, -8, 1.1), r2 = ring(15, .025, .25, 12, 7, -10, 1.3), r3 = ring(6, .03, .35, -16, -9, -6, .8);
+      // yaproqlar: yumshoq dumaloq nuqtalar
+      const tc = document.createElement('canvas'); tc.width = tc.height = 32;
+      const g = tc.getContext('2d'), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gr.addColorStop(0, '#fff'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
+      const N = small ? 24 : 60, pos = new Float32Array(N * 3), vel = [];
+      for (let i = 0; i < N; i++) { pos.set([(Math.random() - .5) * 60, (Math.random() - .5) * 40, -Math.random() * 14], i * 3); vel.push(.012 + Math.random() * .02, Math.random() * .01 + .004); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      s.add(new THREE.Points(pg, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(tc), color: 0xff9fb2, size: .7, transparent: true, opacity: .6, depthWrite: false })));
+      let px = 0, py = 0, cx = 0, cy = 0, sy = 0, run = true;
+      if (!calm) document.addEventListener('pointermove', e => { px = e.clientX / innerWidth - .5; py = e.clientY / innerHeight - .5; }, { passive: true });
+      const draw = () => {
+        sy += ((window._fxY || 0) - sy) * .06; cx += (px * 3 - cx) * .04; cy += (-py * 2 - cy) * .04;
+        cam.position.set(cx, cy - sy * .006, 26);
+        r1.rotation.y += .0012; r1.rotation.z += .0006; r2.rotation.y -= .0008; r3.rotation.x += .001;
+        for (let i = 0; i < N; i++) {
+          pos[i * 3 + 1] -= vel[i * 2]; pos[i * 3] += vel[i * 2 + 1] * Math.sin(pos[i * 3 + 1] * .3 + i);
+          if (pos[i * 3 + 1] < -20) pos[i * 3 + 1] = 20;
+        }
+        pg.attributes.position.needsUpdate = true;
         r.render(s, cam);
-      })();
-      window.addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); });
+      };
+      const loop = () => { if (!run) return; requestAnimationFrame(loop); if (c.style.opacity !== '0') draw(); };
+      if (calm) draw(); else loop();
+      document.addEventListener('visibilitychange', () => { const v = !document.hidden; if (v && !run && !calm) { run = true; loop(); } else if (!v) run = false; });
+      window.addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); if (calm) draw(); });
     })();
 
     // ── SETTINGS ──
@@ -6195,76 +7417,28 @@
     }
 
     // HUD card back HTML generator
-    function _hudCardBack(a, idx) {
-      const og = (a.aniType || '').toLowerCase().includes('ongoing');
-      const delay = (idx * 0.15) % 2; // stagger per card, max 2s
-      // Pips: 8 total — ongoing=8, completed=5, unknown=3
-      const pipOn = og ? 8 : (a.aniType ? 5 : 3);
-      const pips = Array.from({ length: 8 }, (_, i) => `<div class="hud-pip${i < pipOn ? ' on' : ''}"></div>`).join('');
-      // Truncate at 24 chars (was 18 — too aggressive)
-      const rawName = a.nom || 'Nomsiz';
-      const shortName = rawName.length > 24 ? rawName.slice(0, 22) + '…' : rawName;
-      // Dynamic typewriter steps matching actual name length
-      const nameSteps = shortName.length;
-      const views = a.qidiruv ? `👁 ${a.qidiruv}` : '—';
-      const fandub = a.fandub || '\u2014';
+    function _hudCardBack(a) {
+      const rows = [
+        ['Holat', a.aniType || '—'],
+        ['Qismlar', `${a.ep_count || 0} ta`],
+        ['Janr', (a.janri || '—').split(',').slice(0, 2).join(',')],
+        ['Yil', a.yili || '—'],
+        ['Ovoz', a.fandub || '—'],
+        ["Ko'rish", a.qidiruv ? `👁 ${a.qidiruv}` : '—']
+      ].map(([k, v]) => `<div class="hud-row"><div class="hud-key">${k}</div><div class="hud-val">${_cardEsc(v)}</div></div>`).join('');
+      return `<div class="hud-cb"><div class="hud-name">${_cardEsc(a.nom || 'Nomsiz')}</div><div class="hud-rows">${rows}</div></div>`;
+    }
 
-      return `<div class="hud-cb" style="--hud-delay:${delay}s">
-    <div class="hud-top-line"></div>
-    <div class="hud-bot-line"></div>
-
-    <div class="hud-tag">ANIME DATA · ID ${String(a.id).padStart(3, '0')}</div>
-
-    <div style="display:flex;flex-direction:column;gap:1px">
-      <div class="hud-name" style="animation-timing-function:steps(${nameSteps},end)">${shortName}</div>
-      <div class="hud-div-wrap">
-        <div class="hud-div-line"></div>
-        <div class="hud-div-cap"></div>
-      </div>
-    </div>
-
-    <div class="hud-rows">
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Holat</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${a.aniType || '—'}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Qismlar</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${a.ep_count || 0} ta</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Janr</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${(a.janri || '—').split(',').slice(0, 2).join(',')}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Yil</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${a.yili || '—'}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Ovoz</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${fandub}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Ko'rish</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${views}</div>
-      </div>
-    </div>
-
-    <div class="hud-pips">${pips}</div>
-    <div class="hud-id">#${String(a.id).padStart(3, '0')}</div>
-  </div>`;
+    function _cardEsc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function _cardOverlay(a) {
+      const live = (a.aniType || '').toLowerCase().includes('ongoing');
+      const status = a.aniType ? `<span class="cf-chip ${live ? 'live' : 'done'}">${live ? 'OnGoing' : _cardEsc(a.aniType)}</span>` : '<span></span>';
+      const eps = Number(a.ep_count) || 0;
+      const vid = eps > 0 ? `<span class="cf-vid" title="Video qismlar mavjud"><i>▶</i>${eps} qism</span>` : '';
+      const meta = [a.yili, (a.janri || '').split(',')[0].trim()].filter(Boolean).map(_cardEsc).join(' · ');
+      return `<div class="cf-info"><div class="cf-badges">${status}${vid}</div><div class="cf-bottom"><div class="cf-title">${_cardEsc(a.nom || 'Nomsiz')}</div>${meta ? `<div class="cf-meta">${meta}</div>` : ''}</div></div>`;
     }
 
     function renderGrid(list) {
@@ -6273,10 +7447,11 @@
       g.innerHTML = list.map((a, idx) => {
         const likedCls = _isLiked(a.id) ? 'liked' : '';
         const savedCls = _isSaved(a.id) ? 'saved' : '';
-        return `<div class="card-wrap" title="${a.nom}">
-      <div class="card-flipper" onclick="openModal(${a.id},this)">
+        return `<div class="card-wrap" title="${_cardEsc(a.nom)}">
+      <div class="card-flipper" role="button" tabindex="0" onclick="openModal(${a.id},this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(${a.id},this)}">
         <div class="cf">
-          <img class="card-poster" src="${a.rams_url || ''}" loading="lazy" onerror="this.outerHTML='<div class=card-poster-ph>🎬</div>'">
+          <img class="card-poster" src="${_cardEsc(a.rams_url)}" loading="lazy" onerror="this.outerHTML='<div class=card-poster-ph>🎬</div>'">
+          ${_cardOverlay(a)}
         </div>
         <div class="cb">${_hudCardBack(a, idx)}</div>
       </div>
@@ -6367,50 +7542,54 @@
       });
     }
     function renderAnimeModal(a) {
+      window._curPoster = a.rams_url || '';
       if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
         try { window.ytTrailerPlayer.destroy(); } catch (e) { }
         window.ytTrailerPlayer = null;
       }
       document.getElementById('modalContent').innerHTML = `
     <div class="m-media">
-      <img class="m-img" src="${a.rams_url || ''}" onerror="this.outerHTML='<div class=m-img-ph>🎬</div>'">
+      <img class="m-img" src="${_cardEsc(a.rams_url)}" onerror="this.outerHTML='<div class=m-img-ph>🎬</div>'">
       <button class="play-btn" onclick="loadVideo(${a.id})">▶</button>
     </div>
     <div class="m-body">
-      <div class="m-title">${a.nom || 'Nomsiz'}</div>
-      <div class="irow"><span class="ilbl">Holati</span><span class="ival">${a.aniType || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Qismlar</span><span class="ival">${a.ep_count || 0} ta</span></div>
-      <div class="irow"><span class="ilbl">Janr</span><span class="ival">${a.janri || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Yili</span><span class="ival">${a.yili || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Davlat</span><span class="ival">${a.davlat || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Ovoz</span><span class="ival">${a.fandub || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Yosh toifasi</span><span class="ival">${a.yosh_toifa || 'Barcha yoshlar'}</span></div>
-      <div class="irow"><span class="ilbl">Ko'rish</span><span class="ival">👁 ${a.qidiruv || 0}</span></div>
+      <div class="m-title">${_cardEsc(a.nom || 'Nomsiz')}</div>
+      <div class="irow"><span class="ilbl">Holati</span><span class="ival">${_cardEsc(a.aniType || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Qismlar</span><span class="ival">${Number(a.ep_count) || 0} ta</span></div>
+      <div class="irow"><span class="ilbl">Janr</span><span class="ival">${_cardEsc(a.janri || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Yili</span><span class="ival">${_cardEsc(a.yili || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Davlat</span><span class="ival">${_cardEsc(a.davlat || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Ovoz</span><span class="ival">${_cardEsc(a.fandub || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Yosh toifasi</span><span class="ival">${_cardEsc(a.yosh_toifa || 'Barcha yoshlar')}</span></div>
+      <div class="irow"><span class="ilbl">Ko'rish</span><span class="ival">👁 ${Number(a.qidiruv) || 0}</span></div>
       <a class="m-btn" href="https://t.me/${BOT}?start=${a.id}" target="_blank">▶ Botda tomosha qilish</a>
-      ${a.tavsif ? `<div class="irow" style="display:block"><span class="ilbl">Tavsif</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.tavsif}</span></div>` : ''}
-      ${a.filler_info ? `<div class="irow" style="display:block"><span class="ilbl">Filler qismlar</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.filler_info}<br><small>Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.</small></span></div>` : ''}
-      <a class="m-btn" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
+      ${a.tavsif ? `<div class="irow irow-long" style="display:block"><span class="ilbl">Tavsif</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55;white-space:pre-line">${_cardEsc(a.tavsif)}</span></div>` : ''}
+      ${a.filler_info ? `<div class="irow irow-long" style="display:block"><span class="ilbl">Filler qismlar</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${_cardEsc(a.filler_info)}<br><small>Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.</small></span></div>` : ''}
+      <a class="m-btn m-btn-ghost" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
     </div>`;
       document.getElementById('modalBg').classList.add('open');
+      if ((Number(a.ep_count) || 0) > 0) loadVideo(a.id, true);
     }
 
-    async function loadVideo(id) {
+    async function loadVideo(id, auto) {
       const m = document.querySelector('.m-media'); if (!m) return;
       window._curAnimeId = id;
-      m.innerHTML = `<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
+      if (!auto) m.innerHTML = `<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
       try {
         const res = await fetch(`/api/episodes/${id}`);
         const d = await res.json();
-        if (!d.episodes || !d.episodes.length) { m.innerHTML = `<div class="verr">🎬 Hali qism yuklanmagan.<br><a href="https://t.me/${BOT}?start=${id}" target="_blank" style="color:var(--accent)">Botda ko'rish</a></div>`; return; }
-        _playEp(m, d.episodes, 0);
-      } catch (e) { m.innerHTML = `<div class="verr">⚠️ Xatolik: ${e.message}</div>`; }
+        if (!m.isConnected) return;
+        if (!d.episodes || !d.episodes.length) { if (auto) return; m.innerHTML = `<div class="verr">🎬 Hali qism yuklanmagan.<br><a href="https://t.me/${BOT}?start=${id}" target="_blank" style="color:var(--accent)">Botda ko'rish</a></div>`; return; }
+        _playEp(m, d.episodes, 0, auto !== true);
+      } catch (e) { if (auto) return; m.innerHTML = `<div class="verr">⚠️ Xatolik: ${e.message}</div>`; }
     }
-    function _playEp(mediaEl, eps, idx) {
+    function _playEp(mediaEl, eps, idx, autoplay) {
       const ep = eps[idx]; if (!ep) return;
       window._epCache = eps;
       const epBtns = eps.map((e, i) => `<button class="ep-btn ${i === idx ? 'active' : ''}" onclick="_playEp(document.querySelector('.m-media'),window._epCache,${i})">${e.qism || (i + 1)}-qism</button>`).join('');
       const epList = eps.length > 1 ? `<div class="ep-lbl">Qismlar (${eps.length} ta):</div><div class="ep-list">${epBtns}</div>` : '';
       if (!ep.video_url || ep.too_big) {
+        if (autoplay === false) return;
         mediaEl.innerHTML = `<div class="verr" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 14px">
       <div style="font-size:1.8rem">📦</div>
       <div>${ep.too_big ? 'Video juda katta (20MB+), botda tomosha qiling.' : 'Video topilmadi.'}</div>
@@ -6418,8 +7597,8 @@
     </div>${epList}`; return;
       }
       mediaEl.innerHTML = `
-    <video id="epVid" class="modal-video" controls autoplay playsinline preload="auto">
-      <source src="${ep.video_url}" type="video/mp4">
+    <video id="epVid" class="modal-video" controls ${autoplay === false ? '' : 'autoplay'} playsinline preload="${autoplay === false ? 'metadata' : 'auto'}" poster="${_cardEsc(window._curPoster)}">
+      <source src="${_cardEsc(ep.video_url)}" type="video/mp4">
     </video>
     <div id="vErr" style="display:none" class="verr">⚠️ Video ochilmadi.
       <a href="https://t.me/${BOT}?start=${window._curAnimeId || ''}" target="_blank" style="color:var(--accent)">Botda ko'rish</a>
@@ -6536,15 +7715,15 @@
           ? `<img class="al-detail-cover" src="${_alEscape(a.cover)}" alt="${safeTitle}">`
           : '<div class="al-detail-cover" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface)">🎬</div>';
 
-        const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
-        const statusCls = `al-badge status-${a.status || ''}`;
+        const statusLabel = _alEscape(_alStatusLabels[a.status] || a.status || 'UNKNOWN');
+        const statusCls = `al-badge status-${_alEscape(a.status || '')}`;
 
         const badgesHtml = `
       <span class="${statusCls}">${statusLabel}</span>
-      ${a.score ? `<span class="al-score">⭐ ${a.score}/100</span>` : ''}
-      ${a.episodes ? `<span class="al-badge">${a.episodes} qism</span>` : ''}
-      ${a.year ? `<span class="al-badge">${a.year}</span>` : ''}
-      ${a.format ? `<span class="al-badge">${a.format}</span>` : ''}
+      ${a.score ? `<span class="al-score">★ ${_alEscape(a.score)}</span>` : ''}
+      ${a.episodes ? `<span class="al-badge">${_alEscape(a.episodes)} qism</span>` : ''}
+      ${a.year ? `<span class="al-badge">${_alEscape(a.year)}</span>` : ''}
+      ${a.format ? `<span class="al-badge">${_alEscape(a.format)}</span>` : ''}
       ${a.season ? `<span class="al-badge" style="text-transform: uppercase;">${a.season}</span>` : ''}
     `;
 
@@ -7083,7 +8262,7 @@
         const data = await res.json();
 
         if (!data.ok) {
-          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${data.error || 'Xatolik'}</div>`;
+          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${_alEscape(data.error || 'Xatolik')}</div>`;
           return;
         }
 
@@ -7092,7 +8271,7 @@
         if (bar) bar.style.display = '';
 
         if (!items.length) {
-          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${q}" bo'yicha hech narsa topilmadi.</div>`;
+          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${_alEscape(q)}" bo'yicha hech narsa topilmadi.</div>`;
           return;
         }
 
@@ -7127,7 +8306,7 @@
           </div>`
             : '';
 
-          return `<div class="al-card" onclick="openAlDetail(${a.id})" style="cursor: pointer;">
+          return `<div class="al-card" onclick="openAlDetail(${Number(a.id)})" style="cursor: pointer;">
         ${img}
         <div class="al-card-body">
           <div class="al-card-title" title="${safeTitle}">${safeTitle}</div>
@@ -7142,7 +8321,7 @@
         _alStartCountdowns();
 
       } catch (e) {
-        grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>Xatolik: ${e.message}</div>`;
+        grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>Xatolik: ${_alEscape(e.message)}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -7200,12 +8379,14 @@
     let _galFilter = 'all';
     function renderGallery() {
       const g = document.getElementById('galGrid');
-      if (!allAnimes.length && !g.querySelector('.gal-card')) {
-        // Hali yuklanmagan
+      if (!allAnimes.length) {
+        // Hali yuklanmagan: bir marta urinamiz (xato bo'lsa cheksiz qayta so'rov yubormaymiz)
         g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-        if (!allAnimes.length) { loadAnimes().then(() => renderGallery()); return; }
-      }
-      _renderGalGrid();
+        loadAnimes().then(() => {
+          if (allAnimes.length) _renderGalGrid();
+          else g.innerHTML = '<div class="prof-empty" style="grid-column:1/-1">Serverga ulanib bo\'lmadi yoki animelar yo\'q 😔</div>';
+        });
+      } else _renderGalGrid();
       // Filter buttonlar
       document.querySelectorAll('[data-gf]').forEach(b => {
         b.onclick = () => {
@@ -7231,10 +8412,10 @@
         const likedCls = _isLiked(a.id) ? 'liked' : '';
         const savedCls = _isSaved(a.id) ? 'saved' : '';
         return `<div class="gal-card" onclick="openModal(${a.id},this)">
-      <img class="gal-img" src="${a.rams_url || ''}" loading="lazy" onerror="this.outerHTML='<div class=gal-img-ph>🎬</div>'">
+      <img class="gal-img" src="${_cardEsc(a.rams_url || '')}" loading="lazy" onerror="this.outerHTML='<div class=gal-img-ph>🎬</div>'">
       <span class="gal-badge ${badgeCls}">${badgeTxt}</span>
       <div class="gal-overlay">
-        <div class="gal-title">${a.nom || 'Nomsiz'}</div>
+        <div class="gal-title">${_cardEsc(a.nom || 'Nomsiz')}</div>
         <div class="gal-actions">
           <button class="ga-btn ${likedCls}" id="glike-${a.id}" onclick="event.stopPropagation();toggleLike(${a.id})">❤️ Yoqtir</button>
           <button class="ga-btn ${savedCls}" id="gsave-${a.id}" onclick="event.stopPropagation();toggleSave(${a.id})">💾 Saqlash</button>

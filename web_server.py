@@ -2103,18 +2103,36 @@ def _download_instagram_edit(source_url: str) -> tuple[dict, Path, Path]:
     temp_dir = Path(tempfile.mkdtemp(prefix="animeuz-edit-"))
     options = {
         "outtmpl": str(temp_dir / "source.%(ext)s"),
-        "format": "best[ext=mp4]/best[ext=webm]",
+        "format": "best[ext=mp4]/best",
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
         "restrictfilenames": True,
         "max_filesize": 250 * 1024 * 1024,
+        "socket_timeout": 30,
+        "retries": 3,
     }
+    # Instagram anonim so'rovlarni ko'pincha rad etadi: login cookie'lari (Netscape format) env orqali beriladi.
+    cookie_text = os.getenv("INSTAGRAM_COOKIES", "").strip()
+    cookie_file = os.getenv("INSTAGRAM_COOKIES_FILE", "").strip()
+    if cookie_text:
+        cookie_path = temp_dir / "cookies.txt"
+        cookie_path.write_text(cookie_text.replace("\\n", "\n"), encoding="utf-8")
+        options["cookiefile"] = str(cookie_path)
+    elif cookie_file and os.path.isfile(cookie_file):
+        options["cookiefile"] = cookie_file
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
-            info = ydl.extract_info(source_url, download=True)
-            if info.get("entries"):
-                info = next((item for item in info["entries"] if item), info)
+        try:
+            with yt_dlp.YoutubeDL(options) as ydl:
+                info = ydl.extract_info(source_url, download=True)
+                if info.get("entries"):
+                    info = next((item for item in info["entries"] if item), info)
+        except yt_dlp.utils.DownloadError as exc:
+            msg = str(exc).lower()
+            print(f"Instagram yt-dlp xatosi: {exc}")
+            if any(k in msg for k in ("login", "cookie", "rate-limit", "private", "empty media")):
+                raise ValueError("Instagram login talab qilmoqda yoki post yopiq. Serverda INSTAGRAM_COOKIES (yoki INSTAGRAM_COOKIES_FILE) sozlang.")
+            raise ValueError("Instagram videosini yuklab bo'lmadi: " + str(exc)[:200])
         files = [p for p in temp_dir.iterdir() if p.is_file() and p.suffix.lower() in {".mp4", ".webm", ".mkv", ".mov"}]
         if not files:
             raise ValueError("Instagram videosi yuklab olinmadi yoki yopiq")
@@ -2162,6 +2180,8 @@ async def api_anime_edits(request):
                 items.append(item)
         return web.json_response({"ok": True, "edits": items, "total": len(items)})
     except Exception:
+        import traceback
+        traceback.print_exc()  # sabab server logida ko'rinsin
         return web.json_response({"ok": False, "error": "Edits ro'yxatini olishda xatolik"}, status=500)
 
 

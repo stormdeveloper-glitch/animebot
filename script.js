@@ -1,33 +1,80 @@
-    // ── THREE.JS BG ──
+    // ── SCROLL FX: reveal, hero parallax, card tilt (calm: faqat transform/opacity) ──
+    (function () {
+      const root = document.documentElement;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+      window._fxY = 0;
+      let raf = 0;
+      document.addEventListener('scroll', e => {
+        window._fxY = e.target === document ? scrollY : (e.target.scrollTop || 0);
+        if (!raf) raf = requestAnimationFrame(() => { raf = 0; root.style.setProperty('--hp', Math.min(window._fxY / 420, 1).toFixed(3)); });
+      }, { capture: true, passive: true });
+      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: .08 });
+      const watch = (el, d) => { if (el.dataset.rv) return; el.dataset.rv = 1; el.style.setProperty('--d', d + 'ms'); el.classList.add('rv'); io.observe(el); };
+      document.querySelectorAll('.sec-title').forEach(el => watch(el, 0));
+      const grid = document.getElementById('animeGrid');
+      [[grid, '.card-wrap'], [document.getElementById('glResultGrid'), '.al-card']].forEach(([g, sel]) => {
+        if (!g) return;
+        const run = () => g.querySelectorAll(sel + ':not([data-rv])').forEach((el, i) => watch(el, (i % 6) * 55));
+        new MutationObserver(run).observe(g, { childList: true }); run();
+      });
+      if (!grid) return;
+      // nozik 3D tilt (faqat sichqoncha)
+      let tf = null, tr = 0, rx = 0, ry = 0;
+      grid.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        const w = e.target.closest('.card-wrap'); if (!w) return;
+        const b = w.getBoundingClientRect();
+        ry = ((e.clientX - b.left) / b.width - .5) * 8; rx = -((e.clientY - b.top) / b.height - .5) * 8;
+        tf = w.querySelector('.card-flipper');
+        if (!tr) tr = requestAnimationFrame(() => { tr = 0; if (tf) { tf.style.setProperty('--rx', rx.toFixed(2) + 'deg'); tf.style.setProperty('--ry', ry.toFixed(2) + 'deg'); } });
+      });
+      grid.addEventListener('pointerout', e => {
+        const w = e.target.closest('.card-wrap'); if (!w || w.contains(e.relatedTarget)) return;
+        const f = w.querySelector('.card-flipper'); f.style.removeProperty('--rx'); f.style.removeProperty('--ry'); if (f === tf) tf = null;
+      });
+    })();
+
+    // ── THREE.JS BG: sakura halqalar + sokin yaproqlar ──
     (function () {
       if (typeof THREE === 'undefined') { console.warn('THREE.js not loaded – skipping 3D background.'); return; }
       const c = document.getElementById('bg3d');
-      const r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
-      r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); r.setSize(innerWidth, innerHeight);
-      const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .1, 1000);
+      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const small = innerWidth < 760;
+      let r;
+      try { r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: !small, powerPreference: 'low-power' }); } catch (_) { return; }
+      r.setPixelRatio(Math.min(devicePixelRatio, small ? 1 : 1.25)); r.setSize(innerWidth, innerHeight);
+      const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, .1, 200);
       cam.position.z = 26;
-      const mk = (g, col, o) => new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: o }));
-      const i1 = mk(new THREE.IcosahedronGeometry(9, 1), 0xff6b4a, .07), i2 = mk(new THREE.IcosahedronGeometry(5.5, 0), 0x8b7bff, .08);
-      s.add(i1, i2);
-      const geos = [new THREE.TetrahedronGeometry(.8), new THREE.OctahedronGeometry(.7), new THREE.BoxGeometry(1, 1, 1), new THREE.IcosahedronGeometry(.6, 0)];
-      const cols = [0xff6b4a, 0x8b7bff, 0xffc46b, 0x3ee6a8];
-      Array.from({ length: 22 }, (_, i) => {
-        const m = mk(geos[i % 4], cols[i % 4], .06 + Math.random() * .09);
-        const rr = 14 + Math.random() * 20, t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1);
-        m.position.set(rr * Math.sin(p) * Math.cos(t), rr * Math.sin(p) * Math.sin(t), rr * Math.cos(p) - 10);
-        m.userData = { sx: (Math.random() - .5) * .009, sy: (Math.random() - .5) * .009 }; s.add(m); return m;
-      });
-      let mx = 0, my = 0;
-      document.addEventListener('mousemove', e => { mx = (e.clientX / innerWidth - .5) * .016; my = (e.clientY / innerHeight - .5) * .016; });
-      const smalls = [...s.children].slice(2);
-      (function a() {
-        requestAnimationFrame(a);
-        i1.rotation.x += .0017 + mx * .35; i1.rotation.y += .0026 + my * .35;
-        i2.rotation.x -= .0022; i2.rotation.y -= .0016;
-        smalls.forEach(m => { m.rotation.x += m.userData.sx; m.rotation.y += m.userData.sy; });
+      const ring = (rad, tube, op, x, y, z, rx) => {
+        const m = new THREE.Mesh(new THREE.TorusGeometry(rad, tube, 6, 140), new THREE.MeshBasicMaterial({ color: 0xff4d6d, transparent: true, opacity: op }));
+        m.position.set(x, y, z); m.rotation.x = rx; s.add(m); return m;
+      };
+      const r1 = ring(11, .045, .55, 12, 7, -8, 1.1), r2 = ring(15, .025, .25, 12, 7, -10, 1.3), r3 = ring(6, .03, .35, -16, -9, -6, .8);
+      // yaproqlar: yumshoq dumaloq nuqtalar
+      const tc = document.createElement('canvas'); tc.width = tc.height = 32;
+      const g = tc.getContext('2d'), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gr.addColorStop(0, '#fff'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
+      const N = small ? 24 : 60, pos = new Float32Array(N * 3), vel = [];
+      for (let i = 0; i < N; i++) { pos.set([(Math.random() - .5) * 60, (Math.random() - .5) * 40, -Math.random() * 14], i * 3); vel.push(.012 + Math.random() * .02, Math.random() * .01 + .004); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      s.add(new THREE.Points(pg, new THREE.PointsMaterial({ map: new THREE.CanvasTexture(tc), color: 0xff9fb2, size: .7, transparent: true, opacity: .6, depthWrite: false })));
+      let px = 0, py = 0, cx = 0, cy = 0, sy = 0, run = true;
+      if (!calm) document.addEventListener('pointermove', e => { px = e.clientX / innerWidth - .5; py = e.clientY / innerHeight - .5; }, { passive: true });
+      const draw = () => {
+        sy += ((window._fxY || 0) - sy) * .06; cx += (px * 3 - cx) * .04; cy += (-py * 2 - cy) * .04;
+        cam.position.set(cx, cy - sy * .006, 26);
+        r1.rotation.y += .0012; r1.rotation.z += .0006; r2.rotation.y -= .0008; r3.rotation.x += .001;
+        for (let i = 0; i < N; i++) {
+          pos[i * 3 + 1] -= vel[i * 2]; pos[i * 3] += vel[i * 2 + 1] * Math.sin(pos[i * 3 + 1] * .3 + i);
+          if (pos[i * 3 + 1] < -20) pos[i * 3 + 1] = 20;
+        }
+        pg.attributes.position.needsUpdate = true;
         r.render(s, cam);
-      })();
-      window.addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); });
+      };
+      const loop = () => { if (!run) return; requestAnimationFrame(loop); if (c.style.opacity !== '0') draw(); };
+      if (calm) draw(); else loop();
+      document.addEventListener('visibilitychange', () => { const v = !document.hidden; if (v && !run && !calm) { run = true; loop(); } else if (!v) run = false; });
+      window.addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); if (calm) draw(); });
     })();
 
     // ── SETTINGS ──
@@ -241,76 +288,28 @@
     }
 
     // HUD card back HTML generator
-    function _hudCardBack(a, idx) {
-      const og = (a.aniType || '').toLowerCase().includes('ongoing');
-      const delay = (idx * 0.15) % 2; // stagger per card, max 2s
-      // Pips: 8 total — ongoing=8, completed=5, unknown=3
-      const pipOn = og ? 8 : (a.aniType ? 5 : 3);
-      const pips = Array.from({ length: 8 }, (_, i) => `<div class="hud-pip${i < pipOn ? ' on' : ''}"></div>`).join('');
-      // Truncate at 24 chars (was 18 — too aggressive)
-      const rawName = a.nom || 'Nomsiz';
-      const shortName = rawName.length > 24 ? rawName.slice(0, 22) + '…' : rawName;
-      // Dynamic typewriter steps matching actual name length
-      const nameSteps = shortName.length;
-      const views = a.qidiruv ? `👁 ${a.qidiruv}` : '—';
-      const fandub = a.fandub || '\u2014';
+    function _hudCardBack(a) {
+      const rows = [
+        ['Holat', a.aniType || '—'],
+        ['Qismlar', `${a.ep_count || 0} ta`],
+        ['Janr', (a.janri || '—').split(',').slice(0, 2).join(',')],
+        ['Yil', a.yili || '—'],
+        ['Ovoz', a.fandub || '—'],
+        ["Ko'rish", a.qidiruv ? `👁 ${a.qidiruv}` : '—']
+      ].map(([k, v]) => `<div class="hud-row"><div class="hud-key">${k}</div><div class="hud-val">${_cardEsc(v)}</div></div>`).join('');
+      return `<div class="hud-cb"><div class="hud-name">${_cardEsc(a.nom || 'Nomsiz')}</div><div class="hud-rows">${rows}</div></div>`;
+    }
 
-      return `<div class="hud-cb" style="--hud-delay:${delay}s">
-    <div class="hud-top-line"></div>
-    <div class="hud-bot-line"></div>
-
-    <div class="hud-tag">ANIME DATA · ID ${String(a.id).padStart(3, '0')}</div>
-
-    <div style="display:flex;flex-direction:column;gap:1px">
-      <div class="hud-name" style="animation-timing-function:steps(${nameSteps},end)">${shortName}</div>
-      <div class="hud-div-wrap">
-        <div class="hud-div-line"></div>
-        <div class="hud-div-cap"></div>
-      </div>
-    </div>
-
-    <div class="hud-rows">
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Holat</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${a.aniType || '—'}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Qismlar</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${a.ep_count || 0} ta</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Janr</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${(a.janri || '—').split(',').slice(0, 2).join(',')}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Yil</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${a.yili || '—'}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Ovoz</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${fandub}</div>
-      </div>
-      <div class="hud-row">
-        <div class="hud-dot"></div>
-        <div class="hud-key">Ko'rish</div>
-        <div class="hud-sep"></div>
-        <div class="hud-val">${views}</div>
-      </div>
-    </div>
-
-    <div class="hud-pips">${pips}</div>
-    <div class="hud-id">#${String(a.id).padStart(3, '0')}</div>
-  </div>`;
+    function _cardEsc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function _cardOverlay(a) {
+      const live = (a.aniType || '').toLowerCase().includes('ongoing');
+      const status = a.aniType ? `<span class="cf-chip ${live ? 'live' : 'done'}">${live ? 'OnGoing' : _cardEsc(a.aniType)}</span>` : '<span></span>';
+      const eps = Number(a.ep_count) || 0;
+      const vid = eps > 0 ? `<span class="cf-vid" title="Video qismlar mavjud"><i>▶</i>${eps} qism</span>` : '';
+      const meta = [a.yili, (a.janri || '').split(',')[0].trim()].filter(Boolean).map(_cardEsc).join(' · ');
+      return `<div class="cf-info"><div class="cf-badges">${status}${vid}</div><div class="cf-bottom"><div class="cf-title">${_cardEsc(a.nom || 'Nomsiz')}</div>${meta ? `<div class="cf-meta">${meta}</div>` : ''}</div></div>`;
     }
 
     function renderGrid(list) {
@@ -319,10 +318,11 @@
       g.innerHTML = list.map((a, idx) => {
         const likedCls = _isLiked(a.id) ? 'liked' : '';
         const savedCls = _isSaved(a.id) ? 'saved' : '';
-        return `<div class="card-wrap" title="${a.nom}">
-      <div class="card-flipper" onclick="openModal(${a.id},this)">
+        return `<div class="card-wrap" title="${_cardEsc(a.nom)}">
+      <div class="card-flipper" role="button" tabindex="0" onclick="openModal(${a.id},this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(${a.id},this)}">
         <div class="cf">
-          <img class="card-poster" src="${a.rams_url || ''}" loading="lazy" onerror="this.outerHTML='<div class=card-poster-ph>🎬</div>'">
+          <img class="card-poster" src="${_cardEsc(a.rams_url)}" loading="lazy" onerror="this.outerHTML='<div class=card-poster-ph>🎬</div>'">
+          ${_cardOverlay(a)}
         </div>
         <div class="cb">${_hudCardBack(a, idx)}</div>
       </div>
@@ -413,50 +413,54 @@
       });
     }
     function renderAnimeModal(a) {
+      window._curPoster = a.rams_url || '';
       if (window.ytTrailerPlayer && typeof window.ytTrailerPlayer.destroy === 'function') {
         try { window.ytTrailerPlayer.destroy(); } catch (e) { }
         window.ytTrailerPlayer = null;
       }
       document.getElementById('modalContent').innerHTML = `
     <div class="m-media">
-      <img class="m-img" src="${a.rams_url || ''}" onerror="this.outerHTML='<div class=m-img-ph>🎬</div>'">
+      <img class="m-img" src="${_cardEsc(a.rams_url)}" onerror="this.outerHTML='<div class=m-img-ph>🎬</div>'">
       <button class="play-btn" onclick="loadVideo(${a.id})">▶</button>
     </div>
     <div class="m-body">
-      <div class="m-title">${a.nom || 'Nomsiz'}</div>
-      <div class="irow"><span class="ilbl">Holati</span><span class="ival">${a.aniType || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Qismlar</span><span class="ival">${a.ep_count || 0} ta</span></div>
-      <div class="irow"><span class="ilbl">Janr</span><span class="ival">${a.janri || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Yili</span><span class="ival">${a.yili || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Davlat</span><span class="ival">${a.davlat || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Ovoz</span><span class="ival">${a.fandub || '—'}</span></div>
-      <div class="irow"><span class="ilbl">Yosh toifasi</span><span class="ival">${a.yosh_toifa || 'Barcha yoshlar'}</span></div>
-      <div class="irow"><span class="ilbl">Ko'rish</span><span class="ival">👁 ${a.qidiruv || 0}</span></div>
+      <div class="m-title">${_cardEsc(a.nom || 'Nomsiz')}</div>
+      <div class="irow"><span class="ilbl">Holati</span><span class="ival">${_cardEsc(a.aniType || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Qismlar</span><span class="ival">${Number(a.ep_count) || 0} ta</span></div>
+      <div class="irow"><span class="ilbl">Janr</span><span class="ival">${_cardEsc(a.janri || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Yili</span><span class="ival">${_cardEsc(a.yili || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Davlat</span><span class="ival">${_cardEsc(a.davlat || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Ovoz</span><span class="ival">${_cardEsc(a.fandub || '—')}</span></div>
+      <div class="irow"><span class="ilbl">Yosh toifasi</span><span class="ival">${_cardEsc(a.yosh_toifa || 'Barcha yoshlar')}</span></div>
+      <div class="irow"><span class="ilbl">Ko'rish</span><span class="ival">👁 ${Number(a.qidiruv) || 0}</span></div>
       <a class="m-btn" href="https://t.me/${BOT}?start=${a.id}" target="_blank">▶ Botda tomosha qilish</a>
-      ${a.tavsif ? `<div class="irow" style="display:block"><span class="ilbl">Tavsif</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.tavsif}</span></div>` : ''}
-      ${a.filler_info ? `<div class="irow" style="display:block"><span class="ilbl">Filler qismlar</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${a.filler_info}<br><small>Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.</small></span></div>` : ''}
-      <a class="m-btn" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
+      ${a.tavsif ? `<div class="irow irow-long" style="display:block"><span class="ilbl">Tavsif</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55;white-space:pre-line">${_cardEsc(a.tavsif)}</span></div>` : ''}
+      ${a.filler_info ? `<div class="irow irow-long" style="display:block"><span class="ilbl">Filler qismlar</span><span class="ival" style="display:block;margin-top:6px;line-height:1.55">${_cardEsc(a.filler_info)}<br><small>Asosiy syujetga kuchli ta'sir qilmaydigan qo'shimcha qismlar.</small></span></div>` : ''}
+      <a class="m-btn m-btn-ghost" href="/poster/${a.id}" onclick="event.preventDefault();navigator.clipboard?.writeText(location.origin+'/poster/${a.id}');this.textContent='Link nusxalandi'">Poster linki</a>
     </div>`;
       document.getElementById('modalBg').classList.add('open');
+      if ((Number(a.ep_count) || 0) > 0) loadVideo(a.id, true);
     }
 
-    async function loadVideo(id) {
+    async function loadVideo(id, auto) {
       const m = document.querySelector('.m-media'); if (!m) return;
       window._curAnimeId = id;
-      m.innerHTML = `<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
+      if (!auto) m.innerHTML = `<div class="verr"><div class="spinner" style="margin:0 auto 10px"></div>Qismlar yuklanmoqda...</div>`;
       try {
         const res = await fetch(`/api/episodes/${id}`);
         const d = await res.json();
-        if (!d.episodes || !d.episodes.length) { m.innerHTML = `<div class="verr">🎬 Hali qism yuklanmagan.<br><a href="https://t.me/${BOT}?start=${id}" target="_blank" style="color:var(--accent)">Botda ko'rish</a></div>`; return; }
-        _playEp(m, d.episodes, 0);
-      } catch (e) { m.innerHTML = `<div class="verr">⚠️ Xatolik: ${e.message}</div>`; }
+        if (!m.isConnected) return;
+        if (!d.episodes || !d.episodes.length) { if (auto) return; m.innerHTML = `<div class="verr">🎬 Hali qism yuklanmagan.<br><a href="https://t.me/${BOT}?start=${id}" target="_blank" style="color:var(--accent)">Botda ko'rish</a></div>`; return; }
+        _playEp(m, d.episodes, 0, auto !== true);
+      } catch (e) { if (auto) return; m.innerHTML = `<div class="verr">⚠️ Xatolik: ${e.message}</div>`; }
     }
-    function _playEp(mediaEl, eps, idx) {
+    function _playEp(mediaEl, eps, idx, autoplay) {
       const ep = eps[idx]; if (!ep) return;
       window._epCache = eps;
       const epBtns = eps.map((e, i) => `<button class="ep-btn ${i === idx ? 'active' : ''}" onclick="_playEp(document.querySelector('.m-media'),window._epCache,${i})">${e.qism || (i + 1)}-qism</button>`).join('');
       const epList = eps.length > 1 ? `<div class="ep-lbl">Qismlar (${eps.length} ta):</div><div class="ep-list">${epBtns}</div>` : '';
       if (!ep.video_url || ep.too_big) {
+        if (autoplay === false) return;
         mediaEl.innerHTML = `<div class="verr" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 14px">
       <div style="font-size:1.8rem">📦</div>
       <div>${ep.too_big ? 'Video juda katta (20MB+), botda tomosha qiling.' : 'Video topilmadi.'}</div>
@@ -464,8 +468,8 @@
     </div>${epList}`; return;
       }
       mediaEl.innerHTML = `
-    <video id="epVid" class="modal-video" controls autoplay playsinline preload="auto">
-      <source src="${ep.video_url}" type="video/mp4">
+    <video id="epVid" class="modal-video" controls ${autoplay === false ? '' : 'autoplay'} playsinline preload="${autoplay === false ? 'metadata' : 'auto'}" poster="${_cardEsc(window._curPoster)}">
+      <source src="${_cardEsc(ep.video_url)}" type="video/mp4">
     </video>
     <div id="vErr" style="display:none" class="verr">⚠️ Video ochilmadi.
       <a href="https://t.me/${BOT}?start=${window._curAnimeId || ''}" target="_blank" style="color:var(--accent)">Botda ko'rish</a>
@@ -582,15 +586,15 @@
           ? `<img class="al-detail-cover" src="${_alEscape(a.cover)}" alt="${safeTitle}">`
           : '<div class="al-detail-cover" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface)">🎬</div>';
 
-        const statusLabel = _alStatusLabels[a.status] || a.status || 'UNKNOWN';
-        const statusCls = `al-badge status-${a.status || ''}`;
+        const statusLabel = _alEscape(_alStatusLabels[a.status] || a.status || 'UNKNOWN');
+        const statusCls = `al-badge status-${_alEscape(a.status || '')}`;
 
         const badgesHtml = `
       <span class="${statusCls}">${statusLabel}</span>
-      ${a.score ? `<span class="al-score">⭐ ${a.score}/100</span>` : ''}
-      ${a.episodes ? `<span class="al-badge">${a.episodes} qism</span>` : ''}
-      ${a.year ? `<span class="al-badge">${a.year}</span>` : ''}
-      ${a.format ? `<span class="al-badge">${a.format}</span>` : ''}
+      ${a.score ? `<span class="al-score">★ ${_alEscape(a.score)}</span>` : ''}
+      ${a.episodes ? `<span class="al-badge">${_alEscape(a.episodes)} qism</span>` : ''}
+      ${a.year ? `<span class="al-badge">${_alEscape(a.year)}</span>` : ''}
+      ${a.format ? `<span class="al-badge">${_alEscape(a.format)}</span>` : ''}
       ${a.season ? `<span class="al-badge" style="text-transform: uppercase;">${a.season}</span>` : ''}
     `;
 
@@ -1129,7 +1133,7 @@
         const data = await res.json();
 
         if (!data.ok) {
-          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${data.error || 'Xatolik'}</div>`;
+          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>${_alEscape(data.error || 'Xatolik')}</div>`;
           return;
         }
 
@@ -1138,7 +1142,7 @@
         if (bar) bar.style.display = '';
 
         if (!items.length) {
-          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${q}" bo'yicha hech narsa topilmadi.</div>`;
+          grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">🔎</div>"${_alEscape(q)}" bo'yicha hech narsa topilmadi.</div>`;
           return;
         }
 
@@ -1173,7 +1177,7 @@
           </div>`
             : '';
 
-          return `<div class="al-card" onclick="openAlDetail(${a.id})" style="cursor: pointer;">
+          return `<div class="al-card" onclick="openAlDetail(${Number(a.id)})" style="cursor: pointer;">
         ${img}
         <div class="al-card-body">
           <div class="al-card-title" title="${safeTitle}">${safeTitle}</div>
@@ -1188,7 +1192,7 @@
         _alStartCountdowns();
 
       } catch (e) {
-        grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>Xatolik: ${e.message}</div>`;
+        grid.innerHTML = `<div class="gl-msg"><div class="gl-msg-ico">❌</div>Xatolik: ${_alEscape(e.message)}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1246,12 +1250,14 @@
     let _galFilter = 'all';
     function renderGallery() {
       const g = document.getElementById('galGrid');
-      if (!allAnimes.length && !g.querySelector('.gal-card')) {
-        // Hali yuklanmagan
+      if (!allAnimes.length) {
+        // Hali yuklanmagan: bir marta urinamiz (xato bo'lsa cheksiz qayta so'rov yubormaymiz)
         g.innerHTML = '<div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>';
-        if (!allAnimes.length) { loadAnimes().then(() => renderGallery()); return; }
-      }
-      _renderGalGrid();
+        loadAnimes().then(() => {
+          if (allAnimes.length) _renderGalGrid();
+          else g.innerHTML = '<div class="prof-empty" style="grid-column:1/-1">Serverga ulanib bo\'lmadi yoki animelar yo\'q 😔</div>';
+        });
+      } else _renderGalGrid();
       // Filter buttonlar
       document.querySelectorAll('[data-gf]').forEach(b => {
         b.onclick = () => {
@@ -1277,10 +1283,10 @@
         const likedCls = _isLiked(a.id) ? 'liked' : '';
         const savedCls = _isSaved(a.id) ? 'saved' : '';
         return `<div class="gal-card" onclick="openModal(${a.id},this)">
-      <img class="gal-img" src="${a.rams_url || ''}" loading="lazy" onerror="this.outerHTML='<div class=gal-img-ph>🎬</div>'">
+      <img class="gal-img" src="${_cardEsc(a.rams_url || '')}" loading="lazy" onerror="this.outerHTML='<div class=gal-img-ph>🎬</div>'">
       <span class="gal-badge ${badgeCls}">${badgeTxt}</span>
       <div class="gal-overlay">
-        <div class="gal-title">${a.nom || 'Nomsiz'}</div>
+        <div class="gal-title">${_cardEsc(a.nom || 'Nomsiz')}</div>
         <div class="gal-actions">
           <button class="ga-btn ${likedCls}" id="glike-${a.id}" onclick="event.stopPropagation();toggleLike(${a.id})">❤️ Yoqtir</button>
           <button class="ga-btn ${savedCls}" id="gsave-${a.id}" onclick="event.stopPropagation();toggleSave(${a.id})">💾 Saqlash</button>
